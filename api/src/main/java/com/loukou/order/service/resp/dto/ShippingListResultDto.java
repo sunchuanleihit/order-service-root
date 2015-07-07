@@ -3,7 +3,7 @@ package com.loukou.order.service.resp.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ResultDto {
+public class ShippingListResultDto {
 	private String shippingName;
 	private String payType;
 	private List<ShippingListDto> shippingList = new ArrayList<ShippingListDto>();

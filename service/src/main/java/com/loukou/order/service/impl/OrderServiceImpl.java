@@ -31,14 +31,15 @@ import com.loukou.order.service.entity.OrderExtm;
 import com.loukou.order.service.entity.OrderGoods;
 import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Store;
+import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
 import com.loukou.order.service.resp.dto.OrderListBaseDto;
 import com.loukou.order.service.resp.dto.OrderListDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
-import com.loukou.order.service.resp.dto.ResultDto;
 import com.loukou.order.service.resp.dto.ShippingListDto;
+import com.loukou.order.service.resp.dto.ShippingListResultDto;
 import com.loukou.order.service.resp.dto.ShippingMsgDto;
 import com.loukou.order.service.resp.dto.ShippingResultDto;
 
@@ -149,8 +150,14 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public void getCouponList(int cityId, int userId, int storeId, int openId) {
+	public CouponListRespDto getCouponList(int cityId, int userId, int storeId, int openId) {
+		CouponListRespDto resp = new CouponListRespDto();
+		if(cityId <= 0 || userId <= 0 || storeId <= 0 || openId <= 0) {
+			resp.setCode(400);
+			return resp;
+		}
 		
+		return resp;
 	}
 
 	@Override
@@ -608,7 +615,7 @@ public class OrderServiceImpl implements OrderService {
     //不传参数 接口调用
 	private ShippingResultDto getShippingResult(ShippingResultDto shippingResultDto, String taoOrderSn) {
 		
-		ResultDto resultDto = new ResultDto();
+		ShippingListResultDto resultDto = new ShippingListResultDto();
 		if(StringUtils.isEmpty(taoOrderSn)) {
 			return null;
 		}

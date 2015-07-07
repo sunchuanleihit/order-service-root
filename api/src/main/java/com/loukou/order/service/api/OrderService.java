@@ -1,5 +1,6 @@
 package com.loukou.order.service.api;
 
+import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 
 public interface OrderService {
@@ -19,7 +20,7 @@ public interface OrderService {
 	 * @param storeId 店铺ID
 	 * @param openId 唯一设备号
 	 */
-	public void getCouponList(int cityId, int userId, int storeId, int openId);
+	public CouponListRespDto getCouponList(int cityId, int userId, int storeId, int openId);
 	
 	
 	/**

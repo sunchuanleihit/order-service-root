@@ -3,7 +3,7 @@ package com.loukou.order.service.resp.dto;
 public class ShippingResultDto {
 
 	private int code;
-	private ResultDto result = new ResultDto();
+	private ShippingListResultDto result = new ShippingListResultDto();
 
 	public int getCode() {
 		return code;
@@ -13,11 +13,11 @@ public class ShippingResultDto {
 		this.code = code;
 	}
 
-	public ResultDto getResult() {
+	public ShippingListResultDto getResult() {
 		return result;
 	}
 
-	public void setResult(ResultDto result) {
+	public void setResult(ShippingListResultDto result) {
 		this.result = result;
 	}
 
