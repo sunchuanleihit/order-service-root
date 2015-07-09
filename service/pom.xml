@@ -43,6 +43,12 @@
 		<artifactId>commons-lang3</artifactId>
 		<version>3.4</version>
 	</dependency>
+  <!-- pos-account-client -->
+  	<dependency>
+			<groupId>com.loukou</groupId>
+			<artifactId>pos-account-client</artifactId>
+			<version>0.1.0-SNAPSHOT</version>
+	</dependency>
   
   	<!-- cat-ext -->
   	<dependency>
@@ -51,7 +57,13 @@
       	<version>0.1.0</version>
   	</dependency>
   	
-  	
+  	<!--  配置服务 -->
+	<dependency>
+		<groupId>com.github.diamond</groupId>
+		<artifactId>super-diamond-client</artifactId>
+		<version>1.0.0</version>
+	</dependency>
+	
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

@@ -51,6 +51,8 @@ import com.loukou.order.service.resp.dto.OrderListBaseDto;
 import com.loukou.order.service.resp.dto.OrderListDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
+import com.loukou.order.service.resp.dto.PayOrderMsgDto;
+import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
 import com.loukou.order.service.resp.dto.ShippingListDto;
 import com.loukou.order.service.resp.dto.ShippingListResultDto;
 import com.loukou.order.service.resp.dto.ShippingMsgDto;
@@ -59,6 +61,7 @@ import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
 import com.loukou.pos.client.txk.req.TxkCardRefundRespVO;
 import com.loukou.pos.client.vaccount.processor.VirtualAccountProcessor;
 import com.loukou.pos.client.vaccount.resp.VaccountUpdateRespVO;
+
 
 @Service("OrderService")
 public class OrderServiceImpl implements OrderService {
@@ -151,7 +154,7 @@ public class OrderServiceImpl implements OrderService {
 			orderSnMainlistCount = ((List<Order>)orderDao.findByOrderSnMainIn(orderSnMains)).size();
 			break;
 		case 4:
-			List<OrderReturn> orderReturns = orderRDao.findByUserIdAndOrderStatus(userId, 0);
+			List<OrderReturn> orderReturns = orderRDao.findByBuyerIdAndOrderStatus(userId, 0);
 			for(OrderReturn orderReturn : orderReturns) {
 				set.add(orderReturn.getOrderSnMain());
 			}
@@ -222,8 +225,44 @@ public class OrderServiceImpl implements OrderService {
 		getOrderAttr(mainOrderMap, orderSnMain, flag);
 		return resp;
 	}
-	
-	
+		
+	@Override
+	public PayOrderResultRespDto getPayOrderMsg(int userId, String orderSnMain) {
+		PayOrderResultRespDto resp = new PayOrderResultRespDto();
+		PayOrderMsgDto result = new PayOrderMsgDto();
+		if(userId <= 0 || StringUtils.isEmpty(orderSnMain)) {
+			resp.setCode(400);
+			return resp;
+		}
+		if(CollectionUtils.isEmpty(orderDao.findByOrderSnMain(orderSnMain))) {
+			resp.setCode(400);
+			return resp;
+		}
+		
+		List<Order> orders = (List<Order>)orderDao.findByOrderSnMain(orderSnMain);
+		double orderTotal = 0, shippingFee = 0;
+		for(Order o:orders)
+		{
+			orderTotal = orderTotal + o.getGoodsAmount() + o.getShippingFee();
+			shippingFee += o.getShippingFee();
+		}
+		
+		double payedMoney = orderPayDao.getPayedAmountByOrderSnMain(orderSnMain);
+		double txkValue = AccountTxkProcessor.getProcessor().getTxkBalanceByUserId(userId);
+		double vCountValue = VirtualAccountProcessor.getProcessor().getVirtualBalanceByUserId(userId);
+		
+		result.setDiscountAmount(payedMoney);
+		result.setOrderSnMain(orderSnMain);
+		result.setOrderTotal(orderTotal-shippingFee);
+		result.setShippingFee(shippingFee);
+		result.setTotal(orderTotal-payedMoney);
+		result.setTxkNum(txkValue);
+		result.setVcount(vCountValue);
+		resp.setResult(result);
+		
+		return resp;
+		
+	}
 	
 	
 	/*
@@ -655,7 +694,8 @@ public class OrderServiceImpl implements OrderService {
 	//物流信息
     //传参数 列表详情调用
     //不传参数 接口调用
-	private ShippingResultDto getShippingResult(ShippingResultDto shippingResultDto, String taoOrderSn) {
+	@Override
+	public ShippingResultDto getShippingResult(ShippingResultDto shippingResultDto, String taoOrderSn) {
 		
 		ShippingListResultDto resultDto = new ShippingListResultDto();
 		if(StringUtils.isEmpty(taoOrderSn)) {
@@ -1024,36 +1064,36 @@ public class OrderServiceImpl implements OrderService {
     			}
     		}
     	}
-    	
-    }
-    
-    $db = &db();
-	$store_id = $db->getOne("select seller_id from tcz_order where order_id='{$order_id}'");
-    $order_goods = $db->getAll("select spec_id, quantity from tcz_order_goods where order_id='{$order_id}'");
-    if($order_goods && $store_id > 0){
-       foreach($order_goods as $v){
-       	 if($order_type == 'wei_wh' || $order_type == 'wei_self'){//微仓订单
-       	 	 if($operate_type == 6)//发货
-       	 	    $sql = "update lk_wh_goods_store set stock_s=stock_s-{$v['quantity']},freezstock=freezstock-{$v['quantity']} 
-      	 	            where spec_id='{$v['spec_id']}' and store_id='{$store_id}'";
-       	 	 else                  //取消
-       	 	    $sql = "update lk_wh_goods_store set freezstock=freezstock-{$v['quantity']} 
-      	 	            where spec_id='{$v['spec_id']}' and store_id='{$store_id}'";  
-      	     $db->query($sql);
-       	 }else{
-       	 	 if($operate_type == 6)//发货
-       	 	    $sql = "update tcz_goods_spec set taostock=taostock-{$v['quantity']},freezstock=freezstock-{$v['quantity']}" . 
-		               " where spec_id='{$v['spec_id']}'";
-       	 	 else                  //取消
-       	 	    $sql = "update tcz_goods_spec set freezstock=freezstock-{$v['quantity']} 
-       	 	            where spec_id='{$v['spec_id']}'";
-       	 	 $db->query($sql);   
-       	 }
-      }
-      return true;
-    }else{
     	return false;
     }
+    
+//    $db = &db();
+//	$store_id = $db->getOne("select seller_id from tcz_order where order_id='{$order_id}'");
+//    $order_goods = $db->getAll("select spec_id, quantity from tcz_order_goods where order_id='{$order_id}'");
+//    if($order_goods && $store_id > 0){
+//       foreach($order_goods as $v){
+//       	 if($order_type == 'wei_wh' || $order_type == 'wei_self'){//微仓订单
+//       	 	 if($operate_type == 6)//发货
+//       	 	    $sql = "update lk_wh_goods_store set stock_s=stock_s-{$v['quantity']},freezstock=freezstock-{$v['quantity']} 
+//      	 	            where spec_id='{$v['spec_id']}' and store_id='{$store_id}'";
+//       	 	 else                  //取消
+//       	 	    $sql = "update lk_wh_goods_store set freezstock=freezstock-{$v['quantity']} 
+//      	 	            where spec_id='{$v['spec_id']}' and store_id='{$store_id}'";  
+//      	     $db->query($sql);
+//       	 }else{
+//       	 	 if($operate_type == 6)//发货
+//       	 	    $sql = "update tcz_goods_spec set taostock=taostock-{$v['quantity']},freezstock=freezstock-{$v['quantity']}" . 
+//		               " where spec_id='{$v['spec_id']}'";
+//       	 	 else                  //取消
+//       	 	    $sql = "update tcz_goods_spec set freezstock=freezstock-{$v['quantity']} 
+//       	 	            where spec_id='{$v['spec_id']}'";
+//       	 	 $db->query($sql);   
+//       	 }
+//      }
+//      return true;
+//    }else{
+//    	return false;
+//    }
 	
 	  //退款
     private int getOrderReturnAdd(String orderSnMain, int orderId, int buyerId, int sellerId, double returnSum, int refundStatus, int returnStatus)
