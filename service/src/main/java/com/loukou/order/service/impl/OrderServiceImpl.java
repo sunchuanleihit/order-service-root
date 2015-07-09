@@ -3,6 +3,7 @@ package com.loukou.order.service.impl;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -16,24 +17,36 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.loukou.order.service.api.OrderService;
+import com.loukou.order.service.dao.CoupListDao;
+import com.loukou.order.service.dao.CoupRuleDao;
+import com.loukou.order.service.dao.CoupTypeDao;
+import com.loukou.order.service.dao.CouponSnDao;
 import com.loukou.order.service.dao.ExpressDao;
 import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
 import com.loukou.order.service.dao.OrderExtmDao;
 import com.loukou.order.service.dao.OrderGoodsDao;
 import com.loukou.order.service.dao.OrderPayDao;
+import com.loukou.order.service.dao.OrderPayRDao;
 import com.loukou.order.service.dao.OrderReturnDao;
+import com.loukou.order.service.dao.SiteDao;
 import com.loukou.order.service.dao.StoreDao;
+import com.loukou.order.service.entity.CoupList;
+import com.loukou.order.service.entity.CoupRule;
+import com.loukou.order.service.entity.CoupType;
 import com.loukou.order.service.entity.Express;
 import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderExtm;
 import com.loukou.order.service.entity.OrderGoods;
+import com.loukou.order.service.entity.OrderPay;
+import com.loukou.order.service.entity.OrderPayR;
 import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Store;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
+import com.loukou.order.service.resp.dto.OrderCancelRespDto;
 import com.loukou.order.service.resp.dto.OrderListBaseDto;
 import com.loukou.order.service.resp.dto.OrderListDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
@@ -42,14 +55,18 @@ import com.loukou.order.service.resp.dto.ShippingListDto;
 import com.loukou.order.service.resp.dto.ShippingListResultDto;
 import com.loukou.order.service.resp.dto.ShippingMsgDto;
 import com.loukou.order.service.resp.dto.ShippingResultDto;
+import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
+import com.loukou.pos.client.txk.req.TxkCardRefundRespVO;
+import com.loukou.pos.client.vaccount.processor.VirtualAccountProcessor;
+import com.loukou.pos.client.vaccount.resp.VaccountUpdateRespVO;
 
 @Service("OrderService")
 public class OrderServiceImpl implements OrderService {
 	
 	private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	private static final DecimalFormat DECIMALFORMAT = new DecimalFormat("###,###.##");
-	
-
+	private VirtualAccountProcessor virtualAccountProcessor = VirtualAccountProcessor.getProcessor();
+	private AccountTxkProcessor accountTxkProcessor = AccountTxkProcessor.getProcessor();
 	@Autowired OrderDao orderDao;
 	
 	@Autowired OrderReturnDao orderRDao;
@@ -58,6 +75,8 @@ public class OrderServiceImpl implements OrderService {
 	
 	@Autowired OrderPayDao orderPayDao;
 	
+	@Autowired OrderPayRDao orderPayRDao;
+	
 	@Autowired OrderGoodsDao orderGoodsDao;
 	
 	@Autowired ExpressDao expressDao;//快递公司代码及名称
@@ -65,6 +84,16 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired OrderActionDao orderActionDao;
 	
 	@Autowired OrderExtmDao orderExtmDao;
+	
+	@Autowired CoupListDao coupListDao;
+	
+	@Autowired CoupRuleDao coupRuleDao;
+	
+	@Autowired CoupTypeDao coupTypeDao;
+	
+	@Autowired SiteDao siteDao;
+	
+	@Autowired CouponSnDao couponSnDao;
 	
 	@Override
 	public OrderListRespDto getOrderList(int userId, int flag) {
@@ -156,6 +185,19 @@ public class OrderServiceImpl implements OrderService {
 			resp.setCode(400);
 			return resp;
 		}
+		List<CoupList> coupLists = coupListDao.getCoupLists(userId);//以及其他的一些过滤条件
+		List<Integer> couponIds = new ArrayList<Integer>();
+		for(CoupList couplist : coupLists) {
+			couponIds.add(couplist.getCouponId());
+		}
+		List<CoupRule> coupRules = coupRuleDao.findByIdIn(couponIds);
+		List<Integer> coupTypeIds = new ArrayList<Integer>();
+		for(CoupRule coupRule : coupRules) {
+			coupTypeIds.add(coupRule.getTypeid());
+		}
+		List<CoupType> coupTypes = coupTypeDao.findByIdIn(coupTypeIds);
+		
+		
 		
 		return resp;
 	}
@@ -845,7 +887,200 @@ public class OrderServiceImpl implements OrderService {
 
 	
 	
+	@Override
+	public OrderCancelRespDto cancelOrder(int userId, String orderSnMain) {
+		OrderCancelRespDto resp = new OrderCancelRespDto();
+		if(userId <= 0 || StringUtils.isBlank(orderSnMain)) {
+			resp.setCode(400);
+			return resp;
+		}
+		List<Order> orders = orderDao.findByOrderSnMain(orderSnMain);
+		if(CollectionUtils.isEmpty(orders)) {
+			resp.setCode(400);
+			return resp;
+		}
+		//0未支付 1已支付
+		int payedStatus = orders.get(0).getPayStatus();
+		
+		
+		for(Order order : orders) {
+			List<String> couponCodes = new ArrayList<String>();
+			double orderPayed = 0;
+			if(order.getStatus() == 3 || order.getStatus() == 1) {
+				resp.setCode(400);//TODO errorcode
+			} else if(order.getOrderPayed() > 0) {
+				orderPayed += order.getOrderPayed();
+				
+				//TODO 原php代码中为if($order['use_coupon_no'] <> "")
+				if(StringUtils.isNotBlank(order.getUseCouponNo()) && StringUtils.equals(order.getUseCouponNo(), "0")) {
+					couponCodes.add(order.getUseCouponNo());
+				}
+			}
+			if(orderPayed > 0) {//部分或全部支付
+				Map<Integer, Double> paymentIdMoneyMap = getPay(order.getOrderId());//支付明细
+				double returnAmountVcount = 0;
+				double returnAmountTxk = 0;
+				double returnAmountCoupon = 0;
+				double returnAmount = 0;
+				double returnSum = 0;
+				for(Map.Entry<Integer, Double> entry : paymentIdMoneyMap.entrySet()) {
+					if(entry.getKey() == 2) { //虚拟账户
+						returnAmountVcount += entry.getValue();
+					} else if(entry.getKey() == 6) {
+						returnAmountTxk += entry.getValue();
+					} else if(entry.getKey() == 14) {
+						returnAmountCoupon += entry.getValue();
+					} else {
+						returnAmount += entry.getValue();
+					}
+				}
+				returnSum = returnAmountVcount + returnAmountTxk + returnAmountCoupon + returnAmount;
+				
+				if(returnAmount > 0) {
+					//有采用在线支付，则生成未退款单及应退明细记录
+					int orderIdR = getOrderReturnAdd(orderSnMain, order.getOrderId(), order.getBuyerId(), order.getSellerId(), 
+							returnSum, 0, 0);
+					for(Map.Entry<Integer, Double> entry : paymentIdMoneyMap.entrySet()) {
+						OrderPayR  orderPayR = new OrderPayR();
+						orderPayR.setOrderIdR(orderIdR);
+						orderPayR.setRepayWay(0);
+						orderPayR.setPaymentId(entry.getKey());
+						orderPayR.setValue(entry.getValue());
+						orderPayRDao.save(orderPayR);
+					}
+				} else {
+					 //否则安照原先支付记录自动退款，并生成已退款单
+					int orderIdR = getOrderReturnAdd(orderSnMain, order.getOrderId(), order.getBuyerId(), order.getSellerId(), returnSum, 1, 1);
+					if(returnAmountVcount > 0) {//虚拟帐户原额退
+						OrderPayR  orderPayR = new OrderPayR();
+						orderPayR.setOrderIdR(orderIdR);
+						orderPayR.setRepayWay(0);
+						orderPayR.setPaymentId(2);
+						orderPayR.setValue(returnAmountVcount);
+						orderPayRDao.save(orderPayR);
+						VaccountUpdateRespVO vAccountResp = virtualAccountProcessor.refund(userId, order.getOrderId(), orderSnMain, returnAmountVcount, 
+								SDF.format(new Date()), 0, "取消订单退款:" + SDF.format(new Date()), order.getBuyerName());
+						
+					}
+					if(returnAmountTxk > 0) {//淘心卡原额退
+						OrderPayR orderPayR = new OrderPayR();
+						orderPayR.setOrderIdR(orderIdR);
+						orderPayR.setPaymentId(6);
+						orderPayR.setRepayWay(0);
+						orderPayR.setValue(returnAmountTxk);
+						orderPayRDao.save(orderPayR);
+						//TODO
+						TxkCardRefundRespVO txkCardResp = accountTxkProcessor.refund(returnAmountTxk, orderSnMain, userId, order.getBuyerName());
+					}
+					
+					if(returnAmountCoupon > 0) {//优惠券状态改成未使用
+						if(CollectionUtils.isEmpty(couponCodes)) {
+							for(String couponCode : couponCodes) {
+								couponSnDao.
+							}
+						}
+					}
+				}
+				
+				
+				
+//				$payment = $this->_get_pay(order.);//支付明细
+//                foreach($payment['pay'] as $v)
+//                {
+//                    $order_pay_r_mod->add(array("order_id_r" => $order_id_r, "repay_way" => 0, "payment_id" => $v['payment_id'], "value" => $v['money']));
+//                }
+				
+			}
+		}
+		
+		
+		
+		return resp;
+	}
 	
+	  //退款
+    private int getOrderReturnAdd(String orderSnMain, int orderId, int buyerId, int sellerId, double returnSum, int refundStatus, int returnStatus)
+    {
+    	OrderReturn orderReturn = new OrderReturn();
+    	orderReturn.setOrderSnMain(orderSnMain);
+    	orderReturn.setOrderId(orderId);
+    	orderReturn.setBuyerId(buyerId);
+    	orderReturn.setSellerId(sellerId);
+    	orderReturn.setReturnAmount(returnSum);
+    	orderReturn.setActor("system");
+    	orderReturn.setAddTime(SDF.format(new Date()));
+    	orderReturn.setGoodsType(0);
+    	orderReturn.setOrderType(6);
+    	orderReturn.setOrderStatus(0);
+    	orderReturn.setGoodsStatus(1);
+    	orderReturn.setRefundStatus(refundStatus);
+    	orderReturn.setStatementStatus(0);
+    	if(returnStatus == 1) {
+    		orderReturn.setRepayTime(SDF.format(new Date()));
+    	}
+    	orderReturn.setPostscript("客户自已取消订单");
+    	return orderRDao.save(orderReturn).getOrderIdR();
+    }
+
+
+	/*
+	 * 订单支付明细 $orderSnMain 主订单ID
+	 */
+//	private Map<Integer, Double> getPay(String orderSnMain) {
+//		List<OrderPay> orderPays = orderPayDao.findByOrderSnMainAndStatus(
+//				orderSnMain, "succ");
+//		Map<Integer, Double> paymentIdMoney = new HashMap<Integer, Double>();
+//		if (!CollectionUtils.isEmpty(orderPays)) {
+//			// 相同支付方式的支付金额合并
+//			for (OrderPay orderPay : orderPays) {
+//				// if(orderPay.getPaymentId() != 14) {
+//				if (paymentIdMoney.containsKey(orderPay.getPaymentId())) {
+//					paymentIdMoney.put(orderPay.getPaymentId(),
+//							paymentIdMoney.get(orderPay.getPaymentId())
+//									+ orderPay.getMoney());
+//				} else {
+//					paymentIdMoney.put(orderPay.getPaymentId(),
+//							orderPay.getMoney());
+//				}
+//				// }
+//				// else {//需退优惠券 判断是否用优惠券支付过
+//				//
+//				// }
+//			}
+//		}
+//
+//		return paymentIdMoney;
+//	}
+	
+
+	/*
+	 * 订单支付明细 orderId 订单ID
+	 */
+	private Map<Integer, Double> getPay(int orderId) {
+		List<OrderPay> orderPays = orderPayDao.findByOrderIdAndStatus(
+				orderId, "succ");
+		Map<Integer, Double> paymentIdMoney = new HashMap<Integer, Double>();
+		if (!CollectionUtils.isEmpty(orderPays)) {
+			// 相同支付方式的支付金额合并
+			for (OrderPay orderPay : orderPays) {
+				// if(orderPay.getPaymentId() != 14) {
+				if (paymentIdMoney.containsKey(orderPay.getPaymentId())) {
+					paymentIdMoney.put(orderPay.getPaymentId(),
+							paymentIdMoney.get(orderPay.getPaymentId())
+									+ orderPay.getMoney());
+				} else {
+					paymentIdMoney.put(orderPay.getPaymentId(),
+							orderPay.getMoney());
+				}
+				// }
+				// else {//需退优惠券 判断是否用优惠券支付过
+				//
+				// }
+			}
+		}
+
+		return paymentIdMoney;
+	}
 	
 	
 	

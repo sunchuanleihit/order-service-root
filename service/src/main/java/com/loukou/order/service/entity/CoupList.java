@@ -13,7 +13,7 @@ public class CoupList {
 	@Id
 	@GeneratedValue
 	@Column(name = "id")
-	private int storeId;
+	private int id;
 
 	@Column(name = "coupon_id")
 	private int couponId;
@@ -22,10 +22,10 @@ public class CoupList {
 	private int userId;
 
 	@Column(name = "begintime")
-	private String begintime = "";// 开始时间
+	private String begintime;// 开始时间
 
 	@Column(name = "endtime")
-	private String endtime = "";// 结束时间
+	private String endtime;// 结束时间
 
 	@Column(name = "commoncode")
 	private String commoncode = "";
@@ -57,12 +57,12 @@ public class CoupList {
 	@Column(name = "sell_site")
 	private String sellSite;
 
-	public int getStoreId() {
-		return storeId;
+	public int getId() {
+		return id;
 	}
 
-	public void setStoreId(int storeId) {
-		this.storeId = storeId;
+	public void setId(int id) {
+		this.id = id;
 	}
 
 	public int getCouponId() {

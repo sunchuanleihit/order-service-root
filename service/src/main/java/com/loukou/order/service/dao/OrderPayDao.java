@@ -22,4 +22,8 @@ public interface OrderPayDao extends CrudRepository<OrderPay, Integer>{
 	
 	@Query(value="SELECT SUM(money) FROM tcz_order_pay WHERE order_sn_main = ?1")
 	double getPayedAmountByOrderSnMain(String orderSnMain);
+
+	List<OrderPay> findByOrderSnMainAndStatus(String orderSnMain, String status);
+
+	List<OrderPay> findByOrderIdAndStatus(int orderId, String status);
 }

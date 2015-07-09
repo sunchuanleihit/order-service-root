@@ -58,7 +58,7 @@ public class OrderReturn {
 	 * 下单时间
 	 */
 	@Column(name = "add_time")
-	private int addTime;
+	private String addTime;
 
 	/*
 	 * 0商品订单1服务订单2jiazheng
@@ -196,11 +196,11 @@ public class OrderReturn {
 		this.actor = actor;
 	}
 
-	public int getAddTime() {
+	public String getAddTime() {
 		return addTime;
 	}
 
-	public void setAddTime(int addTime) {
+	public void setAddTime(String addTime) {
 		this.addTime = addTime;
 	}
 

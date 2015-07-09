@@ -1,6 +1,7 @@
 package com.loukou.order.service.api;
 
 import com.loukou.order.service.resp.dto.CouponListRespDto;
+import com.loukou.order.service.resp.dto.OrderCancelRespDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 
 public interface OrderService {
@@ -31,4 +32,6 @@ public interface OrderService {
 	 * @return 订单详情
 	 */
 	public OrderListRespDto getOrderInfo(int userId, String orderSnMain, int flag);
+	
+	public OrderCancelRespDto cancelOrder(int userId, String orderSnMain);
 }
