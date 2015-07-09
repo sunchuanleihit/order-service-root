@@ -975,8 +975,8 @@ public class OrderServiceImpl implements OrderService {
 					
 					if(returnAmountCoupon > 0) {//优惠券状态改成未使用
 						if(CollectionUtils.isEmpty(couponCodes)) {
-							for(String couponCode : couponCodes) {
-								couponSnDao.
+							for(String couponCode : couponCodes) {//TODO couponCode待确定
+								couponSnDao.refundCouponSn(couponCode, userId);
 							}
 						}
 					}
@@ -990,13 +990,70 @@ public class OrderServiceImpl implements OrderService {
 //                    $order_pay_r_mod->add(array("order_id_r" => $order_id_r, "repay_way" => 0, "payment_id" => $v['payment_id'], "value" => $v['money']));
 //                }
 				
+			} else {
+				//全部未支付，只需改订单状态及操作记录即可
 			}
+			
+			/*更改订单状态、解冻库存*/
+			orderDao.updateOrderStatus(order.getOrderId(), 1);
 		}
 		
 		
 		
 		return resp;
 	}
+	
+	/*
+     *释放锁定库存
+     *@param order_id 订单ID,必填 
+     *@param order_type 订单类型,wei_wh(微仓订单(总仓进货)),wei_self(微仓订单(独立进货)),booking(预购订单),self_sales(商家独立销售)
+     *@param operate_type 操作类型,1取消,2作废,6核验/发货
+     */
+    private boolean release_freezstock(int orderId, String orderType, int operateType) {
+    	if(orderId < 1 || StringUtils.equals(orderType, "") || operateType < 1 ){
+    		return false;
+    	}
+    	Order order = orderDao.findByOrderId(orderId);
+    	List<OrderGoods> orderGoodsList = orderGoodsDao.findByOrderId(orderId);
+    	if(order.getSellerId() > 0 && !CollectionUtils.isEmpty(orderGoodsList)) {
+    		for(OrderGoods orderGoods : orderGoodsList) {
+    			if(StringUtils.equals(orderType, "wei_wh") || StringUtils.equals(orderType, "wei_self")) {
+    				if(operateType == 6) {
+    					
+    				}
+    			}
+    		}
+    	}
+    	
+    }
+    
+    $db = &db();
+	$store_id = $db->getOne("select seller_id from tcz_order where order_id='{$order_id}'");
+    $order_goods = $db->getAll("select spec_id, quantity from tcz_order_goods where order_id='{$order_id}'");
+    if($order_goods && $store_id > 0){
+       foreach($order_goods as $v){
+       	 if($order_type == 'wei_wh' || $order_type == 'wei_self'){//微仓订单
+       	 	 if($operate_type == 6)//发货
+       	 	    $sql = "update lk_wh_goods_store set stock_s=stock_s-{$v['quantity']},freezstock=freezstock-{$v['quantity']} 
+      	 	            where spec_id='{$v['spec_id']}' and store_id='{$store_id}'";
+       	 	 else                  //取消
+       	 	    $sql = "update lk_wh_goods_store set freezstock=freezstock-{$v['quantity']} 
+      	 	            where spec_id='{$v['spec_id']}' and store_id='{$store_id}'";  
+      	     $db->query($sql);
+       	 }else{
+       	 	 if($operate_type == 6)//发货
+       	 	    $sql = "update tcz_goods_spec set taostock=taostock-{$v['quantity']},freezstock=freezstock-{$v['quantity']}" . 
+		               " where spec_id='{$v['spec_id']}'";
+       	 	 else                  //取消
+       	 	    $sql = "update tcz_goods_spec set freezstock=freezstock-{$v['quantity']} 
+       	 	            where spec_id='{$v['spec_id']}'";
+       	 	 $db->query($sql);   
+       	 }
+      }
+      return true;
+    }else{
+    	return false;
+    }
 	
 	  //退款
     private int getOrderReturnAdd(String orderSnMain, int orderId, int buyerId, int sellerId, double returnSum, int refundStatus, int returnStatus)
