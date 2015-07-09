@@ -36,7 +36,6 @@ import com.loukou.order.service.dao.SiteDao;
 import com.loukou.order.service.dao.StoreDao;
 import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupRule;
-import com.loukou.order.service.entity.CoupType;
 import com.loukou.order.service.entity.Express;
 import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
@@ -46,7 +45,9 @@ import com.loukou.order.service.entity.OrderPay;
 import com.loukou.order.service.entity.OrderPayR;
 import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Store;
+import com.loukou.order.service.resp.dto.CouponListDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
+import com.loukou.order.service.resp.dto.CouponListResultDto;
 import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
 import com.loukou.order.service.resp.dto.OrderCancelRespDto;
@@ -58,6 +59,7 @@ import com.loukou.order.service.resp.dto.ShippingListDto;
 import com.loukou.order.service.resp.dto.ShippingListResultDto;
 import com.loukou.order.service.resp.dto.ShippingMsgDto;
 import com.loukou.order.service.resp.dto.ShippingResultDto;
+import com.loukou.order.service.util.DateUtils;
 import com.loukou.order.service.util.DoubleUtils;
 import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
 import com.loukou.pos.client.txk.req.TxkCardRefundRespVO;
@@ -209,15 +211,61 @@ public class OrderServiceImpl implements OrderService {
 //			coupTypeIds.add(coupRule.getTypeid());
 //		}
 //		List<CoupType> coupTypes = coupTypeDao.findByIdIn(coupTypeIds);
-		List<Integer> validCoupIds = Lists.newArrayList();
+		List<CoupList> validCoupList = Lists.newArrayList();
+		CoupList recommendCoupList = null;	// 推荐用的券
 		CartRespDto cart = cartService.getCart(userId, openId, cityId, storeId);
 		for (CoupList coupList: coupLists) {
 			CoupRule coupRule = ruleMap.get(coupList.getCouponId());
 			if (verifyCoup(userId, openId, cityId, storeId, coupList, cart, coupRule)) {
-				
+				validCoupList.add(coupList);
+				if (recommendCoupList == null) {
+					recommendCoupList = coupList;
+				}
+				else if (coupList.getMoney() > recommendCoupList.getMoney()) {
+					recommendCoupList = coupList;
+				}
 			}
 		}
 		
+		CouponListResultDto result = resp.getResult();
+		// 组装 dto
+		if (validCoupList.size() > 0) {
+			List<CouponListDto> couponListDtos = result.getCouponList();
+			for (CoupList coupList: validCoupList) {
+				String couponName = "";
+				CoupRule coupRule = ruleMap.get(coupList.getCouponId());
+				if (coupRule.getCoupontypeid() == 1) {
+					couponName = "现金券";
+				}
+				else {
+					couponName = String.format("满%.1f减%.1f", coupList.getMinprice(), coupList.getMoney());
+				}
+				CouponListDto couponListDto = new CouponListDto();
+				couponListDto.setCouponId(coupList.getId());
+				couponListDto.setCommoncode(coupList.getCommoncode());
+				couponListDto.setCouponName(couponName);
+				couponListDto.setMoney(String.format("%.1f", coupList.getMoney()));
+				couponListDto.setCouponMsg(coupRule.getCouponName());
+				couponListDtos.add(couponListDto);
+				
+				if (coupList == recommendCoupList) {
+					result.getRecommend().add(couponListDto);
+				}
+			}
+		}
+		
+		// 能否使用券
+		int canUse = 1;
+		Date now = new Date();
+		Date start = DateUtils.getStartofDate(now);
+		int count = coupListDao.getUsedCoupNumber(userId, start);
+		if (count > 20) {
+			// 一天最多只能用20张券
+			canUse = 2;
+		}
+		result.setCanUse(canUse);
+		result.setEverydayNum(String.valueOf(20));
+		result.setEverydayMsg("每天限使用20张优惠券，明天再来吧");
 		
 		return resp;
 	}
@@ -228,8 +276,32 @@ public class OrderServiceImpl implements OrderService {
 		if (coupRule.getCouponType() == CouponType.ALL) {
 			// 全场通用
 			double total = DoubleUtils.add(cart.getTotalPrice(), cart.getShippingFeeTotal());
+			if (total < coupList.getMinprice()) {
+				return false;
+			}
+			else {
+				return true;
+			}
 		}
-		return true;
+		else if (coupRule.getCouponType() == CouponType.STORE) {
+			// 店铺券
+			int outId = getOutId(coupRule);
+			// FIXME 目前有店铺券吗?
+		}
+		else if (coupRule.getCouponType() == CouponType.GOODS) {
+			// FIXME 目前有商品券吗？其他类型的券目前都没用，下次重构掉吧，不搬过来了
+		}
+		
+		return false;
+	}
+	
+	
+	private int getOutId(CoupRule coupRule) {
+		String[] strs = coupRule.getOutId().split(",");
+		if (strs.length > 0) {
+			return Integer.valueOf(strs[0]);
+		}
+		return 0;
 	}
 
 	@Override

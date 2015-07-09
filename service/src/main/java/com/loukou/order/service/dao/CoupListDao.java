@@ -1,5 +1,6 @@
 package com.loukou.order.service.dao;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.Query;
@@ -16,6 +17,9 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 	@Query("select cl from CoupList cl where userId = ?1 and ischecked=0 and issue=1 and begintime<=NOW() and endtime>=NOW() "
 			+ "AND (usedtime IS NULL OR usedtime='0000-00-00 00:00:00')")
 	List<CoupList> getCoupLists(int userId);
+
+	@Query("SELECT count(id) FROM CoupList WHERE userId = ?1 AND usedtime >= ?2")
+	int getUsedCoupNumber(int userId, Date start);
 
 	
 //=======
