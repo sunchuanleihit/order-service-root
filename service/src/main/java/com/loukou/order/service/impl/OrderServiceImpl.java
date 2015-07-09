@@ -22,6 +22,8 @@ import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.CoupTypeDao;
 import com.loukou.order.service.dao.CouponSnDao;
 import com.loukou.order.service.dao.ExpressDao;
+import com.loukou.order.service.dao.GoodsSpecDao;
+import com.loukou.order.service.dao.LkWhGoodsStoreDao;
 import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
 import com.loukou.order.service.dao.OrderExtmDao;
@@ -35,6 +37,7 @@ import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.CoupType;
 import com.loukou.order.service.entity.Express;
+import com.loukou.order.service.entity.LkWhGoodsStore;
 import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderExtm;
@@ -58,7 +61,6 @@ import com.loukou.order.service.resp.dto.ShippingListResultDto;
 import com.loukou.order.service.resp.dto.ShippingMsgDto;
 import com.loukou.order.service.resp.dto.ShippingResultDto;
 import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
-import com.loukou.pos.client.txk.req.TxkCardRefundRespVO;
 import com.loukou.pos.client.vaccount.processor.VirtualAccountProcessor;
 import com.loukou.pos.client.vaccount.resp.VaccountUpdateRespVO;
 
@@ -97,6 +99,10 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired SiteDao siteDao;
 	
 	@Autowired CouponSnDao couponSnDao;
+	
+	@Autowired GoodsSpecDao goodsSpecDao;
+	
+	@Autowired LkWhGoodsStoreDao lkWhGoodsStoreDao;
 	
 	@Override
 	public OrderListRespDto getOrderList(int userId, int flag) {
@@ -1057,9 +1063,20 @@ public class OrderServiceImpl implements OrderService {
     	List<OrderGoods> orderGoodsList = orderGoodsDao.findByOrderId(orderId);
     	if(order.getSellerId() > 0 && !CollectionUtils.isEmpty(orderGoodsList)) {
     		for(OrderGoods orderGoods : orderGoodsList) {
-    			if(StringUtils.equals(orderType, "wei_wh") || StringUtils.equals(orderType, "wei_self")) {
-    				if(operateType == 6) {
-    					
+    			if(StringUtils.equals(orderType, "wei_wh") || StringUtils.equals(orderType, "wei_self")) {//微仓订单
+    				LkWhGoodsStore whStore = lkWhGoodsStoreDao.
+							findBySpecIdAndStoreId(orderGoods.getSpecId(), order.getSellerId());
+    				if(operateType == 6) {//发货
+    					lkWhGoodsStoreDao.updateBySpecIdAndStoreId(orderGoods.getSpecId(), order.getSellerId(), 
+    							whStore.getStockS() - orderGoods.getQuantity(), 
+    							whStore.getFreezstock() - orderGoods.getQuantity());
+    				} else {
+    					lkWhGoodsStoreDao.updateBySpecIdAndStoreId(orderGoods.getSpecId(), order.getSellerId(), 
+    							whStore.getFreezstock() - orderGoods.getQuantity());
+    				}
+    			} else {
+    				if(operateType == 6) {//发货
+    					goodsSpecDao.
     				}
     			}
     		}
