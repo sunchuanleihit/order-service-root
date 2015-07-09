@@ -38,10 +38,14 @@ import com.loukou.order.service.resp.dto.OrderListBaseDto;
 import com.loukou.order.service.resp.dto.OrderListDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
+import com.loukou.order.service.resp.dto.PayOrderMsgDto;
+import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
 import com.loukou.order.service.resp.dto.ShippingListDto;
 import com.loukou.order.service.resp.dto.ShippingListResultDto;
 import com.loukou.order.service.resp.dto.ShippingMsgDto;
 import com.loukou.order.service.resp.dto.ShippingResultDto;
+import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
+import com.loukou.pos.client.vaccount.processor.VirtualAccountProcessor;
 
 @Service("OrderService")
 public class OrderServiceImpl implements OrderService {
@@ -122,7 +126,7 @@ public class OrderServiceImpl implements OrderService {
 			orderSnMainlistCount = ((List<Order>)orderDao.findByOrderSnMainIn(orderSnMains)).size();
 			break;
 		case 4:
-			List<OrderReturn> orderReturns = orderRDao.findByUserIdAndOrderStatus(userId, 0);
+			List<OrderReturn> orderReturns = orderRDao.findByBuyerIdAndOrderStatus(userId, 0);
 			for(OrderReturn orderReturn : orderReturns) {
 				set.add(orderReturn.getOrderSnMain());
 			}
@@ -180,8 +184,44 @@ public class OrderServiceImpl implements OrderService {
 		getOrderAttr(mainOrderMap, orderSnMain, flag);
 		return resp;
 	}
-	
-	
+		
+	@Override
+	public PayOrderResultRespDto getPayOrderMsg(int userId, String orderSnMain) {
+		PayOrderResultRespDto resp = new PayOrderResultRespDto();
+		PayOrderMsgDto result = new PayOrderMsgDto();
+		if(userId <= 0 || StringUtils.isEmpty(orderSnMain)) {
+			resp.setCode(400);
+			return null;
+		}
+		if(CollectionUtils.isEmpty(orderDao.findByOrderSnMain(orderSnMain))) {
+			resp.setCode(400);
+			return null;
+		}
+		
+		List<Order> orders = (List<Order>)orderDao.findByOrderSnMain(orderSnMain);
+		double orderTotal = 0, shippingFee = 0;
+		for(Order o:orders)
+		{
+			orderTotal = orderTotal + o.getGoodsAmount() + o.getShippingFee();
+			shippingFee += o.getShippingFee();
+		}
+		
+		double payedMoney = orderPayDao.getPayedAmountByOrderSnMain(orderSnMain);
+		double txkValue = AccountTxkProcessor.getProcessor().getTxkBalanceByUserId(userId);
+		double vCountValue = VirtualAccountProcessor.getProcessor().getVirtualBalanceByUserId(userId);
+		
+		result.setDiscountAmount(payedMoney);
+		result.setOrderSnMain(orderSnMain);
+		result.setOrderTotal(orderTotal-shippingFee);
+		result.setShippingFee(shippingFee);
+		result.setTotal(orderTotal-payedMoney);
+		result.setTxkNum(txkValue);
+		result.setVcount(vCountValue);
+		resp.setResult(result);
+		
+		return resp;
+		
+	}
 	
 	
 	/*
@@ -613,7 +653,8 @@ public class OrderServiceImpl implements OrderService {
 	//物流信息
     //传参数 列表详情调用
     //不传参数 接口调用
-	private ShippingResultDto getShippingResult(ShippingResultDto shippingResultDto, String taoOrderSn) {
+	@Override
+	public ShippingResultDto getShippingResult(ShippingResultDto shippingResultDto, String taoOrderSn) {
 		
 		ShippingListResultDto resultDto = new ShippingListResultDto();
 		if(StringUtils.isEmpty(taoOrderSn)) {
