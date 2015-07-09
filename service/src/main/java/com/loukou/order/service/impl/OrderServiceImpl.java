@@ -16,7 +16,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.loukou.order.service.api.OrderService;
+import com.loukou.order.service.constants.CouponType;
 import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.CoupTypeDao;
@@ -55,10 +58,13 @@ import com.loukou.order.service.resp.dto.ShippingListDto;
 import com.loukou.order.service.resp.dto.ShippingListResultDto;
 import com.loukou.order.service.resp.dto.ShippingMsgDto;
 import com.loukou.order.service.resp.dto.ShippingResultDto;
+import com.loukou.order.service.util.DoubleUtils;
 import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
 import com.loukou.pos.client.txk.req.TxkCardRefundRespVO;
 import com.loukou.pos.client.vaccount.processor.VirtualAccountProcessor;
 import com.loukou.pos.client.vaccount.resp.VaccountUpdateRespVO;
+import com.serverstarted.cart.service.api.CartService;
+import com.serverstarted.cart.service.resp.dto.CartRespDto;
 
 @Service("OrderService")
 public class OrderServiceImpl implements OrderService {
@@ -94,6 +100,8 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired SiteDao siteDao;
 	
 	@Autowired CouponSnDao couponSnDao;
+	
+	@Autowired CartService cartService;
 	
 	@Override
 	public OrderListRespDto getOrderList(int userId, int flag) {
@@ -179,27 +187,49 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public CouponListRespDto getCouponList(int cityId, int userId, int storeId, int openId) {
+	public CouponListRespDto getCouponList(int cityId, int userId, int storeId, String openId) {
 		CouponListRespDto resp = new CouponListRespDto();
-		if(cityId <= 0 || userId <= 0 || storeId <= 0 || openId <= 0) {
+		if(cityId <= 0 || userId <= 0 || storeId <= 0 || StringUtils.isEmpty(openId)) {
 			resp.setCode(400);
 			return resp;
 		}
+		// FIXME 查询语句
 		List<CoupList> coupLists = coupListDao.getCoupLists(userId);//以及其他的一些过滤条件
 		List<Integer> couponIds = new ArrayList<Integer>();
 		for(CoupList couplist : coupLists) {
 			couponIds.add(couplist.getCouponId());
 		}
 		List<CoupRule> coupRules = coupRuleDao.findByIdIn(couponIds);
-		List<Integer> coupTypeIds = new ArrayList<Integer>();
-		for(CoupRule coupRule : coupRules) {
-			coupTypeIds.add(coupRule.getTypeid());
+		Map<Integer, CoupRule> ruleMap = Maps.newHashMap();
+		for (CoupRule coupRule: coupRules) {
+			ruleMap.put(coupRule.getId(), coupRule);
 		}
-		List<CoupType> coupTypes = coupTypeDao.findByIdIn(coupTypeIds);
-		
+//		List<Integer> coupTypeIds = new ArrayList<Integer>();
+//		for(CoupRule coupRule : coupRules) {
+//			coupTypeIds.add(coupRule.getTypeid());
+//		}
+//		List<CoupType> coupTypes = coupTypeDao.findByIdIn(coupTypeIds);
+		List<Integer> validCoupIds = Lists.newArrayList();
+		CartRespDto cart = cartService.getCart(userId, openId, cityId, storeId);
+		for (CoupList coupList: coupLists) {
+			CoupRule coupRule = ruleMap.get(coupList.getCouponId());
+			if (verifyCoup(userId, openId, cityId, storeId, coupList, cart, coupRule)) {
+				
+			}
+		}
 		
 		
 		return resp;
+	}
+	
+	
+	public boolean verifyCoup(int userId, String openId, int cityId, int storeId, CoupList coupList, CartRespDto cart, CoupRule coupRule) {
+		
+		if (coupRule.getCouponType() == CouponType.ALL) {
+			// 全场通用
+			double total = DoubleUtils.add(cart.getTotalPrice(), cart.getShippingFeeTotal());
+		}
+		return true;
 	}
 
 	@Override

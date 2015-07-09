@@ -21,7 +21,7 @@ public interface OrderService {
 	 * @param storeId 店铺ID
 	 * @param openId 唯一设备号
 	 */
-	public CouponListRespDto getCouponList(int cityId, int userId, int storeId, int openId);
+	public CouponListRespDto getCouponList(int cityId, int userId, int storeId, String openId);
 	
 	
 	/**
