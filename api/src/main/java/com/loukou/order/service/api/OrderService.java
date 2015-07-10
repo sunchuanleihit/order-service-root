@@ -1,8 +1,10 @@
 package com.loukou.order.service.api;
 
+import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.OrderCancelRespDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
+import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
 
 public interface OrderService {
 	
@@ -34,4 +36,6 @@ public interface OrderService {
 	public OrderListRespDto getOrderInfo(int userId, String orderSnMain, int flag);
 	
 	public OrderCancelRespDto cancelOrder(int userId, String orderSnMain);
+	
+	public SubmitOrderRespDto submitOrder(SubmitOrderReqDto req);
 }

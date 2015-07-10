@@ -10,16 +10,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.Validate;
 import org.apache.commons.lang3.StringUtils;
+import org.codehaus.plexus.util.Os;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import com.alibaba.dubbo.remoting.exchange.Request;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.loukou.order.service.api.OrderService;
 import com.loukou.order.service.constants.CouponType;
+import com.loukou.order.service.constants.OS;
+import com.loukou.order.service.dao.AddressDao;
 import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.CoupTypeDao;
@@ -34,6 +39,7 @@ import com.loukou.order.service.dao.OrderPayRDao;
 import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.SiteDao;
 import com.loukou.order.service.dao.StoreDao;
+import com.loukou.order.service.entity.Address;
 import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.Express;
@@ -45,6 +51,7 @@ import com.loukou.order.service.entity.OrderPay;
 import com.loukou.order.service.entity.OrderPayR;
 import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Store;
+import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.CouponListResultDto;
@@ -59,6 +66,7 @@ import com.loukou.order.service.resp.dto.ShippingListDto;
 import com.loukou.order.service.resp.dto.ShippingListResultDto;
 import com.loukou.order.service.resp.dto.ShippingMsgDto;
 import com.loukou.order.service.resp.dto.ShippingResultDto;
+import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
 import com.loukou.order.service.util.DateUtils;
 import com.loukou.order.service.util.DoubleUtils;
 import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
@@ -66,7 +74,9 @@ import com.loukou.pos.client.txk.req.TxkCardRefundRespVO;
 import com.loukou.pos.client.vaccount.processor.VirtualAccountProcessor;
 import com.loukou.pos.client.vaccount.resp.VaccountUpdateRespVO;
 import com.serverstarted.cart.service.api.CartService;
+import com.serverstarted.cart.service.resp.dto.CartGoodsRespDto;
 import com.serverstarted.cart.service.resp.dto.CartRespDto;
+import com.serverstarted.cart.service.resp.dto.PackageRespDto;
 
 @Service("OrderService")
 public class OrderServiceImpl implements OrderService {
@@ -75,6 +85,10 @@ public class OrderServiceImpl implements OrderService {
 	private static final DecimalFormat DECIMALFORMAT = new DecimalFormat("###,###.##");
 	private VirtualAccountProcessor virtualAccountProcessor = VirtualAccountProcessor.getProcessor();
 	private AccountTxkProcessor accountTxkProcessor = AccountTxkProcessor.getProcessor();
+	
+	private static final int LIMIT_COUPON_PER_DAY = 20;	// 每天限用优惠券张数
+	
+	
 	@Autowired OrderDao orderDao;
 	
 	@Autowired OrderReturnDao orderRDao;
@@ -104,6 +118,8 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired CouponSnDao couponSnDao;
 	
 	@Autowired CartService cartService;
+	
+	@Autowired AddressDao addressDao;
 	
 	@Override
 	public OrderListRespDto getOrderList(int userId, int flag) {
@@ -259,13 +275,13 @@ public class OrderServiceImpl implements OrderService {
 		Date now = new Date();
 		Date start = DateUtils.getStartofDate(now);
 		int count = coupListDao.getUsedCoupNumber(userId, start);
-		if (count > 20) {
+		if (count > LIMIT_COUPON_PER_DAY) {
 			// 一天最多只能用20张券
 			canUse = 2;
 		}
 		result.setCanUse(canUse);
 		result.setEverydayNum(String.valueOf(20));
-		result.setEverydayMsg("每天限使用20张优惠券，明天再来吧");
+		result.setEverydayMsg(String.format("每天限使用%d张优惠券，明天再来吧", LIMIT_COUPON_PER_DAY));
 		
 		return resp;
 	}
@@ -295,7 +311,73 @@ public class OrderServiceImpl implements OrderService {
 		return false;
 	}
 	
+	@Override
+	public SubmitOrderRespDto submitOrder(SubmitOrderReqDto req) {
+		// 校验参数
+		if (req == null || req.getUserId() <= 0 || StringUtils.isEmpty(req.getOpenId()) ||
+				req.getStoreId() <= 0 || req.getCityId() <= 0 || req.getAddressId() <= 0) {
+			return new SubmitOrderRespDto(400, "参数有误");
+		}
+		// os
+		int os = 21;	// Android
+		if (OS.ANDROID.equals(req.getOs())) {
+			os = 21;
+		}
+		else if (OS.IOS.equals(req.getOs())) {
+			os = 30;
+		}
+		else {
+			return new SubmitOrderRespDto(400, "目前只支持Android 和iOS 系统");
+		}
+		// shippingtime
+		if (req.getShippingTimes() == null || req.getShippingTimes().getBooking().size() == 0 ||
+				req.getShippingTimes().getMaterial().size() == 0) {
+			return new SubmitOrderRespDto(400, "配送时间有误");
+		}
+		// 地址
+		Address address = addressDao.findOne(req.getAddressId());
+		if (!Validate(address)) {
+			return new SubmitOrderRespDto(400, "地址有误");
+		}
+		
+		// 购物车
+		CartRespDto cartRespDto = cartService.getCart(req.getUserId(), req.getOpenId(), req.getCityId(), req.getStoreId());
+		if (cartRespDto.getPackageList().size() == 0) {
+			return new SubmitOrderRespDto(400, "购物车是空的");
+		}
+		// 校验库存
+		for (PackageRespDto p: cartRespDto.getPackageList()) {
+			for (CartGoodsRespDto g: p.getGoodsList()) {
+				if (g.getAmount() > g.getStock()) {
+					return new SubmitOrderRespDto(400, "部分商品库存不足");
+				}
+				if (g.getOverdue() == 1) {
+					return new SubmitOrderRespDto(400, "部分商品预售时间已过");
+				}
+			}
+		}
+		// TODO 通过会员接口，获取会员信息
+		
+		
+		
+		return null;
+	}
 	
+	private boolean Validate(Address address) {
+		if (address == null) {
+			return false;
+		}
+		if (StringUtils.isEmpty(address.getConsignee()) || 
+				address.getRegionId() <= 0 ||
+				StringUtils.isEmpty(address.getRegionName()) ||
+				StringUtils.isEmpty(address.getAddress()) ||
+				StringUtils.isEmpty(address.getPhoneMob())) {
+			return false;
+		}
+			
+		return true;
+	}
+
 	private int getOutId(CoupRule coupRule) {
 		String[] strs = coupRule.getOutId().split(",");
 		if (strs.length > 0) {

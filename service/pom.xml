@@ -38,6 +38,12 @@
 		<version>0.1.0-SNAPSHOT</version>
 	</dependency>
   	
+  	<!-- Joda Time -->
+	<dependency>
+		<groupId>joda-time</groupId>
+		<artifactId>joda-time</artifactId>
+	</dependency>
+	
     <!-- dubbo-ext -->
   	<dependency>
       	<groupId>com.serverstarted</groupId>
