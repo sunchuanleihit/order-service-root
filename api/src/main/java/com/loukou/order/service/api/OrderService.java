@@ -55,8 +55,8 @@ public interface OrderService {
 	 * @param isVcount 1:是，2:否
 	 * @return
 	 */
-	public AbstractPayOrderRespDto payOrder(int userId, int payType, int paymentId, String orderSnMain, 
-			int isTaoxinka, int isVcount);
+//	public AbstractPayOrderRespDto payOrder(int userId, int payType, int paymentId, String orderSnMain, 
+//			int isTaoxinka, int isVcount);
 	/**
 	 * 
 	 * @param userId 用户ID
