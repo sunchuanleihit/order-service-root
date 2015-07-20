@@ -171,8 +171,17 @@ public class VAcountPay {
 	private boolean payVaccount(int userId, String orderSnMain,
 			List<OrderModels> allModels, ResponseCodeDto response) {
 
+		List<Order> orders = orderDao.findByOrderSnMain(orderSnMain);
 		// 计算需要支付的总额
 		double toPay = 0;
+		
+		for(Order order : orders) {
+			if(order.getPayId() == PaymentEnum.PAY_VACOUNT.getId()) {
+				toPay = DoubleUtils.add(order.getGoodsAmount(), toPay);
+				toPay = DoubleUtils.add(toPay, order.getShippingFee());
+			}
+		}
+		
 		for (OrderModels model : allModels) {
 			OrderPay vaPay = model.findPay(PaymentEnum.PAY_VACOUNT);
 			if (vaPay != null && vaPay.getMoney() > 0) {
