@@ -13,5 +13,6 @@ public class OrderReqParams {
 	public final static String PACKAGE = "Sign=WXPay";
 	
 	public final static String WEIXIN_PAY_URL = "https://api.mch.weixin.qq.com/pay/unifiedorder";
+	public final static int NONCESTR_LENGTH = 32;
 	
 }

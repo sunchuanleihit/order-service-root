@@ -1,103 +1,155 @@
 package com.loukou.order.service.impl;
 
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import com.loukou.order.service.dao.MemberDao;
+import com.loukou.order.service.dao.OrderActionDao;
+import com.loukou.order.service.dao.OrderDao;
+import com.loukou.order.service.dao.OrderPayDao;
+import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderPay;
 import com.loukou.order.service.enums.OrderPayStatusEnum;
+import com.loukou.order.service.enums.PayStatusEnum;
 import com.loukou.order.service.enums.PaymentEnum;
-import com.loukou.order.service.impl.VAcountPay.OrderModels;
-import com.loukou.order.service.req.dto.PayOrderReqContent;
-import com.loukou.order.service.resp.dto.ResponseCodeDto;
 import com.loukou.order.service.util.DoubleUtils;
 import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
 import com.loukou.pos.client.txk.req.TxkCardPayRespVO;
+import com.loukou.pos.client.vaccount.processor.VirtualAccountProcessor;
 
 public class TXKPay {
+
 	private final Logger logger = Logger.getLogger(this.getClass());
+
+	@Autowired
+	private MemberDao memberDao;
 	
-	// 对订单进行淘心卡支付
-	private boolean payTxk(String orderSnMain, PayOrderReqContent orderDto,
-			List<OrderModels> allModels, ResponseCodeDto response) {
-		// 计算总额
+	@Autowired
+	private OrderDao orderDao;
+
+	@Autowired
+	private OrderPayDao orderPayDao;
+
+	@Autowired
+	private OrderActionDao orderActionDao;
+
+	// 对订单进行taoxinka支付
+	public boolean payTXK(int userId, String orderSnMain, List<OrderModels> allModels) {
+		boolean needToPay = false;
+		// 计算需要支付的总额
 		double toPay = 0;
+		List<Order> orders = orderDao.findByOrderSnMain(orderSnMain);
+		for(Order order : orders) {
+		//	if(order.getPayId() == PaymentEnum.PAY_VACOUNT.getId()) {
+				toPay = DoubleUtils.add(order.getGoodsAmount(), toPay);
+				toPay = DoubleUtils.add(toPay, order.getShippingFee());
+		//	}
+		}
+		double payedMoney = 0;
 		for (OrderModels model : allModels) {
-			OrderPay txkPay = model.findPay(PaymentEnum.PAY_TXK);
-			if (txkPay != null && txkPay.getMoney() > 0) {
-				toPay = DoubleUtils.add(txkPay.getMoney(), toPay);
+			for(OrderPay pay : model.getPays()) {
+				if(StringUtils.equals(pay.getStatus(), OrderPayStatusEnum.STATUS_SUCC.getStatus())) {
+					payedMoney = DoubleUtils.add(pay.getMoney(), toPay);
+				}
 			}
 		}
+		toPay = DoubleUtils.sub(toPay, payedMoney);
 		if (toPay == 0) {
-			return true;
+			needToPay = false;
+			return needToPay;
 		}
-		// 完成支付
-		double allPaid = makeTxkPay(orderSnMain, toPay, orderDto.getUserId(),
-				StringUtils.trim(orderDto.getUserName()), true, response);
-		if (response.getCode() != 200) {
-			return false;
-		}
-		// 更新订单和支付记录状态
+
+		// 支付主订单, orderId=0
+		double paid = makeTXKPay(userId, toPay, 0, orderSnMain, true);
+		
+		// 把成功支付的金额分配到各子单
+		double left = paid;
+		
 		for (OrderModels model : allModels) {
-			OrderPay txkPay = model.findPay(PaymentEnum.PAY_TXK);
-			double txkToPay = (txkPay != null ? txkPay.getMoney() : 0);
-			if (txkToPay == 0) {
+			// 确定需要支付金额和可以支付金额
+			//子订单需要支付的金额
+			double oneToPay = DoubleUtils.add(model.getOrder().getGoodsAmount(), model.getOrder().getShippingFee());
+			if (oneToPay == 0) {
 				continue;
 			}
-			// 实际可支付
-			double paid = (allPaid > txkToPay ? txkToPay : allPaid);
-			allPaid = DoubleUtils.sub(allPaid, paid);
-			// 按实际支付记录
-			if (paid > 0) {
-				// txk支付
-				txkPay.setMoney(paid);
-				txkPay.setStatus(OrderPayStatusEnum.STATUS_SUCC.getStatus());
+			
+			if(left >= oneToPay) {
+				updateOrderPayed(model.getOrder().getOrderId(), oneToPay, PayStatusEnum.STATUS_PAYED.getId());
 			} else {
-				txkPay.setStatus(OrderPayStatusEnum.STATUS_CANCEL.getStatus());
+				updateOrderPayed(model.getOrder().getOrderId(), oneToPay, PayStatusEnum.STATUS_PART_PAYED.getId());
 			}
-			if (txkToPay > paid) {
-				// 取消txk支付并转移到现金支付
-				OrderPay cashPay = model.findOrCreatePay(PaymentEnum.PAY_CASH);
-				cashPay.setMoney(DoubleUtils.add(cashPay.getMoney(),
-						DoubleUtils.sub(txkToPay, paid)));
+			double onePaid = (left > oneToPay ? oneToPay : left);
+			// 更新余额
+			left = DoubleUtils.sub(left, onePaid);
+			if (onePaid > 0) {
+				// 支付成功，起码是部分成功
+				insertOrderPay(onePaid, OrderPayStatusEnum.STATUS_SUCC.getStatus(), model.getOrder().getOrderId(), 
+						orderSnMain, PaymentEnum.PAY_TXK.getId());
+			} else {
+				// 支付失败
+				insertOrderPay(onePaid, OrderPayStatusEnum.STATUS_CANCEL.getStatus(), model.getOrder().getOrderId(), 
+						orderSnMain, PaymentEnum.PAY_TXK.getId());
+				needToPay = true;
+				return needToPay;
 			}
 		}
-		return true;
+		return needToPay;
+	}
+	
+	private Order updateOrderPayed(int orderId, double payedMoney, int status) {
+		
+		return orderDao.updateOrderPayedAndStatus(orderId, payedMoney, status);
 	}
 
-	private double makeTxkPay(String orderSnMain, double amount, int userId,
-			String userName, boolean trySufficient, ResponseCodeDto response) {
+	//插入一条新的orderPay记录
+	private OrderPay insertOrderPay(double onePaid, String status, int orderId, String orderSnMain, int paymentId) {
+		OrderPay vaPay = new OrderPay();
+		vaPay.setMoney(onePaid);
+		vaPay.setStatus(status);
+		vaPay.setOrderId(orderId);
+		vaPay.setOrderSnMain(orderSnMain);
+		vaPay.setPaymentId(paymentId);
+		vaPay.setPayTime(new Date().getTime() / 1000);
+		return orderPayDao.save(vaPay);
+	}
+	
+	private double makeTXKPay(int userId, double amount, int orderId,
+			String orderSnMain, boolean trySufficient) {
 		double paid = 0;
-		TxkCardPayRespVO resp = AccountTxkProcessor.getProcessor().consume(
-				orderSnMain, amount, userId, userName);
-		if (resp != null && resp.isSuccess()) {
-			paid = amount;
-			logger.info(String.format(
-					"makeTxkPay done order[%s] user[%d] amount[%f]",
-					orderSnMain, userId, amount));
-		} else if (trySufficient) {
-			double sufficient = AccountTxkProcessor.getProcessor()
-					.getTxkBalanceByUserId(userId);
-			if (sufficient > 0 && sufficient < amount) { // 因為返回null不一定是錢不夠，所以只有錢的確不夠才打日誌
+		
+		TxkCardPayRespVO resp = AccountTxkProcessor.getProcessor()
+				.consume(orderSnMain,  amount, userId, memberDao.findOne(userId).getUserName());
+		if (resp != null) {
+			if (resp != null && resp.isSuccess()) {
+				paid = amount;
+				logger.info(String.format(
+						"makeTXKPay done order[%s] user[%d] amount[%f]",
+						orderSnMain, userId, amount));
+			} else if (trySufficient) {
+				double balance = VirtualAccountProcessor.getProcessor()
+						.getVirtualBalanceByUserId(userId);
 				logger.info(String
-						.format("makeVaccountPay insufficient order[%s] user[%d] amount[%f] available[%f]",
-								orderSnMain, userId, amount, sufficient));
-			}
-			double toPay = Math.min(sufficient, amount);
-			if (toPay > 0) {
-				return makeTxkPay(orderSnMain, toPay, userId, userName, false,
-						response);
-			} else {
-				response.setCode(500);
-				response.setDesc("淘心卡扣款失败");
+						.format("makeTXKPay insufficient order[%s] user[%d] amount[%f] available[%f]",
+								orderSnMain, userId, amount, balance));
+				if (balance > 0) {
+					return makeTXKPay(userId, balance, orderId, orderSnMain,
+							false);
+				} else {
+					logger.info(String.format(
+							"amount balance zero order[%s] user[%d]",
+							orderSnMain, userId));
+				}
 			}
 		} else {
-			response.setCode(500);
-			response.setDesc("淘心卡扣款失败");
+			logger.info(String.format(
+					"failed to pay order[%s] user[%d]",
+					orderSnMain, userId));
 		}
 		return paid;
 	}
-
 
 }

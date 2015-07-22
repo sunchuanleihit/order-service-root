@@ -1,5 +1,6 @@
 package com.loukou.order.service.req.dto;
 
+
 public class XmlParamsDto {
 
 	private String body;
@@ -11,7 +12,7 @@ public class XmlParamsDto {
 	private String mchId;
 	private String nonceStr;
 	private String sign;
-
+	
 	public String getBody() {
 		return body;
 	}
