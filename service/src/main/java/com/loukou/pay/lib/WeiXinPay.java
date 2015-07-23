@@ -1,7 +1,6 @@
 package com.loukou.pay.lib;
 
 import java.util.Date;
-import java.util.List;
 
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -11,13 +10,10 @@ import org.springframework.util.DigestUtils;
 
 import com.loukou.order.service.constants.OrderReqParams;
 import com.loukou.order.service.dao.OrderDao;
-import com.loukou.order.service.entity.OrderPay;
-import com.loukou.order.service.enums.OrderPayStatusEnum;
-import com.loukou.order.service.impl.OrderModels;
 import com.loukou.order.service.req.dto.WeiXinParamsDto;
-import com.loukou.order.service.util.DoubleUtils;
 import com.loukou.order.weixin.pay.processor.WeiXinPayProcessor;
 import com.loukou.order.weixin.pay.resp.WeiXinPayRespVO;
+import com.loukou.pay.service.common.PayReqContent;
 
 public class WeiXinPay {
 	private final Logger logger = Logger.getLogger(this.getClass());
@@ -27,29 +23,11 @@ public class WeiXinPay {
 	
 	
 	// 对订单进行微信支付
-	public boolean pay(String orderSnMain, List<OrderModels> allModels) {
-		boolean needToPay = true; 
+	public PayReqContent pay(PayReqContent content) {
 		WeiXinParamsDto weiXinParamsDto = new WeiXinParamsDto();
 		// 计算总额
-		double toPay = 0; 
-		for(OrderModels orderModels : allModels) {
-			toPay = DoubleUtils.add(orderModels.getOrder().getGoodsAmount(), toPay);
-			toPay = DoubleUtils.add(toPay, orderModels.getOrder().getShippingFee());
-		}
-		double payedMoney = 0;
-		for (OrderModels model : allModels) {
-			for(OrderPay pay : model.getPays()) {
-				if(StringUtils.equals(pay.getStatus(), OrderPayStatusEnum.STATUS_SUCC.getStatus())) {
-					payedMoney = DoubleUtils.add(pay.getMoney(), toPay);
-				}
-			}
-		}
-	
-		toPay = DoubleUtils.sub(toPay, payedMoney);
-		if (toPay == 0) {
-			needToPay = false;
-			return needToPay;
-		}
+		double toPay = content.getNeedToPay(); 
+		
 		weiXinParamsDto.setAppid(OrderReqParams.APPID);
 		weiXinParamsDto.setPartnerid(OrderReqParams.MCHID);
 		weiXinParamsDto.setPrepayid(getPrepayId());
@@ -61,17 +39,17 @@ public class WeiXinPay {
 		weiXinParamsDto.setNeedToPay(toPay);
 		
 		//call weixin httpClient, totlfee只能为整数，单位为分
-		WeiXinPayRespVO resp = WeiXinPayProcessor.getProcessor().pay(orderSnMain, (int)(toPay * 100), 
+		WeiXinPayRespVO resp = WeiXinPayProcessor.getProcessor().pay(content.getOrderSnMain(), (int)(toPay * 100), 
 				createNoncestr(OrderReqParams.NONCESTR_LENGTH), 
 				getSign(OrderReqParams.APPID, OrderReqParams.MCHID, 
 						getPrepayId(), OrderReqParams.PACKAGE, createNoncestr(OrderReqParams.NONCESTR_LENGTH)));
 		if(StringUtils.equals(resp.getReturnCode(), "SUCCESS")) {
 			if(StringUtils.equals(resp.getResultCode(), "SUCCESS")) {
-				needToPay = false;
+				content.setNeedToPay(0);//支付完成，将还需要支付的金额设置为0
 			}
 		}
 		
-		return needToPay;
+		return content;
 	}
 	
 	private String getSign(String appid, String partnerid, String prepayid, String packageStr, String noncestr) {
@@ -96,34 +74,5 @@ public class WeiXinPay {
 	private String createNoncestr(int length) {
 		return RandomStringUtils.random(length, "abcdefghijklmnopqrstuvwxyz0123456789");
 	}
-	
-	
-//	private String  xml(XmlParamsDto xmlDto) {
-//		StringBuilder xml = new StringBuilder();
-//		xml.append("<xml>");
-//		xml.append("<").append("appid").append("><![CDATA[").append(xmlDto.getAppid()).append("]]></")
-//			.append("appid").append(">");
-//		xml.append("<").append("body").append("><![CDATA[").append(xmlDto.getBody()).append("]]></")
-//		.append("body").append(">");
-//		xml.append("<").append("mchid").append("><![CDATA[").append(xmlDto.getMchId()).append("]]></")
-//		.append("mchid").append(">");
-//		xml.append("<").append("noncestr").append("><![CDATA[").append(xmlDto.getNonceStr()).append("]]></")
-//		.append("noncestr").append(">");
-//		xml.append("<").append("notifyUrl").append("><![CDATA[").append(xmlDto.getNotifyUrl()).append("]]></")
-//		.append("notifyUrl").append(">");
-//		xml.append("<").append("outTradeNo").append("><![CDATA[").append(xmlDto.getOutTradeNo()).append("]]></")
-//		.append("outTradeNo").append(">");
-//		xml.append("<").append("sign").append("><![CDATA[").append(xmlDto.getSign()).append("]]></")
-//		.append("sign").append(">");
-//		xml.append("<").append("tradeType").append("><![CDATA[").append(xmlDto.getTradeType()).append("]]></")
-//		.append("tradeType").append(">");
-//		xml.append("<").append("totalFee").append(">").append(xmlDto.getTotalFee()).append("</")
-//		.append("totalFee").append(">");
-//		
-//		xml.append("</xml>");
-//		
-//		return xml.toString();
-//	}
-	
 	
 }

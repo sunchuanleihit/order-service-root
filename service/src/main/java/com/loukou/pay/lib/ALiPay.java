@@ -2,7 +2,6 @@ package com.loukou.pay.lib;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.List;
 import java.util.Random;
 
 import org.apache.commons.lang3.StringUtils;
@@ -14,7 +13,7 @@ import com.loukou.order.service.constants.OrderReqParams;
 import com.loukou.order.service.dao.OrderPaySignDao;
 import com.loukou.order.service.entity.OrderPaySign;
 import com.loukou.order.service.enums.PaySignStatusEnum;
-import com.loukou.order.service.impl.OrderModels;
+import com.loukou.pay.service.common.PayReqContent;
 
 public class ALiPay {
 	private final Logger logger = Logger.getLogger(this.getClass());
@@ -23,7 +22,7 @@ public class ALiPay {
 	private OrderPaySignDao orderPaySignDao;
 	
 	// 对订单进行支付宝支付
-	public boolean pay(String orderSnMain, List<OrderModels> allModels) {
+	public boolean pay(PayReqContent content) {
 		boolean needToPay = false;
 		
 		return needToPay;

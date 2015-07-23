@@ -1,6 +1,5 @@
 package com.loukou.order.service.req.dto;
 
-import java.sql.Timestamp;
 
 public class WeiXinParamsDto {
 	private String appid;
