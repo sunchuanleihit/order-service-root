@@ -7,7 +7,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "tcz_store")
+@Table(name = "tcz_express")
 public class Express {
 
 	@Id
@@ -16,10 +16,10 @@ public class Express {
 	private int eid;
 
 	@Column(name = "code_num")
-	private String codeNum = "";
+	private String codeNum = "";//快递公司代码
 
 	@Column(name = "express_name")
-	private String expressName = "";
+	private String expressName = "";//快递公司名称
 
 	public int getEid() {
 		return eid;

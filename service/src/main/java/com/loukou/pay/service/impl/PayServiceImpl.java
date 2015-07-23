@@ -1,15 +1,13 @@
-package com.loukou.order.service.impl;
+package com.loukou.pay.service.impl;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.DigestUtils;
 
 import com.loukou.order.service.api.PayService;
 import com.loukou.order.service.constants.OrderReqParams;
@@ -24,14 +22,15 @@ import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderPay;
 import com.loukou.order.service.entity.TczcountRecharge;
-import com.loukou.order.service.enums.OrderPayStatusEnum;
+import com.loukou.order.service.enums.OrderPayTypeEnum;
 import com.loukou.order.service.enums.PaymentEnum;
+import com.loukou.order.service.impl.OrderModels;
 import com.loukou.order.service.req.dto.XmlParamsDto;
 import com.loukou.order.service.resp.dto.AbstractPayOrderRespDto;
-import com.loukou.order.service.util.DoubleUtils;
-import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
-import com.loukou.pos.client.txk.req.TxkCardRowRespVO;
-import com.loukou.pos.client.txk.req.TxkMemberCardsRespVO;
+import com.loukou.pay.lib.ALiPay;
+import com.loukou.pay.lib.TXKPay;
+import com.loukou.pay.lib.VAcountPay;
+import com.loukou.pay.lib.WeiXinPay;
 
 public class PayServiceImpl implements PayService {
 	
@@ -73,7 +72,7 @@ public class PayServiceImpl implements PayService {
 			return resp;
 		}
 		if(payType <= 0) {
-			payType = 2;//支付类别 1货到付款2在线支付
+			payType = OrderPayTypeEnum.TYPE_ONLINE.getId();//支付类别 1货到付款2在线支付
 		}
 		if(isTaoxinka <= 0) {
 			isTaoxinka = 0;//是否使用淘心卡 1是 0否
@@ -100,18 +99,16 @@ public class PayServiceImpl implements PayService {
 			if(payType == PaymentEnum.PAY_ALI.getId() && needToPay == true) {
 				ALiPay aLiPay = new ALiPay();
 				
-				aLiPay.pay(orderSnMain, fillOrderModels(orderSnMain));
+				needToPay = aLiPay.pay(orderSnMain, fillOrderModels(orderSnMain));
 			}
+			
 			if(payType == PaymentEnum.PAY_APP_WEIXIN.getId() && needToPay == true) {
 				WeiXinPay weiXinPay = new WeiXinPay();
-				weiXinPay.pay(orderSnMain, fillOrderModels(orderSnMain));
+				needToPay = weiXinPay.pay(orderSnMain, fillOrderModels(orderSnMain));
 			}
-//			submitBillPayment(userId, payType, paymentId, orderSnMain, isTaoxinka, isVcount);
 		}
 		
 		
-		
-	       
 		return resp;
 	}
 
@@ -173,7 +170,7 @@ public class PayServiceImpl implements PayService {
 			//paymentId 4支付宝 207微信支付
 			if(paymentId == PaymentEnum.PAY_APP_WEIXIN.getId()) {
 				WeiXinPay weiXinPay = new WeiXinPay();
-//				weiXinPay.pay(orderSnMain, xmlParamsDto, allModels, response);
+//				weiXinPay.pay(orderSnMain, xmlParamsDto, fillOrderModels(orderSnMain));
 			} else if(paymentId == PaymentEnum.PAY_ALI.getId()) {
 				
 			}

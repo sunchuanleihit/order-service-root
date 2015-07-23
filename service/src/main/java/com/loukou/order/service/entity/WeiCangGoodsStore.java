@@ -1,6 +1,5 @@
 package com.loukou.order.service.entity;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -9,9 +8,14 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+/**
+ * 每个微仓销售的商品及库存
+ * @author laphi
+ *
+ */
 @Entity
 @Table(name = "lk_wh_goods_store")
-public class LkWhGoodsStore {
+public class WeiCangGoodsStore {
 
 	@Id
 	@GeneratedValue

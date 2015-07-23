@@ -41,9 +41,9 @@ public interface OrderService {
 	 * 
 	 * @param userId
 	 * @param orderSnMain
-	 * @return 取消订单
+	 * @return 取消订单（用户app接口，暂搁置不用）
 	 */
-	public OrderCancelRespDto cancelOrder(int userId, String orderSnMain);
+//	public OrderCancelRespDto cancelOrder(int userId, String orderSnMain);
 
 	/**
 	 * 

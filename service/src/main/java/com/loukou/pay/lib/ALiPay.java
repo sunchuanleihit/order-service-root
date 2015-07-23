@@ -1,4 +1,4 @@
-package com.loukou.order.service.impl;
+package com.loukou.pay.lib;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -14,6 +14,7 @@ import com.loukou.order.service.constants.OrderReqParams;
 import com.loukou.order.service.dao.OrderPaySignDao;
 import com.loukou.order.service.entity.OrderPaySign;
 import com.loukou.order.service.enums.PaySignStatusEnum;
+import com.loukou.order.service.impl.OrderModels;
 
 public class ALiPay {
 	private final Logger logger = Logger.getLogger(this.getClass());

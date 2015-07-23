@@ -6,12 +6,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.loukou.order.service.entity.LkWhGoodsStore;
+import com.loukou.order.service.entity.WeiCangGoodsStore;
 
 
-public interface LkWhGoodsStoreDao extends PagingAndSortingRepository<LkWhGoodsStore, Integer>{
+public interface LkWhGoodsStoreDao extends PagingAndSortingRepository<WeiCangGoodsStore, Integer>{
 
-	LkWhGoodsStore findBySpecIdAndStoreId(int specId, int sellerId);
+	WeiCangGoodsStore findBySpecIdAndStoreId(int specId, int sellerId);
 
 	@Transactional(value = "transactionManagerMall")
 	@Modifying

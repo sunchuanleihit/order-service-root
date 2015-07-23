@@ -1,6 +1,6 @@
 package com.loukou.order.service.req.dto;
 
-
+//微信req参数
 public class XmlParamsDto {
 
 	private String body;
