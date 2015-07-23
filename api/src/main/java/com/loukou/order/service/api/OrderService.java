@@ -2,12 +2,16 @@ package com.loukou.order.service.api;
 
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
+<<<<<<< HEAD
 import com.loukou.order.service.resp.dto.OrderCancelRespDto;
+=======
+import com.loukou.order.service.resp.dto.OResponseDto;
+import com.loukou.order.service.resp.dto.OrderInfoDto;
+>>>>>>> add
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
-import com.loukou.order.service.resp.dto.ResponseDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
@@ -94,7 +98,7 @@ public interface OrderService {
 	/**
 	 * 
 	 */
-	public  ResponseDto<OrderListResultDto> getOrderInfo(String orderId);
+	public  OResponseDto<OrderInfoDto> getOrderGoodsInfo(String orderId);
 
 	/**
 	 * 生成订单前支付信息页面

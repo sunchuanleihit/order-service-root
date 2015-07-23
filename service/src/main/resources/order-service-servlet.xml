@@ -25,4 +25,5 @@
 	<dubbo:reference id="goodsSpecService" interface="com.serverstarted.goods.service.api.GoodsSpecService" />
 	
 	<dubbo:reference id="cartService"  interface="com.serverstarted.cart.service.api.CartService" />
+<dubbo:service ref="orderService" interface="com.loukou.order.service.api.OrderService"></dubbo:service>
 </beans>
