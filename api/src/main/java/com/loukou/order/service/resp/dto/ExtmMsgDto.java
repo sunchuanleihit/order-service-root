@@ -37,4 +37,9 @@ public class ExtmMsgDto implements Serializable {
 		this.address = address;
 	}
 
+    @Override
+    public String toString() {
+        return "ExtmMsgDto [consignee=" + consignee + ", phone_mob=" + phone_mob + ", address=" + address + "]";
+    }
+
 }
