@@ -8,11 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.loukou.order.service.api.PayService;
 import com.loukou.order.service.dao.MemberDao;
-import com.loukou.order.service.dao.OrderActionDao;
-import com.loukou.order.service.dao.OrderDao;
-import com.loukou.order.service.dao.OrderPayDao;
-import com.loukou.order.service.dao.OrderPaySignDao;
-import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.TczcountRechargeDao;
 import com.loukou.order.service.entity.Member;
 import com.loukou.order.service.entity.OrderAction;
@@ -37,20 +32,7 @@ public class PayServiceImpl implements PayService {
 	@Autowired
 	private TczcountRechargeDao tczcountRechargeDao;
 
-	@Autowired
-	private PaymentDao paymentDao;
-
-	@Autowired
-	private OrderActionDao orderActionDao;
-
-	@Autowired
-	private OrderDao orderDao;
-
-	@Autowired
-	private OrderPayDao orderPayDao;
-
-	@Autowired
-	private OrderPaySignDao orderPaySignDao;
+	
 
 	/**
 	 * "userId": 1//用户ID "payType":1//支付类别 1货到付款2在线支付 "paymentId": 1//支付类别 4支付宝
@@ -144,7 +126,7 @@ public class PayServiceImpl implements PayService {
 		orderAction.setActor(member.getUserName());
 		orderAction.setActionTime(new Date());
 		orderAction.setNotes("选择支付方式" + payType);
-		orderActionDao.save(orderAction);
+//		orderActionDao.save(orderAction);
 
 		// 订单总金额
 		TczcountRecharge tczcountRecharge = tczcountRechargeDao
