@@ -74,6 +74,8 @@ import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.CouponListResultDto;
 import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
+import com.loukou.order.service.resp.dto.OResponseDto;
+import com.loukou.order.service.resp.dto.OrderInfoDto;
 import com.loukou.order.service.resp.dto.OrderListBaseDto;
 import com.loukou.order.service.resp.dto.OrderListDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
@@ -81,7 +83,6 @@ import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
-import com.loukou.order.service.resp.dto.ResponseDto;
 import com.loukou.order.service.resp.dto.ShareDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShareResultDto;
@@ -1720,29 +1721,39 @@ public class OrderServiceImpl implements OrderService {
 		return resp;
 	}
     @Override
-    public ResponseDto<OrderListResultDto> getOrderInfo(String orderNo) {
-        List<Order> orders = orderDao.findByOrderSnMain(orderNo);
-        ResponseDto<OrderListResultDto> resultDto = new ResponseDto<OrderListResultDto>();
-        OrderListResultDto orderListResultDto =  new OrderListResultDto();
-        List<OrderListDto> orderListDtos = new ArrayList<OrderListDto>();
+    public OResponseDto<OrderInfoDto> getOrderGoodsInfo(String orderNo) {
+        Order order = orderDao.findByTaoOrderSn(orderNo);
+        OResponseDto<OrderInfoDto> oResultDto = new OResponseDto<OrderInfoDto>();
+        OrderInfoDto orderInfoDto = new OrderInfoDto();
         List<GoodsListDto> goodsListDtos = new ArrayList<GoodsListDto>();
-        if(!CollectionUtils.isEmpty(orders)){
-                for(Order order:orders ){
-                    List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
-                    for(OrderGoods good :goods){
-                        GoodsListDto goodsListDto = new GoodsListDto();
-                        BeanUtils.copyProperties(good, goodsListDto);
-                        goodsListDtos.add(goodsListDto);
-                    }
-                    OrderListDto orderListDto =  new OrderListDto();
-                    orderListDto.setGoodsList(goodsListDtos);
-                    orderListDtos.add(orderListDto);
-                }
+
+        List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
+        for(OrderGoods good :goods){
+            GoodsListDto goodsListDto = new GoodsListDto();
+            BeanUtils.copyProperties(good, goodsListDto);
+            goodsListDtos.add(goodsListDto);
         }
-        orderListResultDto.setOrderList(orderListDtos);
-        resultDto.setCode(200);
-        resultDto.setResult(orderListResultDto);
-        return resultDto;
+        //实际上一个主单只有一个收货人
+        List<OrderExtm> orderExtmList = orderExtmDao.findByOrderSnMain(order.getOrderSnMain());
+        OrderExtm orderExtm = orderExtmList.get(0);
+        
+        //封装收货人等信息
+        ExtmMsgDto extmMsgDto = new ExtmMsgDto();
+        extmMsgDto.setAddress(orderExtm.getAddress());
+        extmMsgDto.setConsignee(orderExtm.getConsignee());
+        extmMsgDto.setPhone_mob(orderExtm.getPhoneMob());
+        
+        orderInfoDto.setAddTime(SDF.format(new Date((long)(order.getAddTime())*1000)));
+        orderInfoDto.setOrderAmount(order.getOrderAmount());
+        orderInfoDto.setOrderNo(order.getTaoOrderSn());
+        orderInfoDto.setOrderStatus(order.getStatus());
+        
+        
+        orderInfoDto.setGoodsListDtos(goodsListDtos);
+        orderInfoDto.setExtmMsgDto(extmMsgDto);
+        oResultDto.setCode(200);
+        oResultDto.setResult(orderInfoDto);
+        return oResultDto;
     }
 
 	

@@ -17,8 +17,9 @@ import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShareResultDto;
 import com.loukou.order.service.resp.dto.ShippingMsgDto;
+import com.loukou.order.service.resp.dto.OrderInfoDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
-import com.loukou.order.service.resp.dto.ResponseDto;
+import com.loukou.order.service.resp.dto.OResponseDto;
 
 public class OrderServiceImpTest extends AbstractTestObject {
 

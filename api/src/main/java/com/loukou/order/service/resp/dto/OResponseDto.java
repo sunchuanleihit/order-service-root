@@ -1,8 +1,8 @@
 package com.loukou.order.service.resp.dto;
 
 import java.io.Serializable;
-
-public class ResponseDto<T> implements Serializable{
+//为了区别与其他API返回的Response,Order命名为Ｏ
+public class OResponseDto<T> implements Serializable{
     /**
      * 
      */
