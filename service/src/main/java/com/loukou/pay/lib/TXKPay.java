@@ -39,7 +39,7 @@ public class TXKPay {
 		double paid = makeTXKPay(content.getUserId(), toPay, 0, content.getOrderSnMain(), true);
 		
 		// 把成功支付的金额分配到各子单 
-		CommonMethod common = new CommonMethod();
+		CommonMethod common = CommonMethod.getCommonMethod();
 		common.distributePayedMoneyToOrder(paid, content);
 		content.setNeedToPay(DoubleUtils.sub(toPay, paid));
 		return content;

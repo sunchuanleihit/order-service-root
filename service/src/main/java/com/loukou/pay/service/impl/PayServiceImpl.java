@@ -1,16 +1,12 @@
 package com.loukou.pay.service.impl;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
 
 import com.loukou.order.service.api.PayService;
-import com.loukou.order.service.constants.OrderReqParams;
 import com.loukou.order.service.dao.MemberDao;
 import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
@@ -19,21 +15,16 @@ import com.loukou.order.service.dao.OrderPaySignDao;
 import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.TczcountRechargeDao;
 import com.loukou.order.service.entity.Member;
-import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
-import com.loukou.order.service.entity.OrderPay;
 import com.loukou.order.service.entity.TczcountRecharge;
-import com.loukou.order.service.enums.OrderPayStatusEnum;
 import com.loukou.order.service.enums.OrderPayTypeEnum;
 import com.loukou.order.service.enums.PaymentEnum;
-import com.loukou.order.service.impl.OrderModels;
-import com.loukou.order.service.req.dto.XmlParamsDto;
 import com.loukou.order.service.resp.dto.AbstractPayOrderRespDto;
-import com.loukou.order.service.util.DoubleUtils;
 import com.loukou.pay.lib.ALiPay;
 import com.loukou.pay.lib.TXKPay;
 import com.loukou.pay.lib.VAcountPay;
 import com.loukou.pay.lib.WeiXinPay;
+import com.loukou.pay.service.common.CommonMethod;
 import com.loukou.pay.service.common.PayReqContent;
 
 public class PayServiceImpl implements PayService {
@@ -90,7 +81,7 @@ public class PayServiceImpl implements PayService {
 					isTaoxinka, isVcount);
 		} else {
 			
-			PayReqContent content = getPayReqContent(userId, orderSnMain);
+			PayReqContent content = CommonMethod.getCommonMethod().getPayReqContent(userId, orderSnMain);
 			
 			// 检查桃心卡和虚拟账户的余额
 			if (isVcount == 1 && content.getNeedToPay() > 0) {
@@ -114,7 +105,7 @@ public class PayServiceImpl implements PayService {
 				weiXinPay.pay(content);
 			}
 			//TODO
-			if (content.getNeedToPay() > 0) {// 已经支付完成，不需要再支付
+			if (content.getNeedToPay() == 0) {// 已经支付完成，不需要再支付
 				return resp;
 			} else {
 
@@ -124,56 +115,7 @@ public class PayServiceImpl implements PayService {
 		return resp;
 	}
 	
-	private PayReqContent getPayReqContent(int userId, String orderSnMain) {
-		PayReqContent content = new PayReqContent();
-		content.setUserId(userId);
-		List<OrderModels> orderModelsList = fillOrderModels(orderSnMain);
-		content.setAllModels(orderModelsList);
-		content.setNeedToPay(getTotalFee(orderModelsList));
-		content.setOrderSnMain(orderSnMain);
-		return content;
-	}
-
-	private double getTotalFee(List<OrderModels> orderModelsList) {
-		// 计算需要支付的总额
-		double toPay = 0;
-		for (OrderModels orderModels : orderModelsList) {
-			toPay = DoubleUtils.add(orderModels.getOrder().getGoodsAmount(),
-					toPay);
-			toPay = DoubleUtils.add(toPay, orderModels.getOrder()
-					.getShippingFee());
-		}
-		double payedMoney = 0;
-		for (OrderModels model : orderModelsList) {
-			for (OrderPay pay : model.getPays()) {
-				if (StringUtils.equals(pay.getStatus(),
-						OrderPayStatusEnum.STATUS_SUCC.getStatus())) {
-					payedMoney = DoubleUtils.add(pay.getMoney(), toPay);
-				}
-			}
-		}
-		toPay = DoubleUtils.sub(toPay, payedMoney);
-		return toPay;
-	}
-
-	private List<OrderModels> fillOrderModels(String orderSnMain) {
-		List<OrderModels> orderModelsList = new ArrayList<OrderModels>();
-		List<Order> orders = orderDao.findByOrderSnMain(orderSnMain);
-		if (CollectionUtils.isEmpty(orders)) {
-			return null;
-		}
-		for (Order order : orders) {
-			OrderModels orderModels = new OrderModels();
-			orderModels.setOrder(order);
-			List<OrderPay> orderPayList = orderPayDao.findByOrderId(order
-					.getOrderId());
-			orderModels.setPays(orderPayList);
-			orderModelsList.add(orderModels);
-		}
-
-		return orderModelsList;
-	}
-
+	
 	
 	// 提交支付方式(虚拟充值专用)
 	/*
@@ -209,13 +151,13 @@ public class PayServiceImpl implements PayService {
 				.findByOrderSnMain(orderSnMain);
 		// 订单类别：material=普通商品,booking=预售商品,self_sales=第三方商家
 		double needToPay = tczcountRecharge.getMoney();// 还需要支付的金额
-		XmlParamsDto xmlParamsDto = new XmlParamsDto();
-		xmlParamsDto.setAppid(OrderReqParams.APPID);
-		xmlParamsDto.setMchId(OrderReqParams.MCHID);
-		// xmlParamsDto.setNonceStr(createNoncestr(32));//32位
-		xmlParamsDto.setNotifyUrl(OrderReqParams.NOTIFY_URL);
-		xmlParamsDto.setBody("订单号:" + orderSnMain);// 商品描述
-		xmlParamsDto.setOutTradeNo(orderSnMain);
+//		XmlParamsDto xmlParamsDto = new XmlParamsDto();
+//		xmlParamsDto.setAppid(OrderReqParams.APPID);
+//		xmlParamsDto.setMchId(OrderReqParams.MCHID);
+//		// xmlParamsDto.setNonceStr(createNoncestr(32));//32位
+//		xmlParamsDto.setNotifyUrl(OrderReqParams.NOTIFY_URL);
+//		xmlParamsDto.setBody("订单号:" + orderSnMain);// 商品描述
+//		xmlParamsDto.setOutTradeNo(orderSnMain);
 		// xmlParamsDto.setTotalFee(totalFee);
 		if (needToPay > 0) {
 			// paymentId 4支付宝 207微信支付
