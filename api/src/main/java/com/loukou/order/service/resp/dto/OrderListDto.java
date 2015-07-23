@@ -47,4 +47,10 @@ public class OrderListDto implements Serializable {
 		this.extmMsg = extmMsg;
 	}
 
+    @Override
+    public String toString() {
+        return "OrderListDto [base=" + base + ", shippingmsg=" + shippingmsg + ", goodsList=" + goodsList
+                + ", extmMsg=" + extmMsg + "]";
+    }
+
 }

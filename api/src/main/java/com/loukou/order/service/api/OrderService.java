@@ -4,7 +4,9 @@ import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
+import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
+import com.loukou.order.service.resp.dto.ResponseDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShippingResultDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
@@ -81,6 +83,11 @@ public interface OrderService {
 	 * @return 下单后分享
 	 */
 	public ShareRespDto shareAfterPay(String orderSnMain);
+	
+	/**
+	 * 
+	 */
+	public  ResponseDto<OrderListResultDto> getOrderInfo(String orderId);
 
 	/**
 	 * 生成订单前支付信息页面

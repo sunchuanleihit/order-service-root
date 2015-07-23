@@ -27,4 +27,9 @@ public class ShippingMsgDto implements Serializable {
 		this.creatTime = creatTime;
 	}
 
+    @Override
+    public String toString() {
+        return "ShippingMsgDto [description=" + description + ", creatTime=" + creatTime + "]";
+    }
+
 }

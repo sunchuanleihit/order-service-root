@@ -81,6 +81,7 @@ import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
+import com.loukou.order.service.resp.dto.ResponseDto;
 import com.loukou.order.service.resp.dto.ShareDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShareResultDto;
@@ -168,7 +169,7 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired 
 	private WeiCangGoodsStoreDao lkWhGoodsStoreDao;
 	
-	@Autowired 
+	@Autowired(required=false)
 	private CartService cartService;
 
 	@Autowired 
@@ -1718,5 +1719,33 @@ public class OrderServiceImpl implements OrderService {
 
 		return resp;
 	}
+    @Override
+    public ResponseDto<OrderListResultDto> getOrderInfo(String orderNo) {
+        List<Order> orders = orderDao.findByOrderSnMain(orderNo);
+        ResponseDto<OrderListResultDto> resultDto = new ResponseDto<OrderListResultDto>();
+        OrderListResultDto orderListResultDto =  new OrderListResultDto();
+        List<OrderListDto> orderListDtos = new ArrayList<OrderListDto>();
+        List<GoodsListDto> goodsListDtos = new ArrayList<GoodsListDto>();
+        if(!CollectionUtils.isEmpty(orders)){
+                for(Order order:orders ){
+                    List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
+                    for(OrderGoods good :goods){
+                        GoodsListDto goodsListDto = new GoodsListDto();
+                        BeanUtils.copyProperties(good, goodsListDto);
+                        goodsListDtos.add(goodsListDto);
+                    }
+                    OrderListDto orderListDto =  new OrderListDto();
+                    orderListDto.setGoodsList(goodsListDtos);
+                    orderListDtos.add(orderListDto);
+                }
+        }
+        orderListResultDto.setOrderList(orderListDtos);
+        resultDto.setCode(200);
+        resultDto.setResult(orderListResultDto);
+        return resultDto;
+    }
+
+	
+	
 
 }

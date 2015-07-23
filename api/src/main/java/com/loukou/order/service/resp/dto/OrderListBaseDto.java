@@ -251,4 +251,17 @@ public class OrderListBaseDto implements Serializable {
 		this.isOrder = isOrder;
 	}
 
+    @Override
+    public String toString() {
+        return "OrderListBaseDto [orderId=" + orderId + ", orderSnMain=" + orderSnMain + ", sellerId=" + sellerId
+                + ", source=" + source + ", state=" + state + ", addTime=" + addTime + ", payTime=" + payTime
+                + ", shipTime=" + shipTime + ", payStatus=" + payStatus + ", status=" + status + ", taoOrderSn="
+                + taoOrderSn + ", isshouhuo=" + isshouhuo + ", totalPrice=" + totalPrice + ", needPayPrice="
+                + needPayPrice + ", shippingFee=" + shippingFee + ", packageStatus=" + packageStatus + ", shipping="
+                + shipping + ", arrivalCode=" + arrivalCode + ", commentStatus=" + commentStatus + ", storePhone="
+                + storePhone + ", refundStatus=" + refundStatus + ", discount=" + discount + ", shippingtype="
+                + shippingtype + ", payType=" + payType + ", invoiceHeader=" + invoiceHeader + ", postscript="
+                + postscript + ", isOrder=" + isOrder + "]";
+    }
+
 }
