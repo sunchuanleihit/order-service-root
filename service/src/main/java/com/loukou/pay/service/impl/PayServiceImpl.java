@@ -127,7 +127,7 @@ public class PayServiceImpl implements PayService {
 		orderAction.setActionTime(new Date());
 		orderAction.setNotes("选择支付方式" + payType);
 //		orderActionDao.save(orderAction);
-
+//		CommonMethod.getCommonMethod().insertOrderPay(onePaid, status, orderId, orderSnMain, paymentId);
 		// 订单总金额
 		TczcountRecharge tczcountRecharge = tczcountRechargeDao
 				.findByOrderSnMain(orderSnMain);

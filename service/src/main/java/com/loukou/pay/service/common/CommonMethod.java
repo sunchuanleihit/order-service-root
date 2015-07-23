@@ -41,6 +41,7 @@ public class CommonMethod {
 		return commonMethod;
 	}
 
+	//TODO检查部分支付的订单，修改状态
 	public void distributePayedMoneyToOrder(double paid, PayReqContent content) {
 		// 把成功支付的金额分配到各子单
 		double left = paid;
@@ -59,7 +60,7 @@ public class CommonMethod {
 				updateOrderPayed(model.getOrder().getOrderId(), oneToPay,
 						PayStatusEnum.STATUS_PAYED.getId());
 			} else {
-				updateOrderPayed(model.getOrder().getOrderId(), oneToPay,
+				updateOrderPayed(model.getOrder().getOrderId(), left,
 						PayStatusEnum.STATUS_PART_PAYED.getId());
 			}
 			double onePaid = (left > oneToPay ? oneToPay : left);
@@ -128,6 +129,7 @@ public class CommonMethod {
 					toPay);
 			toPay = DoubleUtils.add(toPay, orderModels.getOrder()
 					.getShippingFee());
+			toPay = DoubleUtils.sub(toPay, orderModels.getOrder().getOrderPayed());//减去已部分支付的金额
 		}
 		double payedMoney = 0;
 		for (OrderModels model : orderModelsList) {
