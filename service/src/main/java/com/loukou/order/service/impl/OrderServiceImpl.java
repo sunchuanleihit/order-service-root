@@ -35,7 +35,6 @@ import com.loukou.order.service.dao.CoupTypeDao;
 import com.loukou.order.service.dao.CouponSnDao;
 import com.loukou.order.service.dao.ExpressDao;
 import com.loukou.order.service.dao.GoodsSpecDao;
-import com.loukou.order.service.dao.LkWhGoodsStoreDao;
 import com.loukou.order.service.dao.MemberDao;
 import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
@@ -49,6 +48,7 @@ import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.SiteDao;
 import com.loukou.order.service.dao.StoreDao;
 import com.loukou.order.service.dao.TczcountRechargeDao;
+import com.loukou.order.service.dao.WeiCangGoodsStoreDao;
 import com.loukou.order.service.entity.Address;
 import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupRule;
@@ -164,7 +164,7 @@ public class OrderServiceImpl implements OrderService {
 	private GoodsSpecDao goodsSpecDao;
 	
 	@Autowired 
-	private LkWhGoodsStoreDao lkWhGoodsStoreDao;
+	private WeiCangGoodsStoreDao lkWhGoodsStoreDao;
 	
 	@Autowired 
 	private CartService cartService;

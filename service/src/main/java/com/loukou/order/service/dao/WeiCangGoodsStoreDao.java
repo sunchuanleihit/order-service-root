@@ -9,18 +9,18 @@ import org.springframework.transaction.annotation.Transactional;
 import com.loukou.order.service.entity.WeiCangGoodsStore;
 
 
-public interface LkWhGoodsStoreDao extends PagingAndSortingRepository<WeiCangGoodsStore, Integer>{
+public interface WeiCangGoodsStoreDao extends PagingAndSortingRepository<WeiCangGoodsStore, Integer>{
 
 	WeiCangGoodsStore findBySpecIdAndStoreId(int specId, int sellerId);
 
 	@Transactional(value = "transactionManagerMall")
 	@Modifying
-	@Query("UPDATE LkWhGoodsStore set stockS = stockS - ?3, freezestock=freezestock - ?4 where specId = ?1 and storeId=?2")
+	@Query("UPDATE WeiCangGoodsStore set stockS = stockS - ?3, freezestock=freezestock - ?4 where specId = ?1 and storeId=?2")
 	void updateBySpecIdAndStoreId(int specId, int storeId, int stockS, int freezestock);
 
 	@Transactional(value = "transactionManagerMall")
 	@Modifying
-	@Query("UPDATE LkWhGoodsStore set freezestock=freezestock - ?3 where specId = ?1 and storeId=?2")
+	@Query("UPDATE WeiCangGoodsStore set freezestock=freezestock - ?3 where specId = ?1 and storeId=?2")
 	void updateBySpecIdAndStoreId(int specId, int sellerId, int freezestock);
 
 
