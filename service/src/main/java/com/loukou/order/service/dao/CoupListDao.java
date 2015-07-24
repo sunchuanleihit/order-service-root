@@ -33,4 +33,5 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 	@Modifying
 	@Query("UPDATE CoupList SET ischecked=1, usedTime=NOW() WHERE userId=?1 AND couponId=?2 AND ischecked=0 AND issue=1")
 	int useCoupon(int userId, int couponId);
+
 }

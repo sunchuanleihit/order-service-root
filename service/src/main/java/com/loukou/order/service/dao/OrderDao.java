@@ -49,5 +49,17 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 
 	List<Order> findByBuyerIdAndIsDel(int userId, int isDel);
 
+	@Transactional(value = "transactionManagerMall")
+	@Modifying
+	@Query("UPDATE Order set status = ?2 where orderId = ?1")
+	void updateOrderStatus(int orderId, int status);
+
+	Order findByOrderId(int orderId);
+	
+	@Transactional(value = "transactionManagerMall")
+	@Modifying
+	@Query("UPDATE Order set payStatus = ?3, orderPayed = ?2 where orderId = ?1")
+	Order updateOrderPayedAndStatus(int orderId, double payedMoney, int status);
+
 }
 

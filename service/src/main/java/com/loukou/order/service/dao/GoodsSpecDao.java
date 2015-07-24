@@ -29,4 +29,16 @@ public interface GoodsSpecDao extends PagingAndSortingRepository<GoodsSpec, Inte
 	List<GoodsSpec> findByGoodsId(int goodsId);
 	
 	List<GoodsSpec> findByBn(String bn);
+
+	GoodsSpec findBySpecId(int specId);
+
+	@Transactional(value="transactionManagerMall")
+	@Modifying
+	@Query("UPDATE GoodsSpec SET freezstock=freezstock-?3, taostock=taostock-?2 WHERE specId = ?1")
+	int updateBySpecId(int specId, int taostock, int freezestock);
+
+	@Transactional(value="transactionManagerMall")
+	@Modifying
+	@Query("UPDATE GoodsSpec SET freezstock=freezstock-?2 WHERE specId = ?1")
+	void updateBySpecId(int specId, int quantity);
 }

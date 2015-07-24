@@ -20,7 +20,7 @@ public interface OrderPayDao extends CrudRepository<OrderPay, Integer>{
 	@Query(value="DELETE FROM tcz_order_pay WHERE order_id = ?1 AND status = ?2 ", nativeQuery=true)
 	int deleteByOrderIdAndStatus(int orderId, String status);
 	
-	@Query(value="SELECT SUM(money) FROM tcz_order_pay WHERE order_sn_main = ?1")
+	@Query(value="SELECT SUM(money) FROM tcz_order_pay WHERE order_sn_main = ?1", nativeQuery=true)
 	double getPayedAmountByOrderSnMain(String orderSnMain);
 
 	List<OrderPay> findByOrderSnMainAndStatus(String orderSnMain, String status);
