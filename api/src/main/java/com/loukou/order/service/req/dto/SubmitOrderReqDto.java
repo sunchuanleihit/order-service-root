@@ -14,7 +14,7 @@ public class SubmitOrderReqDto implements Serializable {
 	private int cityId = 0;
 	private int addressId = 0;
 	private ShippingTime shippingTimes = new ShippingTime(); 
-	private String os = "";
+	private String os = "";	//系统版本 21:android，30：ios
 	private int invoiceType = 1;	// 发票类型 1普票 2增票
 	private String invoiceHeader = "";	//发票抬头
 	private String postScript = "";		// 备注

@@ -8,22 +8,25 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
-import org.apache.commons.lang.Validate;
+import javax.annotation.Resource;
+
 import org.apache.commons.lang3.StringUtils;
-import org.codehaus.plexus.util.Os;
+import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
-import com.alibaba.dubbo.remoting.exchange.Request;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.loukou.order.service.api.OrderService;
 import com.loukou.order.service.constants.CouponType;
 import com.loukou.order.service.constants.OS;
+import com.loukou.order.service.constants.OrderPayType;
 import com.loukou.order.service.dao.AddressDao;
 import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupRuleDao;
@@ -34,6 +37,7 @@ import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
 import com.loukou.order.service.dao.OrderExtmDao;
 import com.loukou.order.service.dao.OrderGoodsDao;
+import com.loukou.order.service.dao.OrderLnglatDao;
 import com.loukou.order.service.dao.OrderPayDao;
 import com.loukou.order.service.dao.OrderPayRDao;
 import com.loukou.order.service.dao.OrderReturnDao;
@@ -47,10 +51,13 @@ import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderExtm;
 import com.loukou.order.service.entity.OrderGoods;
+import com.loukou.order.service.entity.OrderLnglat;
 import com.loukou.order.service.entity.OrderPay;
 import com.loukou.order.service.entity.OrderPayR;
 import com.loukou.order.service.entity.OrderReturn;
+import com.loukou.order.service.entity.Site;
 import com.loukou.order.service.entity.Store;
+import com.loukou.order.service.req.dto.SpecShippingTime;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
@@ -67,6 +74,7 @@ import com.loukou.order.service.resp.dto.ShippingListResultDto;
 import com.loukou.order.service.resp.dto.ShippingMsgDto;
 import com.loukou.order.service.resp.dto.ShippingResultDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
+import com.loukou.order.service.resp.dto.SubmitOrderResultDto;
 import com.loukou.order.service.util.DateUtils;
 import com.loukou.order.service.util.DoubleUtils;
 import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
@@ -74,12 +82,22 @@ import com.loukou.pos.client.txk.req.TxkCardRefundRespVO;
 import com.loukou.pos.client.vaccount.processor.VirtualAccountProcessor;
 import com.loukou.pos.client.vaccount.resp.VaccountUpdateRespVO;
 import com.serverstarted.cart.service.api.CartService;
+import com.serverstarted.cart.service.constants.PackageType;
 import com.serverstarted.cart.service.resp.dto.CartGoodsRespDto;
 import com.serverstarted.cart.service.resp.dto.CartRespDto;
 import com.serverstarted.cart.service.resp.dto.PackageRespDto;
+import com.serverstarted.goods.service.api.GoodsService;
+import com.serverstarted.goods.service.api.GoodsSpecService;
+import com.serverstarted.goods.service.resp.dto.GoodsRespDto;
+import com.serverstarted.goods.service.resp.dto.GoodsSpecRespDto;
+import com.serverstarted.store.service.api.StoreService;
+import com.serverstarted.store.service.resp.dto.StoreRespDto;
+import com.serverstarted.user.api.UserService;
+import com.serverstarted.user.resp.dto.UserRespDto;
 
 @Service("OrderService")
 public class OrderServiceImpl implements OrderService {
+	private static final Logger LOGGER = Logger.getLogger(OrderServiceImpl.class);
 	
 	private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	private static final DecimalFormat DECIMALFORMAT = new DecimalFormat("###,###.##");
@@ -120,6 +138,16 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired CartService cartService;
 	
 	@Autowired AddressDao addressDao;
+	
+	@Autowired StoreService storeService;
+	
+	@Autowired GoodsService goodsService;
+	@Autowired GoodsSpecService goodsSpecService;
+	@Autowired CoupListService coupListService;
+	@Autowired OrderLnglatDao orderLnglatDao;
+	
+	@Resource(name="userService")
+	private UserService userService;
 	
 	@Override
 	public OrderListRespDto getOrderList(int userId, int flag) {
@@ -212,7 +240,7 @@ public class OrderServiceImpl implements OrderService {
 			return resp;
 		}
 		// FIXME 查询语句
-		List<CoupList> coupLists = coupListDao.getCoupLists(userId);//以及其他的一些过滤条件
+		List<CoupList> coupLists = coupListDao.getValidCoupLists(userId);//以及其他的一些过滤条件
 		List<Integer> couponIds = new ArrayList<Integer>();
 		for(CoupList couplist : coupLists) {
 			couponIds.add(couplist.getCouponId());
@@ -312,6 +340,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 	
 	@Override
+	@Transactional
 	public SubmitOrderRespDto submitOrder(SubmitOrderReqDto req) {
 		// 校验参数
 		if (req == null || req.getUserId() <= 0 || StringUtils.isEmpty(req.getOpenId()) ||
@@ -342,7 +371,8 @@ public class OrderServiceImpl implements OrderService {
 		
 		// 购物车
 		CartRespDto cartRespDto = cartService.getCart(req.getUserId(), req.getOpenId(), req.getCityId(), req.getStoreId());
-		if (cartRespDto.getPackageList().size() == 0) {
+		int packageNum = cartRespDto.getPackageList().size();
+		if (packageNum == 0) {
 			return new SubmitOrderRespDto(400, "购物车是空的");
 		}
 		// 校验库存
@@ -356,11 +386,250 @@ public class OrderServiceImpl implements OrderService {
 				}
 			}
 		}
-		// TODO 通过会员接口，获取会员信息
+		// 校验配送时间
+		List<String> materialShippingTime = req.getShippingTimes().getMaterial();
+		List<SpecShippingTime> bookingShippingTime = req.getShippingTimes().getBooking();
+		Map<Integer, String> bookingShippingTimeMap = Maps.newHashMap();
+		for (SpecShippingTime st: bookingShippingTime) {
+			bookingShippingTimeMap.put(st.getSpecId(), st.getTime());
+		}
+		for (PackageRespDto p: cartRespDto.getPackageList()) {
+			String needShippingTime = null;
+			if (PackageType.MATERIAL.equals(p.getPackageType())) {
+				if (materialShippingTime == null || materialShippingTime.size() == 0) {
+					return new SubmitOrderRespDto(400, "商品配送时间有误");
+				}
+				needShippingTime = materialShippingTime.get(0);
+			}
+			else if (PackageType.BOOKING.equals(p.getPackageType())) {
+				int specId = p.getGoodsList().get(0).getSpecId();
+				needShippingTime = bookingShippingTimeMap.get(specId);
+				if (needShippingTime == null) {
+					return new SubmitOrderRespDto(400, "送货日期错误，请重新选择!");
+				}
+			}
+		}
 		
 		
+		// 通过会员接口，获取会员信息
+		UserRespDto user = userService.getByUserId(req.getUserId());
+		if (user == null) {
+			return new SubmitOrderRespDto(400, "用户不存在");
+		}
 		
-		return null;
+		Site site = siteDao.findOne(req.getCityId());
+		
+		// 优惠券, 目前只有全场券
+		double needPay = DoubleUtils.add(cartRespDto.getTotalPrice(), cartRespDto.getShippingFeeTotal());	// 还需付多少钱
+		int couponId = req.getCouponId();
+		CoupList coupList = null;
+		if (couponId > 0) {
+			coupList = coupListDao.getValidCoupList(req.getUserId(), couponId);
+			if (coupList == null) {
+				return new SubmitOrderRespDto(400, "优惠券不可用");
+			}
+			
+			// 校验优惠券是否可用
+			if (coupList.getMinprice() > cartRespDto.getTotalPrice()) {
+				return new SubmitOrderRespDto(400, String.format("使用优惠券最小金额为%.2f. 优惠券不可用", coupList.getMinprice()));
+			}
+			// 更新优惠券状态为已使用
+			boolean used = coupListService.useCoupon(req.getUserId(), couponId);
+			if (!used) {
+				// 使用优惠券失败
+				String msg = String.format("use coupon FAILED, userId=%d, couponId=%d", req.getUserId(), couponId);
+				LOGGER.error(msg);
+				throw new RuntimeException(msg);
+			}
+			needPay = DoubleUtils.mul(needPay, coupList.getMoney(), 2);
+		}
+		
+
+		// 新建订单
+		final String orderSnMain = generateOrderSnMain();
+		double usedDsicount = 0.0;	// 计算过的折扣
+		for (int i = 0; i < cartRespDto.getPackageList().size(); i ++) {
+			
+			PackageRespDto pl = cartRespDto.getPackageList().get(i);
+			double goodsAmount = 0.0;	// 该包裹商品总额
+			for (CartGoodsRespDto g: pl.getGoodsList()) {
+				goodsAmount = DoubleUtils.add(goodsAmount, DoubleUtils.mul(g.getPrice(), g.getAmount(), 2));
+			}
+			
+			// 计算优惠券，每个包裹的折扣是按照包裹金额比例来分配
+			double discount = 0.0;	// 折扣
+			if (coupList != null) {
+				double totalDiscount = coupList.getMoney();
+				if (i == cartRespDto.getPackageList().size()-1) {
+					// 最后一个包裹的折扣
+					discount = DoubleUtils.sub(totalDiscount, usedDsicount);
+				}
+				else {
+					// 该包裹折扣 = 该包裹商品总额 * 折扣总金额/所有商品总额
+					discount = DoubleUtils.div(DoubleUtils.mul(goodsAmount, totalDiscount), cartRespDto.getTotalPrice(), 1);
+				}
+				// 如果折扣金额大于总额，折扣=总额
+				if (discount > goodsAmount) {
+					discount = goodsAmount;
+				}
+				usedDsicount = DoubleUtils.add(usedDsicount, discount);
+			}
+
+			// TODO 如果优惠券全部抵订单，则修改订单状态，自动审核
+			Order order = new Order();
+			order.setOrderSnMain(orderSnMain);
+			order.setOrderSn(generateOrderSn());
+			if (PackageType.MATERIAL.equals(pl.getPackageType())) {
+				order.setShippingFee(cartRespDto.getShippingFeeTotal());
+			}
+			else {
+				order.setShippingFee(0);
+			}
+			String needShippingTime = null;
+			if (PackageType.MATERIAL.equals(pl.getPackageType())) {
+				needShippingTime = materialShippingTime.get(0);
+			}
+			else if (PackageType.BOOKING.equals(pl.getPackageType())) {
+				int specId = pl.getGoodsList().get(0).getSpecId();
+				needShippingTime = bookingShippingTimeMap.get(specId);
+			}
+			String[] strs = needShippingTime.split(" ");
+			order.setNeedShiptime(DateUtils.str2Date(strs[0].trim()));
+			order.setNeedShiptimeSlot(strs[1].trim());
+			order.setType(pl.getPackageType());
+			int storeId = req.getStoreId();
+			StoreRespDto store = null;
+			GoodsRespDto goods = null;
+			GoodsSpecRespDto spec = null;
+			if (PackageType.SELF_SALES.equals(pl.getPackageType())) {
+				int specId = pl.getGoodsList().get(0).getSpecId();
+				spec = goodsSpecService.get(specId);
+				goods = goodsService.getGoods(spec.getGoodsId());
+				storeId = goods.getStoreId();
+			}
+			store = storeService.getByStoreId(req.getStoreId());
+			order.setSellerId(storeId);
+			order.setSellerName(store.getStoreName());
+			order.setBuyerId(req.getUserId());
+			order.setBuyerName(user.getName());
+			order.setPayType(OrderPayType.PAY_ONLINE);
+			order.setAddTime(DateUtils.getTime());
+			order.setGoodsAmount(goodsAmount);
+			order.setDiscount(discount);
+			order.setOrderAmount(DoubleUtils.sub(goodsAmount, discount));
+			if (coupList != null) {
+				order.setUseCouponNo(coupList.getCommoncode());
+				order.setUseCouponValue(coupList.getMoney());
+			}
+			if (!StringUtils.isEmpty(req.getInvoiceHeader())) {
+				order.setNeedInvoice(1);
+				order.setInvoiceHeader(req.getInvoiceHeader());
+			}
+			else {
+				order.setNeedInvoice(0);
+			}
+			order.setInvoiceType(req.getInvoiceType());
+			order.setPostscript(req.getPostScript());
+			if (PackageType.BOOKING.equals(pl.getPackageType())) {
+				order.setShippingId(0);	// 小黄蜂配送
+			}
+			else {
+				order.setShippingId(1);	// 商家自送
+			}
+			if (PackageType.MATERIAL.equals(pl.getPackageType())) {
+				order.setShippingFee(cartRespDto.getShippingFeeTotal());
+			}
+			else {
+				order.setShippingFee(0);
+			}
+			order.setSource(os);
+			order.setSellSite(site.getShortCode());
+			// 如果有用优惠券，设置已支付金额
+			if (discount > 0) {
+				order.setPayTime(DateUtils.getTime());
+				order.setOrderPayed(discount);
+			}
+			
+			Order newOrder = orderDao.save(order);
+			
+			// 新建tcz_order_goods
+			List<OrderGoods> orderGoodsList = Lists.newArrayList();
+			for (CartGoodsRespDto g: pl.getGoodsList()) {
+				OrderGoods orderGoods = new OrderGoods();
+				orderGoods.setOrderId(newOrder.getOrderId());
+				orderGoods.setGoodsId(g.getGoodsId());
+				orderGoods.setGoodsName(g.getGoodsName());
+				orderGoods.setSpecification(g.getSpecName());
+				orderGoods.setStoreId(storeId);
+				orderGoods.setPrice(g.getPrice());	// TODO 现在不需要佣金了把？
+				orderGoods.setPricePurchase(g.getPrice());
+				orderGoods.setPriceDiscount(0); // TODO 计算折扣价格
+				orderGoods.setQuantity(g.getAmount());
+				orderGoods.setPoints(0); 	// TODO 计算积分
+				orderGoods.setProType(g.getFlag());
+//				orderGoods.setPackageId(g.getgr);	// TODO 组合购买的组合ID 或套餐ID
+//				orderGoods.setCommission(commission);// TODO 佣金比例
+				orderGoods.setGoodsImage(g.getGoodsImage());
+//				orderGoods.setTaosku(g.gett);	// TODO getGoods
+//				orderGoods.setBn(g.getbn());	// TODO 
+				
+				orderGoodsList.add(orderGoods);
+
+			}
+			orderGoodsDao.save(orderGoodsList);
+
+			
+			// 新增优惠券支付记录
+			if (discount > 0) {
+				OrderPay orderPay = new OrderPay();
+				orderPay.setOrderId(newOrder.getOrderId());
+				orderPay.setOrderSnMain(newOrder.getOrderSnMain());
+				orderPay.setPaymentId(14);	// 优惠券
+				orderPay.setMoney(discount);
+				orderPay.setPayTime(DateUtils.getTime());
+				orderPay.setStatus("succ");
+				
+				orderPayDao.save(orderPay);
+			}
+		}
+		
+		// 统一更新 更新已售商品 冻结商品库存
+		goodsService.freeze(req.getUserId(), req.getOpenId(), req.getCityId(), req.getStoreId());
+
+		
+		// 添加收货地址信息
+		OrderExtm orderExtm = new OrderExtm();
+		BeanUtils.copyProperties(address, orderExtm);
+		orderExtm.setOrderSnMain(orderSnMain);
+		orderExtmDao.save(orderExtm);
+		
+		String lnglat = String.format("lat:%s,lng:%s", address.getLatitude(), address.getLongitude());
+		OrderLnglat orderLnglat = new OrderLnglat();
+		orderLnglat.setOrderSnMain(orderSnMain);
+		orderLnglat.setLnglat(lnglat);
+		orderLnglatDao.save(orderLnglat);
+		
+		// 添加tcz_order_action
+		OrderAction orderAction = new OrderAction();
+		orderAction.setAction(0);	//  下单
+		orderAction.setOrderSnMain(orderSnMain);
+		orderAction.setActor(user.getName());
+		orderAction.setActionTime(new Date());
+		orderAction.setNotes("下单");
+		orderActionDao.save(orderAction);
+		
+		try {
+			// 清空购物车
+			cartService.clear(req.getUserId(), req.getOpenId(), req.getCityId());
+		}
+		catch (Exception e) {
+			LOGGER.warn("Clear cart FAILED!", e);
+		}
+		SubmitOrderRespDto dto = new SubmitOrderRespDto(200, "");
+		SubmitOrderResultDto result = dto.getResult();
+		result.setOrderSnMain(orderSnMain);
+		result.setNeedPay(needPay);
+		return dto;
 	}
 	
 	private boolean Validate(Address address) {
@@ -407,6 +676,52 @@ public class OrderServiceImpl implements OrderService {
 		return resp;
 	}
 	
+	/**
+	 * 生成主订单号 orderSnMain，'年月日时分+5位随机数'
+	 * @return
+	 */
+	private String generateOrderSnMain() {
+		int min = 10000;
+		int max = 99999;
+		String date = DateUtils.date2DateStr3(new Date());
+		Random random = new Random();
+		int r = random.nextInt(max)%(max-min+1) + min;
+		String orderSnMain = date + r;
+		List<Order> orders = orderDao.findByOrderSnMain(orderSnMain);
+		// 如果orderSnMain 已经存在，递归
+		if (orders.size() > 0) {
+			return generateOrderSnMain();
+		}
+		
+		return orderSnMain;
+	}
+	
+	/**
+	 * FIXME 生成ordersn
+	 * @return
+	 */
+	private String generateOrderSn() {
+//    	global $G_SHOP;
+//        /* 选择一个随机的方案 */
+//        mt_srand((double) microtime() * 1000000);
+//        $timestamp = gmtime();
+//        $y = date('y', $timestamp);
+//        $z = date('z', $timestamp);
+//        $order_sn = $y . str_pad($z, 3, '0', STR_PAD_LEFT) . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+//
+//        $strSQL="SELECT order_sn FROM tcz_order WHERE order_sn='".$order_sn."'";
+//        $orders=$G_SHOP->DBCA->getOne($strSQL);
+//
+//        if (empty($orders))
+//        {
+//            /* 否则就使用这个订单号 */
+//            return $order_sn;
+//        }
+//
+//        /* 如果有重复的，则重新生成 */
+//        return $this->_gen_order_sn();
+		return "";
+	}
 	
 	
 	

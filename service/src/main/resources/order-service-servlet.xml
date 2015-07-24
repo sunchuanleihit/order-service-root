@@ -13,7 +13,10 @@
 
 	<import resource="classpath*:dubbo-ext-appcontext.xml" />
 	<!-- 声明需要暴露的服务接口 -->
-	<dubbo:service interface="com.loukou.order.service.api.UserService"
+	<dubbo:service interface="com.serverstarted.user.api.UserService"
 		ref="userService" />
 
+	<dubbo:reference id="storeService" interface="com.serverstarted.store.service.api.StoreService" />
+	<dubbo:reference id="goodsService" interface="com.serverstarted.goods.service.api.GoodsService" />
+	
 </beans>

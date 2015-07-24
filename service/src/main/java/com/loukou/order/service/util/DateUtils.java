@@ -3,6 +3,7 @@ package com.loukou.order.service.util;
 import java.util.Calendar;
 import java.util.Date;
 
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 
 public class DateUtils {
@@ -37,26 +38,59 @@ public class DateUtils {
 		return dt.toString("yyyy-MM-dd HH:mm:ss");
 	}
 	
+	public static String date2DateStr3(Date date) {
+		DateTime dt = new DateTime(date);
+		return dt.toString("yyMMddHHmm");
+	}
+	
 	/**
 	 * 获得小时
 	 * @param time "HH:mm:ss"
 	 * @return
 	 */
 	public static int getHour(String time) {
+		if (StringUtils.isEmpty(time)) {
+			return 0;
+		}
 		String[] strs = time.split(":");
 		return Integer.valueOf(strs[0]);
 	}
 	
+	/**
+	 * 获取当前小时
+	 * @return
+	 */
 	public static int getCurrentHour() {
 		Calendar calendar = Calendar.getInstance();
 		int hour = calendar.get(Calendar.HOUR_OF_DAY);
 		return hour;
 	}
-	
-	public static void main(String[] args) {
-		String time = "00:03:00";
-		System.out.println(getHour(time));
+
+	/**
+	 * 时间字符串转时间
+	 * @param str
+	 * @return
+	 */
+	public static Date str2Date(String str) {
+		DateTime dt = DateTime.parse(str);
+		return dt.toDate();
 	}
 
+	/**
+	 * 获取时间戳
+	 * @return
+	 */
+	public static int getTime() {
+		
+		return (int) (new Date().getTime()/1000);
+	}
+	
+	public static void main(String[] args) {
+//		String time = "00:03:00";
+//		System.out.println(getHour(time));
+//		String str = "2015-07-13";
+//		System.out.println(str2Date(str));
+		System.out.println(getTime());
+	}
 
 }

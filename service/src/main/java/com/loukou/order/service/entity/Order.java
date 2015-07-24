@@ -201,6 +201,13 @@ public class Order {
 	 */
 	@Column(name = "need_invoice")
 	private int needInvoice;
+	
+	/*
+	 * 发票类型，'1普票 2增票'
+	 * 
+	 */
+	@Column(name = "invoice_type")
+	private int invoiceType = 1;
 
 	/*
 	 * 发票抬头
@@ -276,6 +283,9 @@ public class Order {
 	 */
 	@Column(name = "source")
 	private int source;
+	
+	@Column(name = "sell_site")
+	private String sellSite = "";
 
 	/*
 	 * 配送方式(0黄蜂1商家)
@@ -796,4 +806,21 @@ public class Order {
 	public void setIsDel(int isDel) {
 		this.isDel = isDel;
 	}
+
+	public int getInvoiceType() {
+		return invoiceType;
+	}
+
+	public void setInvoiceType(int invoiceType) {
+		this.invoiceType = invoiceType;
+	}
+
+	public String getSellSite() {
+		return sellSite;
+	}
+
+	public void setSellSite(String sellSite) {
+		this.sellSite = sellSite;
+	}
+	
 }
