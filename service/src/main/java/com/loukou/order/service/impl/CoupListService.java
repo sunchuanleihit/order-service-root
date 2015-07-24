@@ -1,6 +1,7 @@
 package com.loukou.order.service.impl;
 
-import com.alibaba.dubbo.config.annotation.Service;
+import org.springframework.stereotype.Service;
+
 import com.loukou.order.service.dao.CoupListDao;
 
 @Service
