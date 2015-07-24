@@ -50,8 +50,9 @@ public class CommonMethod {
 			// 确定需要支付金额和可以支付金额
 			// 子订单需要支付的金额
 			double oneToPay = DoubleUtils.add(
-					model.getOrder().getGoodsAmount(), model.getOrder()
-							.getShippingFee());
+					model.getOrder().getGoodsAmount(), 
+					model.getOrder().getShippingFee());
+			oneToPay = DoubleUtils.sub(oneToPay, model.getOrder().getOrderPayed());
 			if (oneToPay == 0) {
 				continue;
 			}
