@@ -1,11 +1,12 @@
 package com.loukou.order.service.api;
 
-import com.loukou.order.service.resp.dto.AbstractPayOrderRespDto;
-import com.loukou.order.service.resp.dto.OrderCancelRespDto;
+import com.loukou.order.service.req.dto.SubmitOrderReqDto;
+import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShippingResultDto;
+import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
 
 public interface OrderService {
 	
@@ -24,8 +25,7 @@ public interface OrderService {
 	 * @param storeId 店铺ID
 	 * @param openId 唯一设备号
 	 */
-//	public CouponListRespDto getCouponList(int cityId, int userId, int storeId, String openId);
-//	
+	public CouponListRespDto getCouponList(int cityId, int userId, int storeId, String openId);
 	
 	/**
 	 * 
@@ -35,7 +35,8 @@ public interface OrderService {
 	 * @return 订单详情
 	 */
 	public OrderListRespDto getOrderInfo(int userId, String orderSnMain, int flag);
-	
+		
+	public SubmitOrderRespDto submitOrder(SubmitOrderReqDto req);
 
 	/**
 	 * 
