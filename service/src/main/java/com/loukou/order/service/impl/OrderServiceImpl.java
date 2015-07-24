@@ -1783,27 +1783,93 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OResponseDto<String> finishPackagingOrder(String orderSnMain) {
-        // TODO Auto-generated method stub
+    public OResponseDto<String> finishPackagingOrder(String taoOrderSn,String userName) {
+        Order order = orderDao.findByTaoOrderSn(taoOrderSn);
+        if (order == null || order.getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()) {
+            return new OResponseDto<String>(500, "错误的订单号");
+           }
+            OrderAction orderAction = new OrderAction();
+            orderAction.setActionTime(new Date());
+            orderAction.setAction(OrderStatusEnum.STATUS_ALLOCATED.getId());
+            orderAction.setActor(userName);
+            orderAction.setOrderSnMain(order.getOrderSnMain());
+            orderAction.setTaoOrderSn(taoOrderSn);
+            orderAction.setOrderId(order.getOrderId());
+            orderAction.setNotes("配货");
+            orderActionDao.save(orderAction);
+            orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_ALLOCATED.getId());
+            return new OResponseDto<String>(200, "成功");
+    }
+
+    @Override
+    @Transactional
+    public OResponseDto<String> refuseOrder(String taoOrderSn,String userName) {
+        Order order = orderDao.findByTaoOrderSn(taoOrderSn);
+        //enum中没有14的状态
+        if(order==null || order.getStatus() != 14){
+            return new OResponseDto<String>(500, "失败");
+        }
+        orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_REFUSED.getId());
+        
+        OrderAction orderAction =  new OrderAction();
+        orderAction.setAction(OrderStatusEnum.STATUS_REFUSED.getId());
+        orderAction.setOrderSnMain(order.getOrderSnMain());
+        orderAction.setTaoOrderSn(taoOrderSn);
+        orderAction.setOrderId(order.getOrderId());
+        orderAction.setActor(userName);
+        orderAction.setActionTime(new Date());
+        orderAction.setNotes("拒收");
+        orderActionDao.save(orderAction);
+        
+        OrderReturn orderReturn =  new OrderReturn();
+        orderReturn.setOrderId(order.getOrderId());
+        orderReturn.setOrderSnMain(order.getOrderSnMain());
+        orderReturn.setBuyerId(order.getBuyerId());
+        orderReturn.setSellerId(order.getSellerId());
+        orderReturn.setReturnAmount(order.getGoodsAmount()+orderReturn.getShippingFee());
+        orderReturn.setShippingFee(order.getShippingFee());
+        orderReturn.setActor(userName);
+        orderReturn.setAddTime(SDF.format(new Date()));
+        orderReturn.setOrderType(0);
+        orderReturn.setOrderType(1);
+        orderReturn.setGoodsStatus(3);
+        orderReturn.setRepayWay(0);//1原路返回 0虚拟账户
+        orderRDao.save(orderReturn);
         return null;
     }
 
     @Override
-    public OResponseDto<String> refuseOrder(String orderSnMain) {
-        // TODO Auto-generated method stub
-        return null;
+    public OResponseDto<String> confirmRevieveOrder(String taoOrderSn, String gps,String userName) {
+        Order order = orderDao.findByTaoOrderSn(taoOrderSn);
+        if (order.getStatus() != OrderStatusEnum.STATUS_ALLOCATED.getId()) {
+             return new OResponseDto<String>(500, "错误的订单号");
+         }
+         List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
+         for (OrderGoods good : goods) {
+             lkWhGoodsStoreDao.updateBySpecIdAndStoreId(good.getSpecId(), good.getStoreId(), good.getQuantity(),
+                     good.getQuantity());
+         }
+ 
+         return new OResponseDto<String>(200, "确认成功");
     }
 
     @Override
-    public OResponseDto<String> confirmRevieveOrder(String orderSnMain, String Gps) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public OResponseDto<String> confirmBookOrder(String orderSnMain) {
-        // TODO Auto-generated method stub
-        return null;
+    public OResponseDto<String> confirmBookOrder(String taoOrderSn,String userName) {
+        Order order = orderDao.findByTaoOrderSn(taoOrderSn);
+                if (order == null || order.getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()) {
+                    return new OResponseDto<String>(500, "错误的订单号");
+                   }
+                    OrderAction orderAction = new OrderAction();
+                    orderAction.setActionTime(new Date());
+                    orderAction.setAction(OrderStatusEnum.STATUS_ALLOCATED.getId());
+                    orderAction.setActor(userName);
+                    orderAction.setOrderSnMain(order.getOrderSnMain());
+                    orderAction.setTaoOrderSn(taoOrderSn);
+                    orderAction.setOrderId(order.getOrderId());
+                    orderAction.setNotes("配货");
+                    orderActionDao.save(orderAction);
+                    orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_ALLOCATED.getId());
+                    return new OResponseDto<String>(200, "成功");
     }
 
 	
