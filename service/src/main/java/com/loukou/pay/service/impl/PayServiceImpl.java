@@ -5,6 +5,7 @@ import java.util.Date;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.loukou.order.service.api.PayService;
 import com.loukou.order.service.dao.MemberDao;
@@ -22,6 +23,7 @@ import com.loukou.pay.lib.WeiXinPay;
 import com.loukou.pay.service.common.CommonMethod;
 import com.loukou.pay.service.common.PayReqContent;
 
+@Service("payService")
 public class PayServiceImpl implements PayService {
 
 	private final Logger logger = Logger.getLogger(this.getClass());

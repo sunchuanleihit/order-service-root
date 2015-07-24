@@ -12,6 +12,10 @@ import com.loukou.order.service.resp.dto.GoodsListDto;
 import com.loukou.order.service.resp.dto.OrderListBaseDto;
 import com.loukou.order.service.resp.dto.OrderListDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
+import com.loukou.order.service.resp.dto.PayOrderMsgDto;
+import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
+import com.loukou.order.service.resp.dto.ShareRespDto;
+import com.loukou.order.service.resp.dto.ShareResultDto;
 import com.loukou.order.service.resp.dto.ShippingMsgDto;
 
 public class OrderServiceImpTest extends AbstractTestObject{
@@ -37,5 +41,19 @@ public class OrderServiceImpTest extends AbstractTestObject{
 			ExtmMsgDto extmMsg = dto.getExtmMsg();
 			ShippingMsgDto shippingMsg = dto.getShippingmsg();
 		}
+	}
+	
+	@Test
+	public void getPayOrderMsgTest() {
+		PayOrderResultRespDto resp = orderService.getPayOrderMsg(1156347, "150707164298209");
+		int code = resp.getCode();
+		PayOrderMsgDto dto = resp.getResult();
+	}
+	
+	@Test
+	public void shareAfterPayTest() {
+		ShareRespDto resp = orderService.shareAfterPay("150707164298209");
+		int code = resp.getCode();
+		ShareResultDto dto = resp.getShareResultDto();
 	}
 }
