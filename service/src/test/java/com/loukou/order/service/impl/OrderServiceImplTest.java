@@ -22,7 +22,7 @@ public class OrderServiceImplTest extends AbstractTestObject {
 	}
 	
 	@Test
-	public void test() {
+	public void getCouponList() {
 		int cityId = 1;
 		int userId = 1;
 		int storeId = 18055;
