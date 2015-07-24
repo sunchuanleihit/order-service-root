@@ -23,10 +23,10 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 	int getUsedCoupNumber(int userId, Date start);
 
 	
-	@Query("SELECT c FROM CoupList WHERE userId = ?1 AND issue=1 AND ischecked=0 AND begintime<=NOW() AND endtime>=NOW()")
+	@Query("SELECT c FROM CoupList c WHERE userId = ?1 AND issue=1 AND ischecked=0 AND begintime<=NOW() AND endtime>=NOW()")
 	List<CoupList> getValidCoupLists(int userId);
 	
-	@Query("SELECT c FROM CoupList WHERE userId = ?1 AND couponId=?2 AND issue=1 AND ischecked=0 AND begintime<=NOW() AND endtime>=NOW()")
+	@Query("SELECT c FROM CoupList c WHERE userId = ?1 AND couponId=?2 AND issue=1 AND ischecked=0 AND begintime<=NOW() AND endtime>=NOW()")
 	CoupList getValidCoupList(int userId, int couponId);
 
 	@Transactional
