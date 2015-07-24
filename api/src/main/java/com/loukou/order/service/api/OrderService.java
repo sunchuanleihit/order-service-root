@@ -109,7 +109,7 @@ public interface OrderService {
 	/**
 	 * 打包完成
 	 */
-	public OResponseDto<String> finishPackagingOrder(String orderSnMain);
+	public OResponseDto<String> finishPackagingOrder(String taoOrderSn,String userName);
 
 	/**
 	 * 生成订单前支付信息页面
@@ -124,15 +124,15 @@ public interface OrderService {
 	/**
 	 * 拒绝订单
 	 */
-	public OResponseDto<String> refuseOrder(String orderSnMain);
+	public OResponseDto<String> refuseOrder(String taoOrderSn,String userName);
 	
 	/**
 	 * 确认收货
 	 */
-	public OResponseDto<String> confirmRevieveOrder(String orderSnMain,String Gps);
+	public OResponseDto<String> confirmRevieveOrder(String taoOrderSn,String gps,String userName);
 	
 	/**
 	 *     确认预售订单到货
 	 */
-	public OResponseDto<String> confirmBookOrder(String orderSnMain);
+	public OResponseDto<String> confirmBookOrder(String taoOrderSn,String userName);
 }
