@@ -86,13 +86,17 @@ import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.CouponListResultDto;
+import com.loukou.order.service.req.dto.OrderListParamDto;
+import com.loukou.order.service.resp.dto.DeliveryInfo;
 import com.loukou.order.service.resp.dto.ExtmMsgDto;
+import com.loukou.order.service.resp.dto.GoodsInfoDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
 import com.loukou.order.service.resp.dto.OrderCancelRespDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderInfoDto;
 import com.loukou.order.service.resp.dto.OrderListBaseDto;
 import com.loukou.order.service.resp.dto.OrderListDto;
+import com.loukou.order.service.resp.dto.OrderListInfoDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
@@ -110,6 +114,7 @@ import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderResultDto;
 import com.loukou.order.service.resp.dto.UserOrderNumRespDto;
 import com.loukou.order.service.util.DateUtils;
+import com.loukou.order.service.resp.dto.SpecDto;
 import com.loukou.order.service.util.DoubleUtils;
 import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
 import com.loukou.pos.client.txk.req.TxkCardRefundRespVO;
@@ -2260,13 +2265,12 @@ public class OrderServiceImpl implements OrderService {
         Order order = orderDao.findByTaoOrderSn(orderNo);
         OResponseDto<OrderInfoDto> oResultDto = new OResponseDto<OrderInfoDto>();
         OrderInfoDto orderInfoDto = new OrderInfoDto();
-        List<GoodsListDto> goodsListDtos = new ArrayList<GoodsListDto>();
-
+        List<SpecDto> specList = new ArrayList<SpecDto>();
         List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
         for(OrderGoods good :goods){
-            GoodsListDto goodsListDto = new GoodsListDto();
-            BeanUtils.copyProperties(good, goodsListDto);
-            goodsListDtos.add(goodsListDto);
+            SpecDto spec = new SpecDto();
+            spec.setGoodInfo(new GoodsInfoDto(good.getGoodsId(), good.getGoodsName(), good.getGoodsImage()));
+            specList.add(spec);
         }
         //实际上一个主单只有一个收货人
         List<OrderExtm> orderExtmList = orderExtmDao.findByOrderSnMain(order.getOrderSnMain());
@@ -2277,18 +2281,66 @@ public class OrderServiceImpl implements OrderService {
         extmMsgDto.setAddress(orderExtm.getAddress());
         extmMsgDto.setConsignee(orderExtm.getConsignee());
         extmMsgDto.setPhoneMob(orderExtm.getPhoneMob());
+        DeliveryInfo deliveryInfo =  new DeliveryInfo();
+        deliveryInfo.setAddress(orderExtm.getRegionName()+orderExtm.getAddress());
+        deliveryInfo.setConsignee(orderExtm.getConsignee());
+        deliveryInfo.setTel(orderExtm.getPhoneMob());
         
-        orderInfoDto.setAddTime(SDF.format(new Date((long)(order.getAddTime())*1000)));
-        orderInfoDto.setOrderAmount(order.getOrderAmount());
-        orderInfoDto.setOrderNo(order.getTaoOrderSn());
+        orderInfoDto.setCreateTime(SDF.format(new Date((long)(order.getAddTime())*1000)));
+        orderInfoDto.setGoodsAmount(order.getOrderAmount());
+        orderInfoDto.setTaoOrderSn(order.getTaoOrderSn());
         orderInfoDto.setOrderStatus(order.getStatus());
         
-        
-        orderInfoDto.setGoodsListDtos(goodsListDtos);
-        orderInfoDto.setExtmMsgDto(extmMsgDto);
+       
+        orderInfoDto.setSpecList(specList);
+        orderInfoDto.setDeliveryInfo(deliveryInfo);
         oResultDto.setCode(200);
         oResultDto.setResult(orderInfoDto);
         return oResultDto;
+    }
+
+    @Override
+    public OResponseDto<OrderListInfoDto> getOrderListInfo(OrderListParamDto param) {
+        PageRequest pagenation = new PageRequest(param.getPageNum(), param.getPageSize());
+        Page<Order> orders  =orderDao.findBySellerId(param.getStoreId(), pagenation);
+        OrderListInfoDto orderListInfoDto = new OrderListInfoDto();
+        List<OrderInfoDto> orderInfoDtos = new ArrayList<OrderInfoDto>();
+        for(Order order :orders.getContent()){
+            OrderInfoDto orderInfoDto = new OrderInfoDto();
+            orderInfoDto.setCreateTime(SDF.format(new Date((long)(order.getAddTime())*1000)));
+            orderInfoDto.setGoodsAmount(order.getOrderAmount());
+            orderInfoDto.setTaoOrderSn(order.getTaoOrderSn());
+            orderInfoDto.setOrderStatus(order.getStatus());
+            orderInfoDtos.add(orderInfoDto);
+        }
+        orderListInfoDto.setOrders(orderInfoDtos);
+        orderListInfoDto.setStoreId(param.getStoreId());
+        orderListInfoDto.setTotalNum(orders.getTotalElements());
+        return new OResponseDto<OrderListInfoDto>(200,orderListInfoDto);
+    }
+
+    @Override
+    public OResponseDto<String> finishPackagingOrder(String orderSnMain) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public OResponseDto<String> refuseOrder(String orderSnMain) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public OResponseDto<String> confirmRevieveOrder(String orderSnMain, String Gps) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public OResponseDto<String> confirmBookOrder(String orderSnMain) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 	

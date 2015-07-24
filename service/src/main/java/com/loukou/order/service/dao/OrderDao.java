@@ -66,5 +66,6 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 
 	List<Order> findByOrderSnMainAndPayStatus(String orderSnMain, int payStatus);
 
+	Page<Order> findBySellerId(int sellerId,Pageable page);
 }
 
