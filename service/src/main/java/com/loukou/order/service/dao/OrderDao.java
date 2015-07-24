@@ -61,5 +61,6 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	@Query("UPDATE Order set payStatus = ?3, orderPayed = ?2 where orderId = ?1")
 	Order updateOrderPayedAndStatus(int orderId, double payedMoney, int status);
 
+	Page<Order> findBySellerId(int sellerId,Pageable page);
 }
 

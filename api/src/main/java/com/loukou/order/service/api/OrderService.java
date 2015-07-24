@@ -2,8 +2,10 @@ package com.loukou.order.service.api;
 
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
+import com.loukou.order.service.req.dto.OrderListParamDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderInfoDto;
+import com.loukou.order.service.resp.dto.OrderListInfoDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
@@ -86,9 +88,19 @@ public interface OrderService {
 	public ShareRespDto shareAfterPay(String orderSnMain);
 	
 	/**
-	 * 
+	 * 订单详情
 	 */
 	public  OResponseDto<OrderInfoDto> getOrderGoodsInfo(String orderId);
+	
+	/**
+	 * 订单　预售订单列表
+	 */
+	public OResponseDto<OrderListInfoDto> getOrderListInfo(OrderListParamDto param);
+	
+	/**
+	 * 打包完成
+	 */
+	public OResponseDto<String> finishPackagingOrder(String orderSnMain);
 
 	/**
 	 * 生成订单前支付信息页面
@@ -100,5 +112,18 @@ public interface OrderService {
 	 */
 	public PayBeforeRespDto getPayInfoBeforeOrder(int userId, String openId, int cityId,
 			int storeId, int couponId);
-
+	/**
+	 * 拒绝订单
+	 */
+	public OResponseDto<String> refuseOrder(String orderSnMain);
+	
+	/**
+	 * 确认收货
+	 */
+	public OResponseDto<String> confirmRevieveOrder(String orderSnMain,String Gps);
+	
+	/**
+	 *     确认预售订单到货
+	 */
+	public OResponseDto<String> confirmBookOrder(String orderSnMain);
 }
