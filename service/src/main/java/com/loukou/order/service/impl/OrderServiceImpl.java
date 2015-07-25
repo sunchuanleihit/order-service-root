@@ -63,6 +63,7 @@ import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Site;
 import com.loukou.order.service.entity.Store;
 import com.loukou.order.service.enums.OrderSourceEnum;
+import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.enums.OrderTypeEnums;
 import com.loukou.order.service.enums.RefundStatusEnum;
 import com.loukou.order.service.enums.ReturnStatusEnum;
@@ -380,10 +381,19 @@ public class OrderServiceImpl implements OrderService {
 		else if (coupRule.getCouponType() == CouponType.STORE) {
 			// 店铺券
 			int outId = getOutId(coupRule);
-			// FIXME 目前有店铺券吗?
+			// FIXME 目前没有店铺券，不实现
 		}
 		else if (coupRule.getCouponType() == CouponType.GOODS) {
-			// FIXME 目前有商品券吗？其他类型的券目前都没用，下次重构掉吧，不搬过来了
+			// FIXME 目前没有商品券，不实现
+		}
+		else if (coupRule.getCouponType() == CouponType.BRAND) {
+			// FIXME 目前没有品牌券，不实现
+		}
+		else if (coupRule.getCouponType() == CouponType.GOODS) {
+			// FIXME 分类券
+			// FIXME 分类券，第几级分类？
+			// FIXME 如果有其他分类的商品，不能购买？
+			int cateId = getOutId(coupRule);
 		}
 		
 		return false;
@@ -498,7 +508,7 @@ public class OrderServiceImpl implements OrderService {
 		// 新建订单
 		final String orderSnMain = generateOrderSnMain();
 		double usedDsicount = 0.0;	// 计算过的折扣
-		for (int i = 0; i < cartRespDto.getPackageList().size(); i ++) {
+		for (int i = 0; i < packageNum; i ++) {
 			
 			PackageRespDto pl = cartRespDto.getPackageList().get(i);
 			double goodsAmount = 0.0;	// 该包裹商品总额
@@ -525,10 +535,11 @@ public class OrderServiceImpl implements OrderService {
 				usedDsicount = DoubleUtils.add(usedDsicount, discount);
 			}
 
-			// TODO 如果优惠券全部抵订单，则修改订单状态，自动审核
 			Order order = new Order();
 			order.setOrderSnMain(orderSnMain);
+			String taoOrderSn = String.format("%s-%d-%d", orderSnMain, packageNum, i+1);
 			order.setOrderSn(generateOrderSn());
+			order.setTaoOrderSn(taoOrderSn);
 			if (PackageType.MATERIAL.equals(pl.getPackageType())) {
 				order.setShippingFee(cartRespDto.getShippingFeeTotal());
 			}
@@ -599,12 +610,25 @@ public class OrderServiceImpl implements OrderService {
 				order.setPayTime(DateUtils.getTime());
 				order.setOrderPayed(discount);
 			}
-			
+			// 如果优惠券全部抵订单，则修改订单状态，自动审核
+			order.setStatus(OrderStatusEnum.STATUS_NEW.getId());
+			if (order.getOrderAmount() <= 0 && order.getShippingFee() <= 0) {
+				order.setStatus(OrderStatusEnum.STATUS_REVIEWED.getId());
+			}
+
 			Order newOrder = orderDao.save(order);
 			
 			// 新建tcz_order_goods
 			List<OrderGoods> orderGoodsList = Lists.newArrayList();
+			double priceDiscount = 0.0;	// 商品折扣后的价格
 			for (CartGoodsRespDto g: pl.getGoodsList()) {
+				// FIXME 为什么记录订单商品的时候，还要转成标准规格的商品？
+				priceDiscount = g.getPrice();
+				if (discount > 0) {
+					// 单个商品折扣, priceDiscount = price - (price/goodsAmount)*discount
+					priceDiscount = DoubleUtils.sub(g.getPrice(), DoubleUtils.mul(DoubleUtils.div(g.getPrice(), goodsAmount), discount, 8));
+				}
+				
 				OrderGoods orderGoods = new OrderGoods();
 				orderGoods.setOrderId(newOrder.getOrderId());
 				orderGoods.setGoodsId(g.getGoodsId());
@@ -613,15 +637,15 @@ public class OrderServiceImpl implements OrderService {
 				orderGoods.setStoreId(storeId);
 				orderGoods.setPrice(g.getPrice());	// TODO 现在不需要佣金了把？
 				orderGoods.setPricePurchase(g.getPrice());
-				orderGoods.setPriceDiscount(0); // TODO 计算折扣价格
+				orderGoods.setPriceDiscount(priceDiscount); // 计算折扣价格
 				orderGoods.setQuantity(g.getAmount());
-				orderGoods.setPoints(0); 	// TODO 计算积分
+				orderGoods.setPoints(0); 	// TODO 计算积分，目前积分不要了
 				orderGoods.setProType(g.getFlag());
-//				orderGoods.setPackageId(g.getgr);	// TODO 组合购买的组合ID 或套餐ID
-//				orderGoods.setCommission(commission);// TODO 佣金比例
+				orderGoods.setPackageId(0);	// TODO 组合购买的组合ID 或套餐ID, 不知道怎么算
+				orderGoods.setCommission(g.getCommission());
 				orderGoods.setGoodsImage(g.getGoodsImage());
-//				orderGoods.setTaosku(g.gett);	// TODO getGoods
-//				orderGoods.setBn(g.getbn());	// TODO 
+				orderGoods.setTaosku(g.getTaosku());
+				orderGoods.setBn(g.getBn());	 
 				
 				orderGoodsList.add(orderGoods);
 
@@ -1647,7 +1671,6 @@ public class OrderServiceImpl implements OrderService {
 	public PayBeforeRespDto getPayInfoBeforeOrder(int userId, String openId, int cityId,
 			int storeId, int couponId) {
 
-
 		double couponMoney = 0.0;
 		if (couponId > 0) {
 			CoupList coupList = coupListDao.findOne(couponId);
@@ -1676,10 +1699,10 @@ public class OrderServiceImpl implements OrderService {
 			discountAmount = couponMoney;
 		}
 		
-		// TODO 获取淘心卡
-		double txkNum = 0.0;
-		// TODO 获取虚账户
-		double vcount = 0.0;
+		// 获取淘心卡
+		double txkNum = virtualAccountProcessor.getVirtualBalanceByUserId(userId);
+		// 获取虚账户
+		double vcount = accountTxkProcessor.getTxkBalanceByUserId(userId);
 
 		PayBeforeRespDto resp = new PayBeforeRespDto(200, "");
 		PayOrderMsgDto orderMsgDto = resp.getResult().getOrderMsg();
