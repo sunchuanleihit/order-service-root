@@ -77,6 +77,7 @@ import com.loukou.order.service.resp.dto.OrderListBaseDto;
 import com.loukou.order.service.resp.dto.OrderListDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
+import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
 import com.loukou.order.service.resp.dto.ShareDto;
@@ -278,10 +279,15 @@ public class OrderServiceImpl implements OrderService {
 		CouponListRespDto resp = new CouponListRespDto();
 		if(cityId <= 0 || userId <= 0 || storeId <= 0 || StringUtils.isEmpty(openId)) {
 			resp.setCode(400);
+			resp.setMessage("参数有误");
 			return resp;
 		}
 		// FIXME 查询语句
 		List<CoupList> coupLists = coupListDao.getValidCoupLists(userId);//以及其他的一些过滤条件
+		if (coupLists.size() == 0) {
+			resp.setCode(200);
+			return resp;
+		}
 		List<Integer> couponIds = new ArrayList<Integer>();
 		for(CoupList couplist : coupLists) {
 			couponIds.add(couplist.getCouponId());
@@ -357,6 +363,9 @@ public class OrderServiceImpl implements OrderService {
 	
 	
 	public boolean verifyCoup(int userId, String openId, int cityId, int storeId, CoupList coupList, CartRespDto cart, CoupRule coupRule) {
+		if (coupList == null || coupRule == null || cart == null) {
+			return false;
+		}
 		
 		if (coupRule.getCouponType() == CouponType.ALL) {
 			// 全场通用
@@ -1634,7 +1643,54 @@ public class OrderServiceImpl implements OrderService {
 		return resp;
 	}
 
-	
-	
+	@Override
+	public PayBeforeRespDto getPayInfoBeforeOrder(int userId, String openId, int cityId,
+			int storeId, int couponId) {
+
+
+		double couponMoney = 0.0;
+		if (couponId > 0) {
+			CoupList coupList = coupListDao.findOne(couponId);
+			if (coupList == null) {
+				return new PayBeforeRespDto(400, "无效的优惠券");
+			}
+			couponMoney = coupList.getMoney();
+		}
+		
+		// 购物车
+		CartRespDto cart = cartService.getCart(userId, openId, cityId, storeId);
+		double orderTotal = cart.getTotalPrice();
+		double shippingFee = cart.getShippingFeeTotal();
+		if (cart.getPackageList().size() == 0) {
+			return new PayBeforeRespDto(400, "购物车没有商品");
+		}
+		
+		double total = 0.0;	// 订单总价（订单金额+运费-优惠）
+		double discountAmount = 0.0;	// 折扣金额
+		if (couponMoney > orderTotal) {
+			total = shippingFee;
+			discountAmount = orderTotal;
+		}
+		else {
+			total = DoubleUtils.sub(DoubleUtils.add(orderTotal, shippingFee), couponMoney);
+			discountAmount = couponMoney;
+		}
+		
+		// TODO 获取淘心卡
+		double txkNum = 0.0;
+		// TODO 获取虚账户
+		double vcount = 0.0;
+
+		PayBeforeRespDto resp = new PayBeforeRespDto(200, "");
+		PayOrderMsgDto orderMsgDto = resp.getResult().getOrderMsg();
+		orderMsgDto.setDiscountAmount(discountAmount);
+		orderMsgDto.setOrderTotal(orderTotal);
+		orderMsgDto.setShippingFee(shippingFee);
+		orderMsgDto.setTotal(total);
+		orderMsgDto.setTxkNum(txkNum);
+		orderMsgDto.setVcount(vcount);
+
+		return resp;
+	}
 
 }

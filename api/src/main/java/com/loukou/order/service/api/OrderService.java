@@ -3,6 +3,7 @@ package com.loukou.order.service.api;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
+import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShippingResultDto;
@@ -80,5 +81,16 @@ public interface OrderService {
 	 * @return 下单后分享
 	 */
 	public ShareRespDto shareAfterPay(String orderSnMain);
+
+	/**
+	 * 生成订单前支付信息页面
+	 * @param userId
+	 * @param openId
+	 * @param cityId
+	 * @param storeId
+	 * @param couponId
+	 */
+	public PayBeforeRespDto getPayInfoBeforeOrder(int userId, String openId, int cityId,
+			int storeId, int couponId);
 
 }
