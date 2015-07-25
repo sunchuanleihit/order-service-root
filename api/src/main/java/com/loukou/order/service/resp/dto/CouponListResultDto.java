@@ -7,7 +7,7 @@ public class CouponListResultDto {
 	private List<CouponListDto> recommend = new ArrayList<CouponListDto>();
 	private List<CouponListDto> couponList = new ArrayList<CouponListDto>();
 	private int canUse;
-	private int everydayNum = 2;
+	private String everydayNum = "2";
 	private String everydayMsg = "每天限使用2张优惠券，明天再来吧";
 
 	public List<CouponListDto> getRecommend() {
@@ -34,11 +34,11 @@ public class CouponListResultDto {
 		this.canUse = canUse;
 	}
 
-	public int getEverydayNum() {
+	public String getEverydayNum() {
 		return everydayNum;
 	}
 
-	public void setEverydayNum(int everydayNum) {
+	public void setEverydayNum(String everydayNum) {
 		this.everydayNum = everydayNum;
 	}
 

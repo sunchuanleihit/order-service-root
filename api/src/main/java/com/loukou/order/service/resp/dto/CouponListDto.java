@@ -3,8 +3,8 @@ package com.loukou.order.service.resp.dto;
 public class CouponListDto {
 	private int couponId;
 	private String couponName;
-	private String couponCode;
-	private double money;
+	private String commoncode;
+	private String money;
 	private String endtime;
 	private String couponMsg;
 
@@ -24,19 +24,20 @@ public class CouponListDto {
 		this.couponName = couponName;
 	}
 
-	public String getCouponCode() {
-		return couponCode;
+
+	public String getCommoncode() {
+		return commoncode;
 	}
 
-	public void setCouponCode(String couponCode) {
-		this.couponCode = couponCode;
+	public void setCommoncode(String commoncode) {
+		this.commoncode = commoncode;
 	}
 
-	public double getMoney() {
+	public String getMoney() {
 		return money;
 	}
 
-	public void setMoney(double money) {
+	public void setMoney(String money) {
 		this.money = money;
 	}
 
