@@ -1,4 +1,4 @@
-package com.loukou.pay.service.common;
+package com.loukou.order.pay.common;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,13 +1,13 @@
-package com.loukou.pay.lib;
+package com.loukou.order.pay.lib;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.loukou.order.pay.common.PayReqContent;
 import com.loukou.order.service.dao.OrderDao;
-import com.loukou.order.weixin.pay.processor.WeiXinPayProcessor;
-import com.loukou.order.weixin.pay.resp.WeiXinPayRespVO;
-import com.loukou.pay.service.common.PayReqContent;
+import com.loukou.pay.weixin.processor.WxPayProcessor;
+import com.loukou.pay.weixin.resp.WxUnifiedOrderRespVO;
 
 public class WeiXinPay {
 	private final Logger logger = Logger.getLogger(this.getClass());
@@ -20,7 +20,7 @@ public class WeiXinPay {
 	public PayReqContent pay(PayReqContent content) {
 		
 		//call weixin httpClient, totlfee只能为整数，单位为分
-		WeiXinPayRespVO resp = WeiXinPayProcessor.getProcessor().pay(
+		WxUnifiedOrderRespVO resp = WxPayProcessor.getProcessor().pay(
 				content.getOrderSnMain(), (int)(content.getNeedToPay() * 100)
 				);
 		

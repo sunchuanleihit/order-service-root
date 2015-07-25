@@ -1,4 +1,4 @@
-package com.loukou.pay.lib;
+package com.loukou.order.pay.lib;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -9,11 +9,11 @@ import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.DigestUtils;
 
+import com.loukou.order.pay.common.PayReqContent;
 import com.loukou.order.service.constants.OrderReqParams;
 import com.loukou.order.service.dao.OrderPaySignDao;
 import com.loukou.order.service.entity.OrderPaySign;
 import com.loukou.order.service.enums.PaySignStatusEnum;
-import com.loukou.pay.service.common.PayReqContent;
 
 public class ALiPay {
 	private final Logger logger = Logger.getLogger(this.getClass());
