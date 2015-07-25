@@ -1,5 +1,7 @@
 package com.loukou.order.service.entity;
 
+import java.util.Date;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -34,7 +36,7 @@ public class CoupList {
 	private double money;
 
 	@Column(name = "minprice")
-	private double minprice;// 最低使用金额限制
+	private Double minprice;// 最低使用金额限制
 
 	@Column(name = "issue")
 	private int issue = 1;// 是否启用0，不启用，1，启用，2，停用
@@ -49,10 +51,10 @@ public class CoupList {
 	private String createtime;// 领取时间
 
 	@Column(name = "usedtime")
-	private String usedtime;// 使用时间yyyy-MM-dd HH:mm:ss
+	private Date usedtime;// 使用时间yyyy-MM-dd HH:mm:ss
 
 	@Column(name = "source")
-	private int source;// 1，会员后台；2，购物车
+	private Integer source;// 1，会员后台；2，购物车
 
 	@Column(name = "sell_site")
 	private String sellSite;
@@ -114,10 +116,13 @@ public class CoupList {
 	}
 
 	public double getMinprice() {
+		if (minprice == null) {
+			return 0.0;
+		}
 		return minprice;
 	}
 
-	public void setMinprice(double minprice) {
+	public void setMinprice(Double minprice) {
 		this.minprice = minprice;
 	}
 
@@ -153,19 +158,19 @@ public class CoupList {
 		this.createtime = createtime;
 	}
 
-	public String getUsedtime() {
+	public Date getUsedtime() {
 		return usedtime;
 	}
 
-	public void setUsedtime(String usedtime) {
+	public void setUsedtime(Date usedtime) {
 		this.usedtime = usedtime;
 	}
 
-	public int getSource() {
+	public Integer getSource() {
 		return source;
 	}
 
-	public void setSource(int source) {
+	public void setSource(Integer source) {
 		this.source = source;
 	}
 
