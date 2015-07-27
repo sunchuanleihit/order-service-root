@@ -2268,6 +2268,9 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OResponseDto<OrderInfoDto> getOrderGoodsInfo(String orderNo) {
         Order order = orderDao.findByTaoOrderSn(orderNo);
+        if(order ==null){
+              return new OResponseDto<OrderInfoDto>(500,new OrderInfoDto());
+        }
         OResponseDto<OrderInfoDto> oResultDto = new OResponseDto<OrderInfoDto>();
         OrderInfoDto orderInfoDto = new OrderInfoDto();
         List<SpecDto> specList = new ArrayList<SpecDto>();

@@ -1,8 +1,13 @@
 package com.loukou.order.service.resp.dto;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class DeliveryInfo {
+public class DeliveryInfo implements Serializable {
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -4756721764266897267L;
     private Date time; // 配送时间
     private String address; // 配送地址　　区域＋地址
     private String consignee; // 收货人
