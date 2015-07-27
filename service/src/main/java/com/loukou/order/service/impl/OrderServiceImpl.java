@@ -24,6 +24,7 @@ import org.springframework.util.DigestUtils;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.loukou.order.service.api.OrderService;
 import com.loukou.order.service.constants.CouponType;
 import com.loukou.order.service.constants.OS;
@@ -94,6 +95,8 @@ import com.loukou.order.service.util.DateUtils;
 import com.loukou.order.service.util.DoubleUtils;
 import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
 import com.loukou.pos.client.vaccount.processor.VirtualAccountProcessor;
+import com.loukou.search.service.api.GoodsSearchService;
+import com.loukou.search.service.dto.GoodsCateDto;
 import com.serverstarted.cart.service.api.CartService;
 import com.serverstarted.cart.service.constants.PackageType;
 import com.serverstarted.cart.service.resp.dto.CartGoodsRespDto;
@@ -188,6 +191,7 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired GoodsSpecService goodsSpecService;
 	@Autowired CoupListService coupListService;
 	@Autowired OrderLnglatDao orderLnglatDao;
+	@Autowired GoodsSearchService goodsSearchService;
 	
 	@Resource(name="userService")
 	private UserService userService;
@@ -368,19 +372,18 @@ public class OrderServiceImpl implements OrderService {
 			return false;
 		}
 		
+		if (cart.getTotalPrice() < coupList.getMinprice()) {
+			// 商品金额不足优惠券最小金额
+			return false;
+		}
+		
 		if (coupRule.getCouponType() == CouponType.ALL) {
 			// 全场通用
-			double total = DoubleUtils.add(cart.getTotalPrice(), cart.getShippingFeeTotal());
-			if (total < coupList.getMinprice()) {
-				return false;
-			}
-			else {
-				return true;
-			}
+			return true;
 		}
 		else if (coupRule.getCouponType() == CouponType.STORE) {
 			// 店铺券
-			int outId = getOutId(coupRule);
+//			int outIds = getOutId(coupRule);
 			// FIXME 目前没有店铺券，不实现
 		}
 		else if (coupRule.getCouponType() == CouponType.GOODS) {
@@ -390,10 +393,40 @@ public class OrderServiceImpl implements OrderService {
 			// FIXME 目前没有品牌券，不实现
 		}
 		else if (coupRule.getCouponType() == CouponType.GOODS) {
-			// FIXME 分类券
-			// FIXME 分类券，第几级分类？
-			// FIXME 如果有其他分类的商品，不能购买？
-			int cateId = getOutId(coupRule);
+			// 分类券可用的分类可以是一级和二级分类
+			// 如果商品包含其他分类的商品，不能使用分类优惠券
+			List<Integer> cateIds = getOutId(coupRule);
+			// 获取所有一级类目
+			List<GoodsCateDto> cateOnes = goodsSearchService.getSubCateGoodsList(cityId, storeId, 0);
+			Set<Integer> cateOneIds = Sets.newHashSet();
+			for (GoodsCateDto g: cateOnes) {
+				cateOneIds.add(g.getCateId());
+			}
+			
+			Set<Integer> validsCateIds = Sets.newHashSet();	// 分类券所有的二级分类
+			for (Integer c: cateIds) {
+				if (cateOneIds.contains(c)) {
+					// 一级分类获取二级分类
+					List<GoodsCateDto> cateTwos = goodsSearchService.getSubCateGoodsList(cityId, storeId, c);
+					for (GoodsCateDto g: cateTwos) {
+						validsCateIds.add(g.getCateId());
+					}
+				}
+				else {
+					// 二级分类
+					validsCateIds.add(c);
+				}
+			}
+			
+			// 遍历购物车所有商品，与分类券的二级分类做比较
+			for (PackageRespDto p: cart.getPackageList()) {
+				for (CartGoodsRespDto g: p.getGoodsList()) {
+					if (!validsCateIds.contains(g.getNewCateIdTwo())) {
+						return false;
+					}
+				}
+			}
+			return true;
 		}
 		
 		return false;
@@ -724,12 +757,13 @@ public class OrderServiceImpl implements OrderService {
 		return true;
 	}
 
-	private int getOutId(CoupRule coupRule) {
+	private List<Integer> getOutId(CoupRule coupRule) {
+		List<Integer> ids = Lists.newArrayList();
 		String[] strs = coupRule.getOutId().split(",");
 		if (strs.length > 0) {
-			return Integer.valueOf(strs[0]);
+			ids.add(Integer.valueOf(strs[0]));
 		}
-		return 0;
+		return ids;
 	}
 
 	@Override
