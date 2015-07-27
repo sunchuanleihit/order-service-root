@@ -419,8 +419,8 @@ public class OrderServiceImpl implements OrderService {
 			return new SubmitOrderRespDto(400, "目前只支持Android 和iOS 系统");
 		}
 		// shippingtime
-		if (req.getShippingTimes() == null || req.getShippingTimes().getBooking().size() == 0 ||
-				req.getShippingTimes().getMaterial().size() == 0) {
+		if (req.getShippingTimes() == null || (req.getShippingTimes().getBooking().size() == 0 &&
+				req.getShippingTimes().getMaterial().size() == 0)) {
 			return new SubmitOrderRespDto(400, "配送时间有误");
 		}
 		// 地址
@@ -442,7 +442,7 @@ public class OrderServiceImpl implements OrderService {
 					return new SubmitOrderRespDto(400, "部分商品库存不足");
 				}
 				if (g.getOverdue() == 1) {
-					return new SubmitOrderRespDto(400, "部分商品预售时间已过");
+					return new SubmitOrderRespDto(400, "部分预售商品预售时间已过");
 				}
 			}
 		}
@@ -537,7 +537,10 @@ public class OrderServiceImpl implements OrderService {
 
 			Order order = new Order();
 			order.setOrderSnMain(orderSnMain);
-			String taoOrderSn = String.format("%s-%d-%d", orderSnMain, packageNum, i+1);
+			String taoOrderSn = orderSnMain;
+			if (packageNum > 1) {
+				String.format("%s-%d-%d", orderSnMain, packageNum, i+1);
+			}
 			order.setOrderSn(generateOrderSn());
 			order.setTaoOrderSn(taoOrderSn);
 			if (PackageType.MATERIAL.equals(pl.getPackageType())) {
