@@ -8,6 +8,7 @@ import com.loukou.order.pay.impl.AliPay;
 import com.loukou.order.pay.impl.TXKPay;
 import com.loukou.order.pay.impl.VAcountPay;
 import com.loukou.order.pay.impl.WeiXinPay;
+import com.loukou.order.service.enums.PaymentEnum;
 import com.loukou.order.service.resp.dto.ALiPayOrderResultDto;
 import com.loukou.order.service.resp.dto.WeixinPayOrderResultDto;
 
@@ -91,5 +92,27 @@ public class OrderPayProcessor {
 							String.valueOf(useTxk)));
 			return null;
 		}
+	}
+
+	/**
+	 * 完成普通订单 
+	 * 把支付金额分配到各子单
+	 * 修改支付单paysign状态
+	 * @param paymentEnum
+	 * @param totalFee
+	 * @param orderSnMain
+	 * @return
+	 */
+	public boolean finishOrder(PaymentEnum paymentEnum, double totalFee, String orderSnMain) {
+		//注意⚠这里使用userid=0
+		OrderPayContext context = new OrderPayContext(0, orderSnMain);
+		if (!context.init()) {
+			logger.error(String
+					.format("finishOrder fail to init order_sn_main[%s] total_fee[%f]",
+							orderSnMain, totalFee));
+			return false;
+		}
+		//通过context完成支付单子
+		return context.finishPayment(paymentEnum, totalFee);
 	}
 }

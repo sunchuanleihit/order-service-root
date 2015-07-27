@@ -26,6 +26,10 @@ public class OrderPayContext extends BasePayContext {
 	//子单列表
 	private List<OrderModel> allModels = null;
 
+	/**
+	 * @param userId 可能为空，因为支付完成时不需要user信息
+	 * @param orderSnMain
+	 */
 	public OrderPayContext(int userId, String orderSnMain) {
 		super(userId, orderSnMain);
 	}

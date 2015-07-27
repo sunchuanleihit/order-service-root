@@ -37,7 +37,8 @@ public class AliPay {
 		// 构造收银台结构
 		ALiPayOrderResultDto result = new ALiPayOrderResultDto();
 		result.setNeedPay(needToPay);
-		result.setNotifyUrl(AlipayConfig.notify_url);
+		//！！！把主单号带上 带回到notify接口
+		result.setNotifyUrl(String.format("%s?main=%s", AlipayConfig.notify_url, context.getOrderSnMain()));
 		result.setOrderSnMain(context.getOrderSnMain());
 		result.setOutTradeNo(outTradeNo);
 		result.setPartner(AlipayConfig.partner);
