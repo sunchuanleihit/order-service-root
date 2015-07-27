@@ -69,6 +69,6 @@ public class OrderServiceImplTest extends AbstractTestObject {
 	
 	@Test
 	public void getOrderList() {
-		orderService.getOrderList(1156347, 1);
+		orderService.getOrderList(1156347, 1, 0, 10);
 	}
 }
