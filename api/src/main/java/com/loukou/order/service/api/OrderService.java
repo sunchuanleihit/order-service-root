@@ -2,12 +2,14 @@ package com.loukou.order.service.api;
 
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
+import com.loukou.order.service.resp.dto.OrderBonusRespDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShippingResultDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
+import com.loukou.order.service.resp.dto.basic.RespDto;
 
 public interface OrderService {
 	
@@ -92,5 +94,15 @@ public interface OrderService {
 	 */
 	public PayBeforeRespDto getPayInfoBeforeOrder(int userId, String openId, int cityId,
 			int storeId, int couponId);
+	
+	
+	
+	/*
+	 * 统计每月统计提成奖励信息
+	 * @param: storeId
+	 * @return RespDto<OrderBonusRespDto>
+	 */
+	public RespDto<OrderBonusRespDto> getCurrentMonthBonusInfo(int storeId);
+
 
 }
