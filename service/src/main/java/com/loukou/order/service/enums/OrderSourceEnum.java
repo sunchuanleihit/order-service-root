@@ -8,7 +8,7 @@ public enum OrderSourceEnum {
 	SOURCE_IOS(30, "手机"),//IOS
 	SOURCE_LARGE(35, "大宗触屏版下单"),
 	SOURCE_CVS(50, "便利店内下单"),
-	SOURCE_(51, "");//TODO
+	SOURCE_(51, "微仓");//
 	
 	private int id;
 	private String source;

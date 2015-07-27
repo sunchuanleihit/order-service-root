@@ -44,7 +44,7 @@ public class WeiCangGoodsStore {
 	private int status = 1;// '1上架 0下架',
 
 	@Column(name = "update_time")
-	private Date updateTime = new Date();
+	private Date updateTime;
 
 	public int getGsId() {
 		return gsId;
