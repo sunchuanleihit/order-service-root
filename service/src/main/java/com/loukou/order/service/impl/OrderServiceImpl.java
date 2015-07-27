@@ -18,12 +18,15 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 
 import com.loukou.order.service.api.OrderService;
+import com.loukou.order.service.dao.AsyncTaskDao;
 import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.CoupTypeDao;
 import com.loukou.order.service.dao.CouponSnDao;
 import com.loukou.order.service.dao.ExpressDao;
 import com.loukou.order.service.dao.GoodsSpecDao;
+import com.loukou.order.service.dao.LKWhStockInDao;
+import com.loukou.order.service.dao.LKWhStockInGoodsDao;
 import com.loukou.order.service.dao.LkWhGoodsStoreDao;
 import com.loukou.order.service.dao.MemberDao;
 import com.loukou.order.service.dao.OrderActionDao;
@@ -37,7 +40,10 @@ import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.SiteDao;
 import com.loukou.order.service.dao.StoreDao;
 import com.loukou.order.service.dao.TczcountRechargeDao;
+import com.loukou.order.service.entity.AsyncTask;
 import com.loukou.order.service.entity.Express;
+import com.loukou.order.service.entity.LKWhStockIn;
+import com.loukou.order.service.entity.LKWhStockInGoods;
 import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderExtm;
@@ -46,10 +52,17 @@ import com.loukou.order.service.entity.OrderPay;
 import com.loukou.order.service.entity.OrderPayR;
 import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Store;
+import com.loukou.order.service.enums.AsyncTaskActionEnum;
+import com.loukou.order.service.enums.AsyncTaskStatusEnum;
+import com.loukou.order.service.enums.OrderActionTypeEnum;
+import com.loukou.order.service.enums.OrderGoodsReturnStatusEnum;
+import com.loukou.order.service.enums.OrderReturnGoodsStatusEnum;
 import com.loukou.order.service.enums.OrderSourceEnum;
 import com.loukou.order.service.enums.OrderTypeEnums;
 import com.loukou.order.service.enums.RefundStatusEnum;
 import com.loukou.order.service.enums.ReturnStatusEnum;
+import com.loukou.order.service.req.dto.ReturnStorageGoodsListReqDto;
+import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
 import com.loukou.order.service.resp.dto.OrderCancelRespDto;
@@ -59,6 +72,8 @@ import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
+import com.loukou.order.service.resp.dto.ResponseCodeDto;
+import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
 import com.loukou.order.service.resp.dto.ShareDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShareResultDto;
@@ -138,6 +153,15 @@ public class OrderServiceImpl implements OrderService {
 	
 	@Autowired 
 	private PaymentDao paymentDao;
+	
+	@Autowired
+	private AsyncTaskDao asyncTaskDao;
+	
+	@Autowired
+	private LKWhStockInDao whStockInDao;
+	
+	@Autowired
+	private LKWhStockInGoodsDao whStockInGoodsDao;
 	
 	@Override
 	public OrderListRespDto getOrderList(int userId, int flag) {
@@ -1147,7 +1171,156 @@ public class OrderServiceImpl implements OrderService {
 		return resp;
 	}
 
-	
-	
+	/**
+	 * 修改退货状态
+	 * @param orderId 订单id
+	 * @param returnStatus 退货状态
+	 * @return
+	 */
+	public int updateGoodsReturnStatus(int orderId,OrderGoodsReturnStatusEnum returnStatus){
+		return orderDao.updateGoodsReturnStatus(orderId, returnStatus.getId());
+	}
 
+	/**
+	 * 退货入库
+	 */
+	public ReturnStorageRespDto returnStorage(ReturnStorageReqDto returnStorageReqDto){
+		//预售商品退货时，修改订单状态，新建退款单
+		//操作库存，包括库存操作流水（退货状态）
+		//触发退款（退款状态）
+		
+		Order order = orderDao.findByTaoOrderSn(returnStorageReqDto.getTaoOrderSn());
+		if(order==null){
+			return new ReturnStorageRespDto(402,"订单不存在");
+		}
+		
+		if(order.getSellerId()!=returnStorageReqDto.getStoreId()){
+			return new ReturnStorageRespDto(403,"订单与微仓不一致");
+		}
+
+//		if(order.getGoodsReturnStatus() == OrderGoodsReturnStatusEnum.STATUS_RETURNED.getId()){
+//			return new ReturnStorageRespDto();
+//		}
+		
+		//修改订单退货状态
+		//updateGoodsReturnStatus(order.getOrderId(),OrderGoodsReturnStatusEnum.STATUS_RETURNED);
+		
+		//创建操作日志
+		createAction(order,OrderActionTypeEnum.TYPE_RETURN_STORAGE,"","退货入库");
+		
+		//生成退货库存记录，增加库存
+		LKWhStockIn whStockIn = createLKWhStockIn(order);
+		
+		List<LKWhStockInGoods> stockInGoodsList = createLKWhStockInGoodsList(whStockIn,returnStorageReqDto);
+
+		//增加库存
+		updateGoodsStock(whStockIn,stockInGoodsList);
+		
+		//查找退货单
+		//List<OrderReturn> orderReturnList = orderRDao.findByOrderId(order.getOrderId());
+		
+		//修改退货单商品状态
+		//updateOrderReturnGoodsStatus(orderReturnList,OrderReturnGoodsStatusEnum.STATUS_RETURNED.getId());
+		
+		//触发退款
+		//createAsyncTask(order,AsyncTaskActionEnum.ACTION_REFUND);
+		
+		return new ReturnStorageRespDto();
+	}
+	
+	private int updateOrderReturnGoodsStatus(List<OrderReturn> orderReturnList,int goodsStatus){
+		int count=0;
+		
+		for (OrderReturn orderReturn : orderReturnList) {
+			count += orderRDao.updateGoodsStatusByOrderIdR(orderReturn.getOrderIdR(), goodsStatus);
+		}
+		
+		return count;
+	}
+	
+	private LKWhStockIn createLKWhStockIn(Order order){
+		LKWhStockIn whStockIn = new LKWhStockIn();
+		whStockIn.setStoreId(order.getSellerId());
+		//order_id_r
+		whStockIn.setType(2);
+		whStockIn.setCreateTime(new Date());
+		whStockInDao.save(whStockIn);
+		
+		return whStockIn;
+	}
+	
+	private List<LKWhStockInGoods> createLKWhStockInGoodsList(LKWhStockIn whStockIn ,ReturnStorageReqDto returnStorageReqDto){
+		List<LKWhStockInGoods> stockInGoodsList = new ArrayList<LKWhStockInGoods>();
+		
+		for (ReturnStorageGoodsListReqDto returnStorageGoods : returnStorageReqDto.getGoodsList()) {
+			LKWhStockInGoods stockInGoods = new LKWhStockInGoods();
+			stockInGoods.setSpecId(returnStorageGoods.getSpecId());
+			stockInGoods.setStock(returnStorageGoods.getQuantity());
+			stockInGoods.setInId(whStockIn.getInId());
+			whStockInGoodsDao.save(stockInGoods);
+			stockInGoodsList.add(stockInGoods);
+		}
+		
+		return stockInGoodsList;
+	}
+	
+	/**
+	 * 增加库存
+	 * @param order
+	 * @param goodsList
+	 */
+	private int updateGoodsStock(LKWhStockIn whStockIn,List<LKWhStockInGoods> stockInGoodsList){
+		if(whStockIn==null || stockInGoodsList==null){
+			return 0 ;
+		}
+		
+		int count=0;
+		for (LKWhStockInGoods stockInGoods : stockInGoodsList) {
+			count+=lkWhGoodsStoreDao.updateBySpecIdAndStoreId(stockInGoods.getSpecId(),
+					whStockIn.getStoreId(),-stockInGoods.getStock(),0);
+		}
+		
+		return count;
+	}
+	
+	/**
+	 * 创建操作日志
+	 * @param order
+	 * @param action
+	 * @param actor
+	 * @param notes
+	 */
+	private OrderAction createAction(Order order,OrderActionTypeEnum action,String actor,String notes){
+		//order_action 只插入一条记录
+		OrderAction orderAction = new OrderAction();
+		orderAction.setAction(action.getId());
+		orderAction.setOrderSnMain(order.getOrderSnMain());
+		orderAction.setTaoOrderSn(order.getTaoOrderSn());
+		orderAction.setOrderId(order.getOrderId());
+		orderAction.setActor(actor);
+		orderAction.setActionTime(new Date());
+		orderAction.setNotes(notes);
+		orderActionDao.save(orderAction);
+		
+		return orderAction;
+	}
+	
+	/**
+	 * 创建异步任务
+	 * @param order
+	 * @param action
+	 */
+	private AsyncTask createAsyncTask(Order order,int actionKey,AsyncTaskActionEnum action){
+		AsyncTask task = new AsyncTask();
+		task.setAction(action.getId());
+		task.setCreateTime(new Date());
+		task.setActionKey(actionKey);
+		task.setOrderId(order.getOrderId());
+		task.setOrderSnMain(order.getOrderSnMain());
+		task.setTaoOrderSn(order.getTaoOrderSn());
+		task.setStatus(AsyncTaskStatusEnum.STATUS_NEW.getId());
+		asyncTaskDao.save(task);
+		
+		return task;
+	}
 }

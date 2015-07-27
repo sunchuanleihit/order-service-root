@@ -16,12 +16,12 @@ public interface LkWhGoodsStoreDao extends PagingAndSortingRepository<LkWhGoodsS
 	@Transactional(value = "transactionManagerMall")
 	@Modifying
 	@Query("UPDATE LkWhGoodsStore set stockS = stockS - ?3, freezestock=freezestock - ?4 where specId = ?1 and storeId=?2")
-	void updateBySpecIdAndStoreId(int specId, int storeId, int stockS, int freezestock);
+	int updateBySpecIdAndStoreId(int specId, int storeId, int stockS, int freezestock);
 
 	@Transactional(value = "transactionManagerMall")
 	@Modifying
 	@Query("UPDATE LkWhGoodsStore set freezestock=freezestock - ?3 where specId = ?1 and storeId=?2")
-	void updateBySpecIdAndStoreId(int specId, int sellerId, int freezestock);
+	int updateBySpecIdAndStoreId(int specId, int sellerId, int freezestock);
 
 
 }

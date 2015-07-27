@@ -16,4 +16,5 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 			+ "AND (usedtime IS NULL OR usedtime='0000-00-00 00:00:00')")
 	List<CoupList> getCoupLists(int userId);
 
+	CoupList getByUserIdAndCommoncode(int userId,String commoncode);
 }

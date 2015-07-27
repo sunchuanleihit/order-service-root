@@ -1,9 +1,13 @@
 package com.loukou.order.service.api;
 
+import com.loukou.order.service.req.dto.ReturnStorageGoodsListReqDto;
+import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.resp.dto.AbstractPayOrderRespDto;
 import com.loukou.order.service.resp.dto.OrderCancelRespDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
+import com.loukou.order.service.resp.dto.ResponseCodeDto;
+import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShippingResultDto;
 
@@ -80,4 +84,10 @@ public interface OrderService {
 	 */
 	public ShareRespDto shareAfterPay(String orderSnMain);
 
+	/**
+	 * 
+	 * @param 退货入库
+	 * @return 
+	 */
+	public ReturnStorageRespDto returnStorage(ReturnStorageReqDto returnStorageReqDto);
 }

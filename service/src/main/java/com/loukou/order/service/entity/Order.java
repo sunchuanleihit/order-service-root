@@ -8,6 +8,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
+
 
 @Entity
 @Table(name = "tcz_order")
@@ -372,6 +374,16 @@ public class Order {
 	 */
 	@Column(name = "is_del")
 	private int isDel;
+
+	/**
+	 * 退货状态 OrderGoodsReturnStatusEnum
+	 */
+	@Column(name = "goods_return_status")
+	private int goodsReturnStatus;
+	
+	public int getGoodsReturnStatus() {
+		return goodsReturnStatus;
+	}
 
 	public int getOrderId() {
 		return orderId;
@@ -796,4 +808,10 @@ public class Order {
 	public void setIsDel(int isDel) {
 		this.isDel = isDel;
 	}
+
+	public void setGoodsReturnStatus(int goodsReturnStatus) {
+		this.goodsReturnStatus = goodsReturnStatus;
+	}
+	
+	
 }
