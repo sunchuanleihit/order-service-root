@@ -32,28 +32,24 @@ public class OrderServiceImpTest extends AbstractTestObject{
 	
 	@Test
 	public void getOrderInfoTest() {
-		OrderListRespDto resp = orderService.getOrderInfo(1156347, "150707164298209", 1);
-		System.out.println(String.format("resp code = %d", resp.getCode()));
-		System.out.println(String.format("main order count = %d", resp.getResult().getOrderCount()));
-		for(OrderListDto dto : resp.getResult().getOrderList()) {
-			OrderListBaseDto base = dto.getBase();
-			List<GoodsListDto> goodsList = dto.getGoodsList();
-			ExtmMsgDto extmMsg = dto.getExtmMsg();
-			ShippingMsgDto shippingMsg = dto.getShippingmsg();
-		}
+		@SuppressWarnings("unused")
+		OrderListRespDto resp = orderService.getOrderInfo(1156347, "150629161315204", 1);
 	}
 	
 	@Test
 	public void getPayOrderMsgTest() {
 		PayOrderResultRespDto resp = orderService.getPayOrderMsg(1156347, "150707164298209");
-		int code = resp.getCode();
-		PayOrderMsgDto dto = resp.getResult();
+		resp.getCode();
 	}
 	
+	@SuppressWarnings("unused")
 	@Test
 	public void shareAfterPayTest() {
 		ShareRespDto resp = orderService.shareAfterPay("150707164298209");
-		int code = resp.getCode();
-		ShareResultDto dto = resp.getShareResultDto();
+	}
+	
+	@Test
+	public void getOrderList() {
+		orderService.getOrderList(1156347, 1);
 	}
 }

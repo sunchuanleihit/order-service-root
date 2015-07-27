@@ -258,7 +258,7 @@ public class OrderServiceImpl implements OrderService {
 		}
 		Map<String, OrderListDto> mainOrderMap = new HashMap<String, OrderListDto>();
 		for(String orderSnMain : orderSnMains) {
-			getOrderAttr(mainOrderMap, orderSnMain, flag);
+			mainOrderMap = getOrderAttr(orderSnMain, flag);
 		}
 		
 		OrderListResultDto resultDto = new OrderListResultDto();
@@ -713,7 +713,23 @@ public class OrderServiceImpl implements OrderService {
 			flag = 4;
 		}
 		Map<String, OrderListDto> mainOrderMap = new HashMap<String, OrderListDto>();
-		getOrderAttr(mainOrderMap, orderSnMain, flag);
+		mainOrderMap = getOrderAttr(orderSnMain, flag);
+		int orderCount = 0;
+		List<OrderListDto> orderList = new ArrayList<OrderListDto>();
+		Set<String> set = new HashSet<String>();
+		if( !CollectionUtils.isEmpty(mainOrderMap) ) {
+			for(Map.Entry<String, OrderListDto> entry : mainOrderMap.entrySet()) {
+				if( !set.contains(entry.getValue().getBase().getOrderSnMain()) ) {
+					set.add(entry.getValue().getBase().getOrderSnMain());
+					orderCount++;
+				}
+				orderList.add(entry.getValue());
+			}
+		}
+		OrderListResultDto resultDto = new OrderListResultDto();
+		resultDto.setOrderCount(orderCount);
+		resultDto.setOrderList(orderList);
+		resp.setResult(resultDto);
 		return resp;
 	}
 	
@@ -780,7 +796,7 @@ public class OrderServiceImpl implements OrderService {
 		
 		List<Order> orders = (List<Order>)orderDao.findByOrderSnMain(orderSnMain);
 		double orderTotal = 0, shippingFee = 0;
-		for(Order o:orders)
+		for(Order o : orders)
 		{
 			orderTotal = DoubleUtils.add(orderTotal, o.getGoodsAmount());
 			orderTotal = DoubleUtils.add(orderTotal, o.getShippingFee());
@@ -808,11 +824,12 @@ public class OrderServiceImpl implements OrderService {
 	/*
 	 *  返回列表页展示的订单信息
 	 */
-	private Map<String, OrderListDto> getOrderAttr(Map<String, OrderListDto> mainOrderMap, String orderSnMain, int flag) {
+	private Map<String, OrderListDto> getOrderAttr(String orderSnMain, int flag) {
 		List<Order> ordersList = orderDao.findByOrderSnMain(orderSnMain);
 		if(CollectionUtils.isEmpty(ordersList)) {
 			return null;
 		}
+		Map<String, OrderListDto> mainOrderMap = new HashMap<String, OrderListDto>();
 		int payStatus = 1;//默认不显示立即付款按钮
 		int orderPayStatus = 0;
 		int pType = 0;
@@ -865,13 +882,13 @@ public class OrderServiceImpl implements OrderService {
 				baseDto.setSellerId(order.getSellerId());
 				baseDto.setSource(source);
 				baseDto.setState("未付款");
-				if(order.getAddTime() != 0) {
+				if(order.getAddTime() != null && order.getAddTime() != 0) {
 					baseDto.setAddTime(SDF.format(order.getAddTime() * 1000));
 				}
-				if(order.getPayTime() != 0) {
+				if(order.getPayTime() != null && order.getPayTime() != 0) {
 					baseDto.setPayTime(SDF.format(order.getPayTime() * 1000));
 				}
-				if(order.getShipTime() != 0) {
+				if(order.getShipTime() != null && order.getShipTime() != 0) {
 					baseDto.setShipTime(SDF.format(order.getShipTime() * 1000));
 				}
 				baseDto.setStatus(order.getStatus());
@@ -902,21 +919,21 @@ public class OrderServiceImpl implements OrderService {
 					goodsList.add(goodsListDto);
 				}
 				
-				if(mainOrderMap.containsKey(orderSnMain)) {
-					if(mainOrderMap.get(orderSnMain) == null) {
+				if(mainOrderMap.containsKey(order.getTaoOrderSn())) {
+					if(mainOrderMap.get(order.getTaoOrderSn()) == null) {
 						OrderListDto orderListDto = new OrderListDto();
 						orderListDto.setGoodsList(goodsList);
 						orderListDto.setBase(baseDto);
-						mainOrderMap.put(orderSnMain, orderListDto);
+						mainOrderMap.put(order.getTaoOrderSn(), orderListDto);
 					} else {
-						mainOrderMap.get(orderSnMain).setGoodsList(goodsList);
-						mainOrderMap.get(orderSnMain).setBase(baseDto);
+						mainOrderMap.get(order.getTaoOrderSn()).setGoodsList(goodsList);
+						mainOrderMap.get(order.getTaoOrderSn()).setBase(baseDto);
 					}
 				} else {
 					OrderListDto orderListDto = new OrderListDto();
 					orderListDto.setGoodsList(goodsList);
 					orderListDto.setBase(baseDto);
-					mainOrderMap.put(orderSnMain, orderListDto);
+					mainOrderMap.put(order.getTaoOrderSn(), orderListDto);
 				}
 				//如果订单号和包裹号一样则为订单，反之则为包裹
 				if(mainOrderMap.containsKey(order.getTaoOrderSn())) {
@@ -939,13 +956,13 @@ public class OrderServiceImpl implements OrderService {
 				baseDto.setSellerId(order.getSellerId());
 				baseDto.setSource(source);
 				baseDto.setState(getPackageStatus(order.getTaoOrderSn(), 0));
-				if(order.getAddTime() != 0) {
+				if(order.getAddTime() != null && order.getAddTime() != 0) {
 					baseDto.setAddTime(SDF.format(order.getAddTime() * 1000));
 				}
-				if(order.getPayTime() != 0) {
+				if(order.getPayTime() != null && order.getPayTime() != 0) {
 					baseDto.setPayTime(SDF.format(order.getPayTime() * 1000));
 				}
-				if(order.getShipTime() != 0) {
+				if(order.getShipTime() != null && order.getShipTime() != 0) {
 					baseDto.setShipTime(SDF.format(order.getShipTime() * 1000));
 				}
 				baseDto.setStatus(order.getStatus());
@@ -997,11 +1014,13 @@ public class OrderServiceImpl implements OrderService {
 						OrderListDto orderListDto = new OrderListDto();
 						ShippingMsgDto shippingMsgDto = new ShippingMsgDto();
 						shippingMsgDto.setDescription("订单已支付，等待商家发货");
-						shippingMsgDto.setCreatTime(SDF.format(order.getPayTime() * 1000));
+						if(order.getPayTime() != null && order.getPayTime() != 0) {
+							shippingMsgDto.setCreatTime(SDF.format(order.getPayTime() * 1000));
+						}
 						orderListDto.setShippingmsg(shippingMsgDto);
 						orderListDto.setBase(baseDto);
-						mainOrderMap.get(order.getTaoOrderSn()).setGoodsList(goodsList);
-						mainOrderMap.put(orderSnMain, orderListDto);
+						orderListDto.setGoodsList(goodsList);
+						mainOrderMap.put(order.getTaoOrderSn(), orderListDto);
 					}
 				}
 				
@@ -1095,17 +1114,17 @@ public class OrderServiceImpl implements OrderService {
 			ExtmMsgDto extmMsgDto = new ExtmMsgDto();
 			
 			if(payStatus == 0) {//未支付，不分包裹
-				if(mainOrderMap.containsKey(orderSnMain)) {
-					if(mainOrderMap.get(orderSnMain).getExtmMsg() == null) {
+				if(mainOrderMap.containsKey(order.getTaoOrderSn())) {
+					if(mainOrderMap.get(order.getTaoOrderSn()).getExtmMsg() == null) {
 						extmMsgDto.setAddress(trimall(orderExtms.get(0).getRegionName() + orderExtms.get(0).getAddress()));
 						extmMsgDto.setConsignee(orderExtms.get(0).getConsignee());
 						extmMsgDto.setPhone_mob(orderExtms.get(0).getPhoneMob());
-						mainOrderMap.get(orderSnMain).setExtmMsg(extmMsgDto);
+						mainOrderMap.get(order.getTaoOrderSn()).setExtmMsg(extmMsgDto);
 					} else {
-						mainOrderMap.get(orderSnMain).getExtmMsg().setAddress(
+						mainOrderMap.get(order.getTaoOrderSn()).getExtmMsg().setAddress(
 								trimall(orderExtms.get(0).getRegionName() + orderExtms.get(0).getAddress()));
-						mainOrderMap.get(orderSnMain).getExtmMsg().setConsignee(orderExtms.get(0).getConsignee());
-						mainOrderMap.get(orderSnMain).getExtmMsg().setPhone_mob(orderExtms.get(0).getPhoneMob());
+						mainOrderMap.get(order.getTaoOrderSn()).getExtmMsg().setConsignee(orderExtms.get(0).getConsignee());
+						mainOrderMap.get(order.getTaoOrderSn()).getExtmMsg().setPhone_mob(orderExtms.get(0).getPhoneMob());
 					}
 				}
 			} else {//已支付，分包裹
