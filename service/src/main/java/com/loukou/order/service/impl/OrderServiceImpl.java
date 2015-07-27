@@ -191,8 +191,6 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired 
 	private PaymentDao paymentDao;
 	
-	@Autowired
-	private OrderGoodsRDao orderGoodsRDao;
 	
 	@Autowired AddressDao addressDao;
 	
