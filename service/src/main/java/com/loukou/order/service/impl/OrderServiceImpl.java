@@ -194,7 +194,7 @@ public class OrderServiceImpl implements OrderService {
 	
 	@Override
 	public OrderListRespDto getOrderList(int userId, int flag) {
-		OrderListRespDto resp = new OrderListRespDto();
+		OrderListRespDto resp = new OrderListRespDto(200, "");
 		if(userId <= 0 || flag <= 0) {
 			resp.setCode(400);
 			return resp;
@@ -735,7 +735,7 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public OrderListRespDto getOrderInfo(int userId, String orderSnMain,
 			int flag) {
-		OrderListRespDto resp = new OrderListRespDto();
+		OrderListRespDto resp = new OrderListRespDto(200, "");
 		if(userId <= 0 || flag <=0 || StringUtils.isEmpty(orderSnMain)) {
 			resp.setCode(400);
 			return null;
@@ -819,7 +819,7 @@ public class OrderServiceImpl implements OrderService {
 		
 	@Override
 	public PayOrderResultRespDto getPayOrderMsg(int userId, String orderSnMain) {
-		PayOrderResultRespDto resp = new PayOrderResultRespDto();
+		PayOrderResultRespDto resp = new PayOrderResultRespDto(200, "");
 		PayOrderMsgDto result = new PayOrderMsgDto();
 		if(userId <= 0 || StringUtils.isEmpty(orderSnMain)) {
 			resp.setCode(400);
@@ -1652,7 +1652,7 @@ public class OrderServiceImpl implements OrderService {
 	
 	@Override
 	public ShareRespDto shareAfterPay(String orderSnMain) {
-		ShareRespDto resp = new ShareRespDto();
+		ShareRespDto resp = new ShareRespDto(200, "");
 		if(StringUtils.isBlank(orderSnMain)) {
 			resp.setCode(400);
 			return resp;

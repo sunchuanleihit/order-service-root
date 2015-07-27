@@ -1,16 +1,18 @@
 package com.loukou.order.service.resp.dto;
 
-public class OrderCancelRespDto {
-	private int code = 200;
+import java.io.Serializable;
+
+public class OrderCancelRespDto extends ResponseCodeDto implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6722881887389992746L;
+
+	public OrderCancelRespDto(int code, String desc) {
+		super(code, desc);
+	}
+
 	private String message;
-
-	public int getCode() {
-		return code;
-	}
-
-	public void setCode(int code) {
-		this.code = code;
-	}
 
 	public String getMessage() {
 		return message;
