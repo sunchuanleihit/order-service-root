@@ -1,7 +1,13 @@
 package com.loukou.order.service.resp.dto;
 
-public class ALiPayOrderResultDto {
+import java.io.Serializable;
 
+public class ALiPayOrderResultDto implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2220201094001851384L;
 	private String outTradeNo;// 外部订单号
 	private String orderSnMain;
 	private double needPay;

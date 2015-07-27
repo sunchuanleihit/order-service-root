@@ -13,6 +13,7 @@ public interface WeiCangGoodsStoreDao extends PagingAndSortingRepository<WeiCang
 
 	WeiCangGoodsStore findBySpecIdAndStoreId(int specId, int sellerId);
 
+	//TODO timestamp
 	@Transactional(value = "transactionManagerMall")
 	@Modifying
 	@Query("UPDATE WeiCangGoodsStore set stockS = stockS - ?3, freezestock=freezestock - ?4 where specId = ?1 and storeId=?2")
