@@ -17,6 +17,14 @@ public class OrderServiceImplTest extends AbstractTestObject {
 	@Test
 	public void submitOrder() {
 		SubmitOrderReqDto req = new SubmitOrderReqDto();
+		req.setUserId(1032752);
+		req.setOpenId("414F8167B0CF4C3AA3603C7CF63365DD");
+		req.setStoreId(18047);
+		req.setCityId(1);
+		req.setAddressId(128);
+		req.setOs("ios");
+		req.getShippingTimes().getMaterial().add("2015-07-28 09:00:00");
+		
 		SubmitOrderRespDto resp = orderService.submitOrder(req);
 		System.out.println(object2String(resp));
 	}
@@ -24,7 +32,7 @@ public class OrderServiceImplTest extends AbstractTestObject {
 	@Test
 	public void getCouponList() {
 		int cityId = 1;
-		int userId = 1;
+		int userId = 113981;
 		int storeId = 18055;
 		String openId = "test-openId";
 		CouponListRespDto resp = orderService.getCouponList(cityId, userId, storeId, openId);
