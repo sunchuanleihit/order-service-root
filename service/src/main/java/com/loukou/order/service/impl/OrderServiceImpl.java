@@ -2327,7 +2327,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OResponseDto<String> finishPackagingOrder(String taoOrderSn,String userName) {
+    public OResponseDto<String> finishPackagingOrder(String taoOrderSn,String userName,int senderId) {
         Order order = orderDao.findByTaoOrderSn(taoOrderSn);
         if (order == null || order.getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()) {
             return new OResponseDto<String>(500, "错误的订单号");
@@ -2342,6 +2342,9 @@ public class OrderServiceImpl implements OrderService {
             orderAction.setNotes("配货");
             orderActionDao.save(orderAction);
             orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_ALLOCATED.getId());
+            
+            //TODO 订单派送给物流人员　　给用户发短信
+            
             return new OResponseDto<String>(200, "成功");
     }
 

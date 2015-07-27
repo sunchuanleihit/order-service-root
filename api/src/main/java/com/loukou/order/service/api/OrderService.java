@@ -109,7 +109,7 @@ public interface OrderService {
 	/**
 	 * 打包完成
 	 */
-	public OResponseDto<String> finishPackagingOrder(String taoOrderSn,String userName);
+	public OResponseDto<String> finishPackagingOrder(String taoOrderSn,String userName,int senderId);
 
 	/**
 	 * 生成订单前支付信息页面
