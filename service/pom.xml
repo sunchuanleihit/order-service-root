@@ -32,7 +32,6 @@
 			<artifactId>order-pay-client</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
-		
 		<dependency>
 			<groupId>com.serverstarted</groupId>
 			<artifactId>goods-api</artifactId>

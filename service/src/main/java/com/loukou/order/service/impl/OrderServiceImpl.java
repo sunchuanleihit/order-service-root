@@ -42,6 +42,7 @@ import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
 import com.loukou.order.service.dao.OrderExtmDao;
 import com.loukou.order.service.dao.OrderGoodsDao;
+import com.loukou.order.service.dao.OrderGoodsRDao;
 import com.loukou.order.service.dao.OrderLnglatDao;
 import com.loukou.order.service.dao.OrderPayDao;
 import com.loukou.order.service.dao.OrderPayRDao;
@@ -59,6 +60,7 @@ import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderExtm;
 import com.loukou.order.service.entity.OrderGoods;
+import com.loukou.order.service.entity.OrderGoodsR;
 import com.loukou.order.service.entity.OrderLnglat;
 import com.loukou.order.service.entity.OrderPay;
 import com.loukou.order.service.entity.OrderReturn;
@@ -188,6 +190,9 @@ public class OrderServiceImpl implements OrderService {
 	
 	@Autowired 
 	private PaymentDao paymentDao;
+	
+	@Autowired
+	private OrderGoodsRDao orderGoodsRDao;
 	
 	@Autowired AddressDao addressDao;
 	
@@ -1820,22 +1825,32 @@ public class OrderServiceImpl implements OrderService {
         orderAction.setActionTime(new Date());
         orderAction.setNotes("拒收");
         orderActionDao.save(orderAction);
+        //退款暂时不考虑 直接设置拒收状态
+//        OrderReturn orderReturn =  new OrderReturn();
+//        orderReturn.setOrderId(order.getOrderId());
+//        orderReturn.setOrderSnMain(order.getOrderSnMain());
+//        orderReturn.setBuyerId(order.getBuyerId());
+//        orderReturn.setSellerId(order.getSellerId());
+//        orderReturn.setReturnAmount(order.getGoodsAmount()+orderReturn.getShippingFee());
+//        orderReturn.setShippingFee(order.getShippingFee());
+//        orderReturn.setActor(userName);
+//        orderReturn.setAddTime(SDF.format(new Date()));
+//        orderReturn.setOrderType(0);
+//        orderReturn.setGoodsStatus(3);
+//        orderReturn.setRepayWay(0);//TODO 怎么返回? 1原路返回 0虚拟账户
+//        orderRDao.save(orderReturn);
+//        
+//       List<OrderGoods> orderGoodsList =  orderGoodsDao.findByOrderId(order.getOrderId());
+//       for(OrderGoods orderGoods :orderGoodsList){
+//           OrderGoodsR orderGoodsR =  new OrderGoodsR();
+//           orderGoodsR.setOrderIdR(orderReturn.getOrderIdR());
+//           orderGoodsR.setOrderId(order.getOrderId());
+//           orderGoodsR.setRecId(orderGoods.getRecId());
+//           orderGoodsRDao.save(orderGoodsR);
+//       }
+    
         
-        OrderReturn orderReturn =  new OrderReturn();
-        orderReturn.setOrderId(order.getOrderId());
-        orderReturn.setOrderSnMain(order.getOrderSnMain());
-        orderReturn.setBuyerId(order.getBuyerId());
-        orderReturn.setSellerId(order.getSellerId());
-        orderReturn.setReturnAmount(order.getGoodsAmount()+orderReturn.getShippingFee());
-        orderReturn.setShippingFee(order.getShippingFee());
-        orderReturn.setActor(userName);
-        orderReturn.setAddTime(SDF.format(new Date()));
-        orderReturn.setOrderType(0);
-        orderReturn.setOrderType(1);
-        orderReturn.setGoodsStatus(3);
-        orderReturn.setRepayWay(0);//1原路返回 0虚拟账户
-        orderRDao.save(orderReturn);
-        return null;
+        return new OResponseDto<String>(200, "成功");
     }
 
     @Override

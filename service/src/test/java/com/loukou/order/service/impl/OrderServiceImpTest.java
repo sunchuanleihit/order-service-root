@@ -62,7 +62,7 @@ public class OrderServiceImpTest extends AbstractTestObject {
 
     @Test
     public void testGetOrderInfo() {
-        ResponseDto<OrderListResultDto> result = orderService.getOrderInfo("120108035625905");
-        System.out.println(result);
+//        ResponseDto<OrderListResultDto> result = orderService.getOrderInfo("120108035625905");
+//        System.out.println(result);
     }
 }
