@@ -1,9 +1,14 @@
 package com.loukou.order.service.resp.dto;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CouponListResultDto {
+public class CouponListResultDto implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7820221019466934231L;
 	private List<CouponListDto> recommend = new ArrayList<CouponListDto>();
 	private List<CouponListDto> couponList = new ArrayList<CouponListDto>();
 	private int canUse;

@@ -297,7 +297,7 @@ public class OrderServiceImpl implements OrderService {
 	@Override
 	public CouponListRespDto getCouponList(int cityId, int userId, int storeId,
 			String openId) {
-		CouponListRespDto resp = new CouponListRespDto();
+		CouponListRespDto resp = new CouponListRespDto(200, "");
 		if (cityId <= 0 || userId <= 0 || storeId <= 0
 				|| StringUtils.isEmpty(openId)) {
 			resp.setCode(400);

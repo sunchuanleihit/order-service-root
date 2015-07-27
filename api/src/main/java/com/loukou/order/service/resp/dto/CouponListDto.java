@@ -1,6 +1,12 @@
 package com.loukou.order.service.resp.dto;
 
-public class CouponListDto {
+import java.io.Serializable;
+
+public class CouponListDto implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8413159346299672994L;
 	private int couponId;
 	private String couponName;
 	private String commoncode;

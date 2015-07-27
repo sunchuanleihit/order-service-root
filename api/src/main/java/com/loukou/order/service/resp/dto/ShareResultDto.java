@@ -1,7 +1,13 @@
 package com.loukou.order.service.resp.dto;
 
-public class ShareResultDto {
+import java.io.Serializable;
 
+public class ShareResultDto implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -280100977315243934L;
 	private String image;
 	private String arrivalCode;
 

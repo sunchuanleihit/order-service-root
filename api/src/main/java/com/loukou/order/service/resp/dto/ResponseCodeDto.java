@@ -1,6 +1,12 @@
 package com.loukou.order.service.resp.dto;
 
-public class ResponseCodeDto {
+import java.io.Serializable;
+
+public class ResponseCodeDto implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -11001300903411737L;
 	private int code = 200;
 	private String message = "";
 	
