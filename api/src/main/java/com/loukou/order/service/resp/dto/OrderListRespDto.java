@@ -4,8 +4,8 @@ import java.io.Serializable;
 
 public class OrderListRespDto extends ResponseCodeDto implements Serializable {
 	
-	public OrderListRespDto(int code, String desc) {
-		super(code, desc);
+	public OrderListRespDto(int code, String message) {
+		super(code, message);
 	}
 	/**
 	 * 
