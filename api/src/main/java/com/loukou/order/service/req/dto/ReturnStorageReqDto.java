@@ -3,7 +3,7 @@ package com.loukou.order.service.req.dto;
 public class ReturnStorageReqDto {
 	private String taoOrderSn;
 	private int storeId;
-	private ReturnStorageGoodsReqDto[] goodsList;
+	private ReturnStorageGoodsReqDto[] specList;
 	public String getTaoOrderSn() {
 		return taoOrderSn;
 	}
@@ -16,12 +16,10 @@ public class ReturnStorageReqDto {
 	public void setStoreId(int storeId) {
 		this.storeId = storeId;
 	}
-	public ReturnStorageGoodsReqDto[] getGoodsList() {
-		return goodsList;
+	public ReturnStorageGoodsReqDto[] getSpecList() {
+		return specList;
 	}
-	public void setGoodsList(ReturnStorageGoodsReqDto[] goodsList) {
-		this.goodsList = goodsList;
+	public void setSpecList(ReturnStorageGoodsReqDto[] specList) {
+		this.specList = specList;
 	}
-	
-	
 }

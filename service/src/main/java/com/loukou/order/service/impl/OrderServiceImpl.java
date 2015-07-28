@@ -77,6 +77,7 @@ import com.loukou.order.service.enums.OpearteTypeEnum;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
 import com.loukou.order.service.enums.OrderGoodsReturnStatusEnum;
 import com.loukou.order.service.enums.OrderPayTypeEnum;
+import com.loukou.order.service.enums.OrderReturnGoodsStatusEnum;
 import com.loukou.order.service.enums.OrderSourceEnum;
 import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.enums.OrderTypeEnums;
@@ -2139,16 +2140,6 @@ public class OrderServiceImpl implements OrderService {
     }
 
 	/**
-	 * 修改退货状态
-	 * @param orderId 订单id
-	 * @param returnStatus 退货状态
-	 * @return
-	 */
-	public int updateGoodsReturnStatus(int orderId,OrderGoodsReturnStatusEnum returnStatus){
-		return orderDao.updateGoodsReturnStatus(orderId, returnStatus.getId());
-	}
-
-	/**
 	 * 退货入库
 	 */
 	public ReturnStorageRespDto returnStorage(ReturnStorageReqDto returnStorageReqDto){
@@ -2165,12 +2156,12 @@ public class OrderServiceImpl implements OrderService {
 			return new ReturnStorageRespDto(403,"订单与微仓不一致");
 		}
 
-		//if(退货状态==“以退货”){
-		//	return new ReturnStorageRespDto();
-		//}
+		if(isGoodsReturned(order.getOrderId())){
+			return new ReturnStorageRespDto();
+		}
 		
 		//修改订单退货状态
-		//updateGoodsReturnStatus(order.getOrderId(),OrderGoodsReturnStatusEnum.STATUS_RETURNED);
+		updateOrderReturnGoodsStatus(order.getOrderId(),OrderReturnGoodsStatusEnum.STATUS_RETURNED);
 		
 		//创建操作日志
 		createAction(order,OrderActionTypeEnum.TYPE_RETURN_STORAGE,"","退货入库");
@@ -2186,14 +2177,26 @@ public class OrderServiceImpl implements OrderService {
 		return new ReturnStorageRespDto();
 	}
 	
-	private int updateOrderReturnGoodsStatus(List<OrderReturn> orderReturnList,int goodsStatus){
-		int count=0;
+	private boolean isGoodsReturned(int orderId){
+		List<OrderReturn> orderReturnList = orderRDao.findByOrderId(orderId);
 		
-		for (OrderReturn orderReturn : orderReturnList) {
-			count += orderRDao.updateGoodsStatusByOrderIdR(orderReturn.getOrderIdR(), goodsStatus);
+		if(orderReturnList.size()>0){
+			if(orderReturnList.get(0).getGoodsStatus()!=OrderReturnGoodsStatusEnum.STATUS_RETURNED.getId()){
+				return false;
+			}
 		}
 		
-		return count;
+		return true;
+	}
+	
+	/**
+	 * 修改退货状态
+	 * @param orderId 订单id
+	 * @param returnStatus 退货状态
+	 * @return
+	 */
+	private int updateOrderReturnGoodsStatus(int orderId,OrderReturnGoodsStatusEnum goodsStatus){
+		return orderRDao.updateGoodsStatusByOrderId(orderId,goodsStatus.getId());
 	}
 	
 	private LKWhStockIn createLKWhStockIn(Order order){
@@ -2210,7 +2213,7 @@ public class OrderServiceImpl implements OrderService {
 	private List<LKWhStockInGoods> createLKWhStockInGoodsList(LKWhStockIn whStockIn ,ReturnStorageReqDto returnStorageReqDto){
 		List<LKWhStockInGoods> stockInGoodsList = new ArrayList<LKWhStockInGoods>();
 		
-		for (ReturnStorageGoodsReqDto returnStorageGoods : returnStorageReqDto.getGoodsList()) {
+		for (ReturnStorageGoodsReqDto returnStorageGoods : returnStorageReqDto.getSpecList()) {
 			LKWhStockInGoods stockInGoods = new LKWhStockInGoods();
 			stockInGoods.setSpecId(returnStorageGoods.getSpecId());
 			stockInGoods.setStock(returnStorageGoods.getQuantity());
