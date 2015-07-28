@@ -97,7 +97,7 @@ public abstract class BasePayContext {
 		if (oldOutTradeNo != null) {
 			return oldOutTradeNo.getOutOrderSn();
 		}
-		//如果没有旧记录，则生成
+		//如果没有旧记录，则生成(其实不会用了！！！！先留着)
 		String outTradeNo = generateTradeNo();
 		int retry = 10;
 		while (retry > 0

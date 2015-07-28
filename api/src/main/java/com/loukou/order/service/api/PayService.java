@@ -22,12 +22,11 @@ public interface PayService {
 	/**
 	 * 完成在线支付回调的订单支付逻辑
 	 * @param orderSnMain 
-	 * @param outTradeNo 外部支付号，对于微信它等于orderSnMain
 	 * @param paymentId 支付完成方式 4:支付宝 207:微信
 	 * @param totalFee 支付完成金额
 	 * @return 参考FinishPayResultEnum
 	 */
 	public int finishOrderPay(int paymentId, double totalFee,
-			String orderSnMain, String outTradeNo);
+			String orderSnMain);
 
 }

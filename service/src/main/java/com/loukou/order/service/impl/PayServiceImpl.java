@@ -97,8 +97,8 @@ public class PayServiceImpl implements PayService {
 	 */
 	@Override
 	public int finishOrderPay(int paymentId, double totalFee,
-			String orderSnMain, String outTradeNo) {
-		if (!verifyRechargePayInfo(paymentId, totalFee, orderSnMain, outTradeNo)) {
+			String orderSnMain) {
+		if (!verifyRechargePayInfo(paymentId, totalFee, orderSnMain)) {
 			return FinishPayResultEnum.RESULT_VERIFY_FAILED.getId();
 		}
 		PaymentEnum paymentEnum = PaymentEnum.parseType(paymentId);
@@ -127,7 +127,7 @@ public class PayServiceImpl implements PayService {
 	
 	
 	private boolean verifyRechargePayInfo(int paymentId, double totalFee,
-			String orderSnMain, String outTradeNo) {
+			String orderSnMain) {
 		OrderPaySign paySign = orderPaySignDao.findByOrderSnMainAndPayId(
 				orderSnMain, paymentId);
 		//支付单要有的吧
@@ -143,13 +143,6 @@ public class PayServiceImpl implements PayService {
 					.format("verifyRechargePayInfo paysign money not match order_sn_main[%s] payment_id[%d] total_fee[%f] money[%f]",
 							orderSnMain, paymentId, totalFee,
 							paySign.getMoney()));
-			return false;
-		}
-		//支付宝还需要校验下outtradeno不是
-		if (!StringUtils.equalsIgnoreCase(paySign.getOutOrderSn(), outTradeNo)) {
-			logger.error(String
-					.format("verifyRechargePayInfo paysign money not match order_sn_main[%s] payment_id[%d] out_trade_no_input[%s] out_trade_no_indb[%s]",
-							orderSnMain, paymentId, outTradeNo, paySign.getOutOrderSn()));
 			return false;
 		}
 		return true;
