@@ -2156,12 +2156,8 @@ public class OrderServiceImpl implements OrderService {
 			return new ReturnStorageRespDto(403,"订单与微仓不一致");
 		}
 
-		List<OrderReturn> orderReturnList = orderRDao.findByOrderId(order.getOrderId());
-		
-		if(orderReturnList.size()>0){
-			if(orderReturnList.get(0).getGoodsStatus()==OrderReturnGoodsStatusEnum.STATUS_RETURNED.getId()){
-				return new ReturnStorageRespDto();
-			}
+		if(isGoodsReturned(order.getOrderId())){
+			return new ReturnStorageRespDto();
 		}
 		
 		//修改订单退货状态
@@ -2179,6 +2175,18 @@ public class OrderServiceImpl implements OrderService {
 		updateGoodsStock(whStockIn,stockInGoodsList);
 		
 		return new ReturnStorageRespDto();
+	}
+	
+	private boolean isGoodsReturned(int orderId){
+		List<OrderReturn> orderReturnList = orderRDao.findByOrderId(orderId);
+		
+		if(orderReturnList.size()>0){
+			if(orderReturnList.get(0).getGoodsStatus()!=OrderReturnGoodsStatusEnum.STATUS_RETURNED.getId()){
+				return false;
+			}
+		}
+		
+		return true;
 	}
 	
 	/**
@@ -2205,7 +2213,7 @@ public class OrderServiceImpl implements OrderService {
 	private List<LKWhStockInGoods> createLKWhStockInGoodsList(LKWhStockIn whStockIn ,ReturnStorageReqDto returnStorageReqDto){
 		List<LKWhStockInGoods> stockInGoodsList = new ArrayList<LKWhStockInGoods>();
 		
-		for (ReturnStorageGoodsReqDto returnStorageGoods : returnStorageReqDto.getGoodsList()) {
+		for (ReturnStorageGoodsReqDto returnStorageGoods : returnStorageReqDto.getSpecList()) {
 			LKWhStockInGoods stockInGoods = new LKWhStockInGoods();
 			stockInGoods.setSpecId(returnStorageGoods.getSpecId());
 			stockInGoods.setStock(returnStorageGoods.getQuantity());
