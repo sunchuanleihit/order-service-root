@@ -25,7 +25,13 @@
 
 
 	<dependencies>
-
+		<!-- search -->
+		<dependency>
+	    	<groupId>com.loukou</groupId>
+	    	<artifactId>search-client</artifactId>
+	    	<version>0.1.0-SNAPSHOT</version>
+	    </dependency>
+    
 		<!-- order-pay-client -->
 		<dependency>
 			<groupId>com.loukou.order.pay</groupId>
@@ -38,7 +44,7 @@
 			<artifactId>goods-service</artifactId>
 			<version>0.1.0-SNAPSHOT</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.serverstarted</groupId>
 			<artifactId>goods-api</artifactId>

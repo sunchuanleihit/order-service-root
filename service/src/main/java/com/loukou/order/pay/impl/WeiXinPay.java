@@ -46,8 +46,9 @@ public class WeiXinPay {
 		}
 		// 调用微信统一支付接口
 		String goodsName = String.format("订单号：%s", context.getOrderSnMain());
+		// !!!! 注意⚠这里外部交易号用的是主单号 跟支付宝不一样 !!!!
 		WxUnifiedOrderRespVO unifiedOrderResp = WxPayProcessor.getProcessor()
-				.pay(outTradeNo, goodsName, needToPay);
+				.pay(context.getOrderSnMain(), goodsName, needToPay);
 		if (!WxPayProcessor.isSuccessUnifiedOrder(unifiedOrderResp)) {
 			logger.error(String
 					.format("preparePay weixin fail to make unified order user_id[%d] order_sn_main[%s] out_trade_no[%s]",
@@ -82,5 +83,4 @@ public class WeiXinPay {
 		result.setSign(WxPayUtil.getSign(paramMap));
 		return result;
 	}
-
 }

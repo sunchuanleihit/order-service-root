@@ -1,15 +1,22 @@
 package com.loukou.order.service.api;
 
+import com.loukou.order.service.req.dto.OrderListParamDto;
+import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
+import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderBonusRespDto;
+import com.loukou.order.service.resp.dto.OrderInfoDto;
+import com.loukou.order.service.resp.dto.OrderListInfoDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
+import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
-import com.loukou.order.service.resp.dto.ShippingResultDto;
+import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
 import com.loukou.order.service.resp.dto.basic.RespDto;
+
 
 public interface OrderService {
 	
@@ -17,9 +24,11 @@ public interface OrderService {
 	 * 
 	 * @param userId,//用户ID
 	 * @param flag ,//flag 1:全部 2:待付款 3:待收货 4:退货
+	 * @param pageSize 
+	 * @param pageNum 
 	 * @return 订单列表
 	 */
-	public OrderListRespDto getOrderList(int userId, int flag);
+	public OrderListRespDto getOrderList(int userId, int flag, int pageNum, int pageSize);
 	
 	/**
 	 * 
@@ -75,7 +84,7 @@ public interface OrderService {
 	 * @param taoOrderSn 订单ID
 	 * @return 物流详情
 	 */
-	public ShippingResultDto getShippingResult(ShippingResultDto shippingResultDto, String taoOrderSn);
+	public ShippingMsgRespDto getShippingResult(String taoOrderSn);
 	
 	/**
 	 * 
@@ -83,8 +92,24 @@ public interface OrderService {
 	 * @return 下单后分享
 	 */
 	public ShareRespDto shareAfterPay(String orderSnMain);
+	
+	/**
+	 * 订单详情
+	 */
+	public  OResponseDto<OrderInfoDto> getOrderGoodsInfo(String orderId);
+	
+	/**
+	 * 订单　预售订单列表
+	 */
+	public OResponseDto<OrderListInfoDto> getOrderListInfo(OrderListParamDto param);
+	
+	/**
+	 * 打包完成
+	 */
+	public OResponseDto<String> finishPackagingOrder(String taoOrderSn,String userName,int senderId);
 
 	/**
+
 	 * 生成订单前支付信息页面
 	 * @param userId
 	 * @param openId
@@ -94,15 +119,32 @@ public interface OrderService {
 	 */
 	public PayBeforeRespDto getPayInfoBeforeOrder(int userId, String openId, int cityId,
 			int storeId, int couponId);
+	/**
+	 * 拒绝订单
+	 */
+	public OResponseDto<String> refuseOrder(String taoOrderSn,String userName);
 	
+	/**
+	 * 确认收货
+	 */
+	public OResponseDto<String> confirmRevieveOrder(String taoOrderSn,String gps,String userName);
 	
-	
+	/**
+	 *     确认预售订单到货
+	 */
+	public OResponseDto<String> confirmBookOrder(String taoOrderSn,String userName);
+
+	/** 
+	 * @param 退货入库
+	 * @return 
+	 */
+	public ReturnStorageRespDto returnStorage(ReturnStorageReqDto returnStorageReqDto);
+
 	/*
 	 * 统计每月统计提成奖励信息
 	 * @param: storeId
 	 * @return RespDto<OrderBonusRespDto>
 	 */
 	public RespDto<OrderBonusRespDto> getCurrentMonthBonusInfo(int storeId);
-
 
 }

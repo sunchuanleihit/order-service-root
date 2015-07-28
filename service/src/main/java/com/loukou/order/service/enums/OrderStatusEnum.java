@@ -18,8 +18,12 @@ public enum OrderStatusEnum {
 	STATUS_PACKAGED(8), // 打包
 	
 	STATUS_DELIVERIED(13),	// 已发货
+
+	STATUS_14(14),//
 	
-	STATUS_FINISHED(15); // 回单
+	STATUS_FINISHED(15),// 回单
+	
+	STATUS_REFUSED(16); //拒单
 	
 	private int id;
 	

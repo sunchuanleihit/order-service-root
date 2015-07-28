@@ -71,4 +71,11 @@ public class GoodsListDto implements Serializable {
 		this.goodsId = goodsId;
 	}
 
+    @Override
+    public String toString() {
+        return "GoodsListDto [goodsImage=" + goodsImage + ", goodsName=" + goodsName + ", specification="
+                + specification + ", pricePurchase=" + pricePurchase + ", quantity=" + quantity + ", specId=" + specId
+                + ", goodsId=" + goodsId + "]";
+    }
+	
 }

@@ -15,7 +15,11 @@ public enum OrderActionTypeEnum {
 	
 	TYPE_SLIP(15), //回单
 	
-	TYPE_CHOOSE_PAY(20); //选择支付方式
+	TYPE_CHOOSE_PAY(20), //选择支付方式
+	
+	TYPE_33(33),
+
+	TYPE_RETURN_STORAGE(30); //退货入库
 	
 	private int id;
 	

@@ -26,4 +26,10 @@ public class OrderListResultDto implements Serializable {
 		this.orderCount = orderCount;
 	}
 
+    @Override
+    public String toString() {
+        return "OrderListResultDto [orderList=" + orderList + ", orderCount=" + orderCount + "]";
+    }
+	
+
 }

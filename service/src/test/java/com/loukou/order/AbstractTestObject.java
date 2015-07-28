@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = {
-	"classpath*:order-service-*.xml",
+	"classpath*:order-service-appcontext.xml",
 })
 @TransactionConfiguration(defaultRollback = false)
 @Transactional

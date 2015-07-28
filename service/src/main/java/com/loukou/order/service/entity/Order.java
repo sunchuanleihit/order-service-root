@@ -89,7 +89,7 @@ public class Order {
 	 * 下单时间
 	 */
 	@Column(name = "add_time")
-	private int addTime;
+	private Integer addTime;
 
 	/*
 	 * 1货到付款2在线支付3建行员工支付
@@ -471,11 +471,11 @@ public class Order {
 		this.status = status;
 	}
 
-	public int getAddTime() {
+	public Integer getAddTime() {
 		return addTime;
 	}
 
-	public void setAddTime(int addTime) {
+	public void setAddTime(Integer addTime) {
 		this.addTime = addTime;
 	}
 
@@ -822,5 +822,4 @@ public class Order {
 	public void setSellSite(String sellSite) {
 		this.sellSite = sellSite;
 	}
-	
 }
