@@ -124,7 +124,7 @@ public interface OrderService {
 	/**
 	 * 拒绝订单
 	 */
-	public OResponseDto<String> refuseOrder(String taoOrderSn,String userName);
+	public OResponseDto<String> refuseOrder(String taoOrderSn,String userName,int refuseId,String refuseReason);
 	
 	/**
 	 * 确认收货

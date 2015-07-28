@@ -54,6 +54,8 @@ import com.loukou.order.service.dao.OrderGoodsRDao;
 import com.loukou.order.service.dao.OrderLnglatDao;
 import com.loukou.order.service.dao.OrderPayDao;
 import com.loukou.order.service.dao.OrderPayRDao;
+import com.loukou.order.service.dao.OrderRefuseConfigDao;
+import com.loukou.order.service.dao.OrderRefuseDao;
 import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.SiteDao;
@@ -73,6 +75,7 @@ import com.loukou.order.service.entity.OrderGoods;
 import com.loukou.order.service.entity.OrderLnglat;
 import com.loukou.order.service.entity.OrderPay;
 import com.loukou.order.service.entity.OrderPayR;
+import com.loukou.order.service.entity.OrderRefuse;
 import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Site;
 import com.loukou.order.service.entity.Store;
@@ -248,6 +251,14 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired
 	private LkWhDeliveryDao lkWhDeliveryDao;
 	
+
+	@Autowired
+	private OrderRefuseDao orderRefuseDao;
+	
+	@Autowired
+	private OrderRefuseConfigDao orderRefuseConfigDao;
+	
+
 	
 
 
@@ -2318,10 +2329,9 @@ public class OrderServiceImpl implements OrderService {
         orderInfoDto.setDeliveryInfo(deliveryInfo);
         
         if(order.getStatus() ==OrderStatusEnum.STATUS_REFUSED.getId()){
-            List<OrderAction> orderActions =  orderActionDao.findByTaoOrderSnAndAction(order.getTaoOrderSn(),OrderStatusEnum.STATUS_REFUSED.getId());
-            OrderAction orderAction =orderActions.get(0);
-           orderInfoDto.setRejectTime(orderAction.getActionTime());
-           orderInfoDto.setRejectReason("");
+            OrderRefuse orderRefuse =  orderRefuseDao.findByTaoOrderSn(order.getTaoOrderSn());
+           orderInfoDto.setRejectReason(orderRefuse.getRefuseReason());
+           orderInfoDto.setRejectTime(orderRefuse.getRefuseTime());
         }else   if(order.getStatus() ==OrderStatusEnum.STATUS_CANCELED.getId()){
             List<OrderAction> orderActions =  orderActionDao.findByTaoOrderSnAndAction(order.getTaoOrderSn(),OrderStatusEnum.STATUS_CANCELED.getId());
             OrderAction orderAction =orderActions.get(0);
@@ -2441,7 +2451,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public OResponseDto<String> refuseOrder(String taoOrderSn,String userName) {
+    public OResponseDto<String> refuseOrder(String taoOrderSn,String userName,int refuseId,String refuseReason) {
         Order order = orderDao.findByTaoOrderSn(taoOrderSn);
         //enum中没有14的状态 大多数逻辑都
         if(order==null || order.getStatus() != 14){
@@ -2458,6 +2468,21 @@ public class OrderServiceImpl implements OrderService {
         orderAction.setActionTime(new Date());
         orderAction.setNotes("拒收");
         orderActionDao.save(orderAction);
+        
+        //拒绝原因是其他 refuseId=0
+        if(refuseId ==0){
+            OrderRefuse orderRefuse = new OrderRefuse();
+            orderRefuse.setRefuseId(0);
+            orderRefuse.setRefuseReason(refuseReason);
+            orderRefuse.setTaoOrderSn(taoOrderSn);
+        }else{
+            OrderRefuse orderRefuse = new OrderRefuse();
+            orderRefuse.setRefuseId(1);
+            orderRefuse.setRefuseReason(refuseReason);
+            orderRefuse.setTaoOrderSn(taoOrderSn);
+        }
+        
+           
         //退款暂时不考虑 直接设置拒收状态
 //        OrderReturn orderReturn =  new OrderReturn();
 //        orderReturn.setOrderId(order.getOrderId());
