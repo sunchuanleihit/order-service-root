@@ -195,13 +195,20 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired
 	private StoreService storeService;
 
+	@Autowired 
+	private GoodsService goodsService;
 	
-	@Autowired GoodsService goodsService;
-	@Autowired GoodsSpecService goodsSpecService;
-	@Autowired CoupListService coupListService;
-	@Autowired OrderLnglatDao orderLnglatDao;
-	@Autowired GoodsSearchService goodsSearchService;
-
+	@Autowired 
+	private GoodsSpecService goodsSpecService;
+	
+	@Autowired 
+	private CoupListService coupListService;
+	
+	@Autowired 
+	private OrderLnglatDao orderLnglatDao;
+	
+	@Autowired 
+	private GoodsSearchService goodsSearchService;
 
 	@Autowired
 	private UserService userService;
