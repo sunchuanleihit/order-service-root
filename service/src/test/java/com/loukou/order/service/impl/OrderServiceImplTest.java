@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.loukou.order.AbstractTestObject;
 import com.loukou.order.service.api.OrderService;
+import com.loukou.order.service.req.dto.ReturnStorageGoodsReqDto;
+import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.ExtmMsgDto;
@@ -16,6 +18,7 @@ import com.loukou.order.service.resp.dto.OrderListDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
+import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShareResultDto;
 import com.loukou.order.service.resp.dto.ShippingMsgDto;
@@ -95,4 +98,33 @@ public class OrderServiceImplTest extends AbstractTestObject {
 //        ResponseDto<OrderListResultDto> result = orderService.getOrderInfo("120108035625905");
 //        System.out.println(result);
     }
+    
+    @Test
+	public void returnStorage(){
+		ReturnStorageReqDto req = new ReturnStorageReqDto();
+		req.setStoreId(1432);
+		req.setTaoOrderSn("nj0131021214077861");
+		
+		ReturnStorageGoodsReqDto[] goodsList = new ReturnStorageGoodsReqDto[3];
+		
+		ReturnStorageGoodsReqDto goo=new ReturnStorageGoodsReqDto();
+		goo.setSpecId(608017);
+		goo.setQuantity(10);
+		
+		ReturnStorageGoodsReqDto goo1=new ReturnStorageGoodsReqDto();
+		goo1.setSpecId(610927);
+		goo1.setQuantity(11);
+		
+		ReturnStorageGoodsReqDto goo2=new ReturnStorageGoodsReqDto();
+		goo2.setSpecId(622294);
+		goo2.setQuantity(12);
+		
+		goodsList[0]=goo;
+		goodsList[1]=goo1;
+		goodsList[2]=goo2;
+		req.setGoodsList(goodsList);
+		
+		ReturnStorageRespDto resp = orderService.returnStorage(req);
+		System.out.println(object2String(resp));
+	}
 }
