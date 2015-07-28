@@ -122,7 +122,7 @@ public class OrderServiceImplTest extends AbstractTestObject {
 		goodsList[0]=goo;
 		goodsList[1]=goo1;
 		goodsList[2]=goo2;
-		req.setGoodsList(goodsList);
+		req.setSpecList(goodsList);
 		System.out.println(object2String(req));
 		ReturnStorageRespDto resp = orderService.returnStorage(req);
 		System.out.println(object2String(resp));
