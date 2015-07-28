@@ -1,5 +1,7 @@
 package com.loukou.order.service.impl;
 
+import java.rmi.RemoteException;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -41,11 +43,14 @@ import com.loukou.order.service.dao.CoupTypeDao;
 import com.loukou.order.service.dao.CouponSnDao;
 import com.loukou.order.service.dao.ExpressDao;
 import com.loukou.order.service.dao.GoodsSpecDao;
+import com.loukou.order.service.dao.LkWhDeliveryDao;
+import com.loukou.order.service.dao.LkWhDeliveryOrderDao;
 import com.loukou.order.service.dao.MemberDao;
 import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
 import com.loukou.order.service.dao.OrderExtmDao;
 import com.loukou.order.service.dao.OrderGoodsDao;
+import com.loukou.order.service.dao.OrderGoodsRDao;
 import com.loukou.order.service.dao.OrderLnglatDao;
 import com.loukou.order.service.dao.OrderPayDao;
 import com.loukou.order.service.dao.OrderPayRDao;
@@ -59,6 +64,8 @@ import com.loukou.order.service.entity.Address;
 import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.Express;
+import com.loukou.order.service.entity.LkWhDelivery;
+import com.loukou.order.service.entity.LkWhDeliveryOrder;
 import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderExtm;
@@ -122,6 +129,8 @@ import com.loukou.pos.client.vaccount.processor.VirtualAccountProcessor;
 import com.loukou.pos.client.vaccount.resp.VaccountUpdateRespVO;
 import com.loukou.search.service.api.GoodsSearchService;
 import com.loukou.search.service.dto.GoodsCateDto;
+import com.loukou.sms.sdk.client.SingletonSmsClient;
+import com.loukou.sms.sdk.client.SmsClient;
 import com.serverstarted.cart.service.api.CartService;
 import com.serverstarted.cart.service.constants.PackageType;
 import com.serverstarted.cart.service.resp.dto.CartGoodsRespDto;
@@ -233,6 +242,11 @@ public class OrderServiceImpl implements OrderService {
 	private GoodsSearchService goodsSearchService;
 	@Autowired
 	private OrderGoodsRDao orderGoodsRDao;
+	@Autowired
+	private LkWhDeliveryOrderDao lkWhDeliveryOrderDao;
+	
+	@Autowired
+	private LkWhDeliveryDao lkWhDeliveryDao;
 	
 	
 
@@ -2302,6 +2316,29 @@ public class OrderServiceImpl implements OrderService {
        
         orderInfoDto.setSpecList(specList);
         orderInfoDto.setDeliveryInfo(deliveryInfo);
+        
+        if(order.getStatus() ==OrderStatusEnum.STATUS_REFUSED.getId()){
+            List<OrderAction> orderActions =  orderActionDao.findByTaoOrderSnAndAction(order.getTaoOrderSn(),OrderStatusEnum.STATUS_REFUSED.getId());
+            OrderAction orderAction =orderActions.get(0);
+           orderInfoDto.setRejectTime(orderAction.getActionTime());
+           orderInfoDto.setRejectReason("");
+        }else   if(order.getStatus() ==OrderStatusEnum.STATUS_CANCELED.getId()){
+            List<OrderAction> orderActions =  orderActionDao.findByTaoOrderSnAndAction(order.getTaoOrderSn(),OrderStatusEnum.STATUS_CANCELED.getId());
+            OrderAction orderAction =orderActions.get(0);
+            orderInfoDto.setCancelTime(orderAction.getActionTime());
+            //添加退货状态
+            List<OrderReturn> returns =  orderRDao.findByOrderSnMain(order.getOrderSnMain());
+            //good_status只要不是４　就是待退货
+            if(returns.get(0).getGoodsStatus()!=4){
+                orderInfoDto.setGoodsReturnStatus(1);
+            }else{
+                orderInfoDto.setGoodsReturnStatus(2);
+            }
+        }else if(order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()){
+            List<OrderAction> orderActions =  orderActionDao.findByTaoOrderSnAndAction(order.getTaoOrderSn(),OrderStatusEnum.STATUS_CANCELED.getId());
+            OrderAction orderAction =orderActions.get(0);
+            orderInfoDto.setFinishTime(orderAction.getActionTime());
+        }
         oResultDto.setCode(200);
         oResultDto.setResult(orderInfoDto);
         return oResultDto;
@@ -2310,7 +2347,18 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OResponseDto<OrderListInfoDto> getOrderListInfo(OrderListParamDto param) {
         PageRequest pagenation = new PageRequest(param.getPageNum(), param.getPageSize());
-        Page<Order> orders  =orderDao.findBySellerId(param.getStoreId(), pagenation);
+        String type;
+        switch (param.getOrderType()) {
+        case 1:
+            type = "wei_wh";
+            break;
+        case 2:
+            type = "booking";
+        default:
+            type = "wei_wh";
+            break;
+        }
+        Page<Order> orders  =orderDao.findBySellerIdAndTypeAndStatus(param.getStoreId(), type,param.getOrderStatus(),pagenation);
         OrderListInfoDto orderListInfoDto = new OrderListInfoDto();
         List<OrderInfoDto> orderInfoDtos = new ArrayList<OrderInfoDto>();
         for(Order order :orders.getContent()){
@@ -2320,10 +2368,25 @@ public class OrderServiceImpl implements OrderService {
             orderInfoDto.setTaoOrderSn(order.getTaoOrderSn());
             orderInfoDto.setOrderStatus(order.getStatus());
             orderInfoDtos.add(orderInfoDto);
+           
+           if(order.getStatus() == OrderStatusEnum.STATUS_REVIEWED.getId()){
+               
+           }else if(order.getStatus() ==OrderStatusEnum.STATUS_CANCELED.getId()){
+               
+           }else if(order.getStatus() == OrderStatusEnum.STATUS_DELIVERIED.getId()) {
+            
+           }else if (order.getStatus() == OrderStatusEnum.STATUS_ALLOCATED.getId()) {
+            
+           }else if(order.getStatus() == OrderStatusEnum.STATUS_REFUSED.getId()){
+               
+           }
+            
         }
         orderListInfoDto.setOrders(orderInfoDtos);
         orderListInfoDto.setStoreId(param.getStoreId());
         orderListInfoDto.setTotalNum(orders.getTotalElements());
+     
+        
         return new OResponseDto<OrderListInfoDto>(200,orderListInfoDto);
     }
 
@@ -2333,27 +2396,54 @@ public class OrderServiceImpl implements OrderService {
         if (order == null || order.getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()) {
             return new OResponseDto<String>(500, "错误的订单号");
            }
+        List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
+        for (OrderGoods good : goods) {
+            lkWhGoodsStoreDao.updateBySpecIdAndStoreId(good.getSpecId(), good.getStoreId(), good.getQuantity(),
+                    good.getQuantity());
+        }
+        
+            LkWhDeliveryOrder lkWhDeliveryOrder =  new LkWhDeliveryOrder();
+            lkWhDeliveryOrder.setOrderId(order.getOrderId());
+            lkWhDeliveryOrder.setOrderNo(order.getOrderSnMain());
+            lkWhDeliveryOrder.setdId(senderId);
+            lkWhDeliveryOrder.setRemark("仓库发货");
+            lkWhDeliveryOrderDao.save(lkWhDeliveryOrder);
+            
+            LkWhDelivery lkDelivery = lkWhDeliveryDao.findByDId(senderId);
+            if(lkDelivery ==null){
+                return new OResponseDto<String>(500, "错误的快递员");
+            }
             OrderAction orderAction = new OrderAction();
             orderAction.setActionTime(new Date());
-            orderAction.setAction(OrderStatusEnum.STATUS_ALLOCATED.getId());
+            orderAction.setAction(14);
             orderAction.setActor(userName);
             orderAction.setOrderSnMain(order.getOrderSnMain());
             orderAction.setTaoOrderSn(taoOrderSn);
             orderAction.setOrderId(order.getOrderId());
-            orderAction.setNotes("配货");
+            orderAction.setNotes("配送员"+lkDelivery.getdName()+",手机号"+lkDelivery.getdMobile());
             orderActionDao.save(orderAction);
-            orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_ALLOCATED.getId());
+            orderDao.updateOrderStatus(order.getOrderId(), 14);
             
-            //TODO 订单派送给物流人员　　给用户发短信
+            String receiveNo = new String(""+(int)(Math.random()*10000));
+            orderDao.updateOrderStatusAndreceiveNo(order.getOrderId(), receiveNo,14);
             
+            //发短信  内容?
+            OrderExtm orderExm = orderExtmDao.findByOrderId(order.getOrderId());
+            if(!StringUtils.isEmpty(orderExm.getPhoneMob())){
+                try {
+                    String[] mobiles = {orderExm.getPhoneMob()};
+                    SingletonSmsClient.getClient().sendSMS(mobiles, "订单已发送");
+                } catch (RemoteException e) {
+                }
+            }
+           
             return new OResponseDto<String>(200, "成功");
     }
 
     @Override
-    @Transactional
     public OResponseDto<String> refuseOrder(String taoOrderSn,String userName) {
         Order order = orderDao.findByTaoOrderSn(taoOrderSn);
-        //enum中没有14的状态
+        //enum中没有14的状态 大多数逻辑都
         if(order==null || order.getStatus() != 14){
             return new OResponseDto<String>(500, "失败");
         }
@@ -2402,11 +2492,7 @@ public class OrderServiceImpl implements OrderService {
         if (order.getStatus() != OrderStatusEnum.STATUS_ALLOCATED.getId()) {
              return new OResponseDto<String>(500, "错误的订单号");
          }
-         List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
-         for (OrderGoods good : goods) {
-             lkWhGoodsStoreDao.updateBySpecIdAndStoreId(good.getSpecId(), good.getStoreId(), good.getQuantity(),
-                     good.getQuantity());
-         }
+        
  
          return new OResponseDto<String>(200, "确认成功");
     }
