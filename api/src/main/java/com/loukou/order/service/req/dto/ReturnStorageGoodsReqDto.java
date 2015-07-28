@@ -1,6 +1,6 @@
 package com.loukou.order.service.req.dto;
 
-public class ReturnStorageGoodsListReqDto {
+public class ReturnStorageGoodsReqDto {
 	private int specId;
 	
 	private int quantity;

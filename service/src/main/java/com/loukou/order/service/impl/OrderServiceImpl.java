@@ -84,7 +84,7 @@ import com.loukou.order.service.enums.PayStatusEnum;
 import com.loukou.order.service.enums.RefundStatusEnum;
 import com.loukou.order.service.enums.ReturnStatusEnum;
 import com.loukou.order.service.req.dto.OrderListParamDto;
-import com.loukou.order.service.req.dto.ReturnStorageGoodsListReqDto;
+import com.loukou.order.service.req.dto.ReturnStorageGoodsReqDto;
 import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.req.dto.SpecShippingTime;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
@@ -2219,7 +2219,7 @@ public class OrderServiceImpl implements OrderService {
 	private List<LKWhStockInGoods> createLKWhStockInGoodsList(LKWhStockIn whStockIn ,ReturnStorageReqDto returnStorageReqDto){
 		List<LKWhStockInGoods> stockInGoodsList = new ArrayList<LKWhStockInGoods>();
 		
-		for (ReturnStorageGoodsListReqDto returnStorageGoods : returnStorageReqDto.getGoodsList()) {
+		for (ReturnStorageGoodsReqDto returnStorageGoods : returnStorageReqDto.getGoodsList()) {
 			LKWhStockInGoods stockInGoods = new LKWhStockInGoods();
 			stockInGoods.setSpecId(returnStorageGoods.getSpecId());
 			stockInGoods.setStock(returnStorageGoods.getQuantity());
