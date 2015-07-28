@@ -3,6 +3,7 @@ package com.loukou.order.service.impl;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -95,6 +96,7 @@ import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsInfoDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
+import com.loukou.order.service.resp.dto.OrderBonusRespDto;
 import com.loukou.order.service.resp.dto.OrderInfoDto;
 import com.loukou.order.service.resp.dto.OrderListBaseDto;
 import com.loukou.order.service.resp.dto.OrderListDto;
@@ -115,6 +117,7 @@ import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SpecDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderResultDto;
+import com.loukou.order.service.resp.dto.basic.RespDto;
 import com.loukou.order.service.util.DateUtils;
 import com.loukou.order.service.util.DoubleUtils;
 import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
@@ -2286,5 +2289,43 @@ public class OrderServiceImpl implements OrderService {
 		asyncTaskDao.save(task);
 		
 		return task;
+	}
+
+	@Override
+	public RespDto<OrderBonusRespDto> getCurrentMonthBonusInfo(int storeId) {
+		
+		
+		// 获取当月第一天以及下月第一天
+		int currentYear;
+		int currentMonth;
+		int start;
+		int end;
+		
+		Calendar cal=Calendar.getInstance();
+		currentYear = cal.get(Calendar.YEAR);
+		currentMonth = cal.get(Calendar.MONTH) + 1;
+		
+		cal.set(Calendar.DAY_OF_MONTH,1);
+		start = (int) (cal.getTimeInMillis() / 1000);
+		cal.add(Calendar.MONTH,1);
+		end = (int) (cal.getTimeInMillis() / 1000);
+		// 计算本月总体订单数
+		int orderNum = orderDao.countValidOrderBetweenAddTime(storeId, start, end);
+		// 计算已回订单金额和运费
+		double feedback = 0;
+		double feedbackDelivery = 0;
+		List<Order> orderList = orderDao.findByStatusAndAddTimeBetween(15, start, end);
+		for (Order order : orderList) {
+			feedback = DoubleUtils.add(feedback, order.getOrderAmount());
+			feedbackDelivery = DoubleUtils.add(feedbackDelivery,order.getShippingFee());
+		}
+		
+		OrderBonusRespDto bonusDto = new OrderBonusRespDto();
+		bonusDto.setOrderNum(orderNum);
+		bonusDto.setFeedback(feedback);
+		bonusDto.setFeedbackDelivery(feedbackDelivery);
+		bonusDto.setTimeStr(String.format("%d年%d月", currentYear, currentMonth ));
+		
+		return new RespDto(200, "ok", bonusDto);
 	}
 }

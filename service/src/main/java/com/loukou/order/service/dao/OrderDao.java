@@ -24,6 +24,12 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	
 	@Query("SELECT o FROM Order o WHERE status=15 AND sellerId IN (?1) AND finishedTime >= ?2 AND finishedTime < ?3")
 	List<Order> getByStoreIdsAndFinishedTime(List<Integer> storeIds, int start, int end);
+	
+	@Query("SELECT count(o) FROM Order o WHERE status > 2 AND sellerId = ?1 AND addTime >= ?2 AND addTime < ?3")
+	int countValidOrderBetweenAddTime(int storeId, int start, int end);
+	
+
+	List<Order> findByStatusAndAddTimeBetween(int storeId, int start, int end);
 
 
 	Page<Order> findBySellerIdAndPayStatusAndStatusIn(int storeId, int payStatus, List<Integer> statusList, Pageable Pageable);

@@ -5,6 +5,7 @@ import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
+import com.loukou.order.service.resp.dto.OrderBonusRespDto;
 import com.loukou.order.service.resp.dto.OrderInfoDto;
 import com.loukou.order.service.resp.dto.OrderListInfoDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
@@ -14,6 +15,7 @@ import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
+import com.loukou.order.service.resp.dto.basic.RespDto;
 
 
 public interface OrderService {
@@ -137,5 +139,12 @@ public interface OrderService {
 	 * @return 
 	 */
 	public ReturnStorageRespDto returnStorage(ReturnStorageReqDto returnStorageReqDto);
+
+	/*
+	 * 统计每月统计提成奖励信息
+	 * @param: storeId
+	 * @return RespDto<OrderBonusRespDto>
+	 */
+	public RespDto<OrderBonusRespDto> getCurrentMonthBonusInfo(int storeId);
 
 }
