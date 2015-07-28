@@ -1,7 +1,13 @@
 package com.loukou.order.service.resp.dto;
 
-public class WeixinPayOrderResultDto {
+import java.io.Serializable;
 
+public class WeixinPayOrderResultDto implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -8334750079601385185L;
 	private String appId;
 	private String partnerId;
 	private String prepayId;// 预支付订单

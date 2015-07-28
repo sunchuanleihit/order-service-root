@@ -11,7 +11,7 @@ import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
-import com.loukou.order.service.resp.dto.ShippingResultDto;
+import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
 
 public interface OrderService {
@@ -20,9 +20,11 @@ public interface OrderService {
 	 * 
 	 * @param userId,//用户ID
 	 * @param flag ,//flag 1:全部 2:待付款 3:待收货 4:退货
+	 * @param pageSize 
+	 * @param pageNum 
 	 * @return 订单列表
 	 */
-	public OrderListRespDto getOrderList(int userId, int flag);
+	public OrderListRespDto getOrderList(int userId, int flag, int pageNum, int pageSize);
 	
 	/**
 	 * 
@@ -78,7 +80,7 @@ public interface OrderService {
 	 * @param taoOrderSn 订单ID
 	 * @return 物流详情
 	 */
-	public ShippingResultDto getShippingResult(ShippingResultDto shippingResultDto, String taoOrderSn);
+	public ShippingMsgRespDto getShippingResult(String taoOrderSn);
 	
 	/**
 	 * 

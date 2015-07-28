@@ -16,6 +16,7 @@ import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderPaySign;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
 import com.loukou.order.service.enums.PaySignStatusEnum;
+import com.loukou.order.service.enums.PaymentEnum;
 
 /**
  * paycontext 用于负责封装与数据库的数据交互 basepaycontext 抽取生产外部交易号/分配订单金额等基本操作
@@ -91,6 +92,12 @@ public abstract class BasePayContext {
 							userId, orderSnMain, paymentId));
 			return null;
 		}
+		//如果该订单该支付方式已经有对应的记录，使用旧记录
+		OrderPaySign oldOutTradeNo = orderPaySignDao.findByOrderSnMainAndPayId(orderSnMain, paymentId);
+		if (oldOutTradeNo != null) {
+			return oldOutTradeNo.getOutOrderSn();
+		}
+		//如果没有旧记录，则生成(其实不会用了！！！！先留着)
 		String outTradeNo = generateTradeNo();
 		int retry = 10;
 		while (retry > 0
@@ -122,6 +129,74 @@ public abstract class BasePayContext {
 					.format("makeOutTrade fail to insert out_trade_no user_id[%d] order_sn_main[%s] payment_id[%d] out_trade_no[%s]",
 							userId, orderSnMain, paymentId, outTradeNo));
 			return null;
+		}
+	}
+	
+
+	/**
+	 * 完成照顾反应的共同逻辑
+	 * @param paymentEnum 支付方式
+	 * @param totalFee 支付金额
+	 * @return
+	 */
+	public boolean finishPayment(PaymentEnum paymentEnum, double totalFee) {
+		// 计算需要支付的总额
+		double needToPay = getAmountToPay();
+		if (needToPay <= 0) {
+			//如果无需支付
+			return true;
+		}
+		// 把成功支付的金额分配到各子单
+		double rest = consume(paymentEnum, totalFee);
+		if (rest < 0) { 
+			//支付失败
+			logger.error(String
+					.format("finishPayment fail to pay order_sn_main[%s] total_fee[%f]",
+							orderSnMain, totalFee));
+			return false;
+		} else if (rest > 0) {
+			//支付有盈余！！！warn
+			logger.warn(String
+					.format("finishPayment rest money order_sn_main[%s] total_fee[%f] rest[%f]",
+							orderSnMain, totalFee, rest));
+		}
+		//更新支付订单状态
+		if (!finishPaySign(paymentEnum)) {
+			logger.error(String.format(
+					"finishPayment fail to update recharge order status order_sn_main[%s] total_fee[%f]",
+					orderSnMain, totalFee));
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * 完成paysign的状态更新
+	 * @param payment
+	 * @return
+	 */
+	private boolean finishPaySign(PaymentEnum payment) {
+		// 生成数据库记录
+		OrderPaySign orderPaySign = orderPaySignDao.findByOrderSnMainAndPayId(orderSnMain, payment.getId());
+		if (orderPaySign == null) {
+			logger.error(String
+					.format("finishPaySign fail to find paysign order_sn_main[%s] payment_id[%d]",
+							orderSnMain, payment.getId()));
+			return false;
+		}
+		orderPaySign.setfTime(new Date().getTime() / 1000);
+		orderPaySign.setStatus(PaySignStatusEnum.STATUS_SUCC.getStatus());
+		// 更新记录
+		if (orderPaySignDao.save(orderPaySign) != null) {
+			logger.info(String
+					.format("finishPaySign done to finish paysign order_sn_main[%s] payment_id[%d]",
+							orderSnMain, payment.getId()));
+			return true;
+		} else {
+			logger.error(String
+					.format("finishPaySign fail to finish paysign order_sn_main[%s] payment_id[%d]",
+							orderSnMain, payment.getId()));
+			return false;
 		}
 	}
 
@@ -170,7 +245,7 @@ public abstract class BasePayContext {
 
 	public abstract double getAmountToPay();
 
-	public boolean init() {
-		return false;
-	}
+	public abstract boolean init();
+	
+	public abstract double consume(PaymentEnum paymentEnum, double totalFee);
 }

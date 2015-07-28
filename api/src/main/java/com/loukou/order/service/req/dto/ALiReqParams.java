@@ -1,6 +1,12 @@
 package com.loukou.order.service.req.dto;
 
-public class ALiReqParams {
+import java.io.Serializable;
+
+public class ALiReqParams implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4342590151785846276L;
 	/* 基本信息 */
 	private String agent;
 	private String service;

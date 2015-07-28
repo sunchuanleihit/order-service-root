@@ -9,5 +9,6 @@ public interface OrderPaySignDao extends CrudRepository<OrderPaySign, Integer>{
 
 	OrderPaySign findByOutOrderSn(String outTradeSn);
 
+	OrderPaySign findByOrderSnMainAndPayId(String orderSnMain, int payId);
 	
 }

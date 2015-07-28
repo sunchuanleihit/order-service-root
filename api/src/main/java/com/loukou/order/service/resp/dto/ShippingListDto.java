@@ -1,6 +1,12 @@
 package com.loukou.order.service.resp.dto;
 
-public class ShippingListDto {
+import java.io.Serializable;
+
+public class ShippingListDto implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5641901360425123642L;
 	private String taoOrderSn;
 	private String description;
 	private String createTime;

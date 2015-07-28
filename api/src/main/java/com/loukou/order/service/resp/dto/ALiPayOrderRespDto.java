@@ -1,7 +1,13 @@
 package com.loukou.order.service.resp.dto;
 
-public class ALiPayOrderRespDto extends AbstractPayOrderRespDto{
+import java.io.Serializable;
 
+public class ALiPayOrderRespDto extends AbstractPayOrderRespDto implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -22286338848377267L;
 	private ALiPayOrderResultDto result;
 	public ALiPayOrderResultDto getResult() {
 		return result;
