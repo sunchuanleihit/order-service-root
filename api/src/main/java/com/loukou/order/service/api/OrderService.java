@@ -1,18 +1,20 @@
 package com.loukou.order.service.api;
 
+import com.loukou.order.service.req.dto.OrderListParamDto;
+import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
-import com.loukou.order.service.req.dto.OrderListParamDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderInfoDto;
 import com.loukou.order.service.resp.dto.OrderListInfoDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
-import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
+import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
+
 
 public interface OrderService {
 	
@@ -105,6 +107,7 @@ public interface OrderService {
 	public OResponseDto<String> finishPackagingOrder(String taoOrderSn,String userName,int senderId);
 
 	/**
+
 	 * 生成订单前支付信息页面
 	 * @param userId
 	 * @param openId
@@ -128,4 +131,11 @@ public interface OrderService {
 	 *     确认预售订单到货
 	 */
 	public OResponseDto<String> confirmBookOrder(String taoOrderSn,String userName);
+
+	/** 
+	 * @param 退货入库
+	 * @return 
+	 */
+	public ReturnStorageRespDto returnStorage(ReturnStorageReqDto returnStorageReqDto);
+
 }

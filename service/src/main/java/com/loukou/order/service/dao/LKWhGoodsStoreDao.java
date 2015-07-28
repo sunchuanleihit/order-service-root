@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.loukou.order.service.entity.WeiCangGoodsStore;
 
 
-public interface WeiCangGoodsStoreDao extends PagingAndSortingRepository<WeiCangGoodsStore, Integer>{
+public interface LKWhGoodsStoreDao extends PagingAndSortingRepository<WeiCangGoodsStore, Integer>{
 
 	WeiCangGoodsStore findBySpecIdAndStoreId(int specId, int sellerId);
 
