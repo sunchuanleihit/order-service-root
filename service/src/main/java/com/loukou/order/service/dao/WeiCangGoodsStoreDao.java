@@ -16,12 +16,12 @@ public interface WeiCangGoodsStoreDao extends PagingAndSortingRepository<WeiCang
 	//TODO timestamp
 	@Transactional(value = "transactionManagerMall")
 	@Modifying
-	@Query("UPDATE LkWhGoodsStore set stockS = stockS - ?3, freezestock=freezestock - ?4 where specId = ?1 and storeId=?2")
-	int updateBySpecIdAndStoreId(int specId, int storeId, int stockS, int freezestock);
+	@Query("UPDATE LkWhGoodsStore set stockS = stockS - ?3, freezstock=freezstock - ?4 where specId = ?1 and storeId=?2")
+	int updateBySpecIdAndStoreId(int specId, int storeId, int stockS, int freezstock);
 
 	@Transactional(value = "transactionManagerMall")
 	@Modifying
-	@Query("UPDATE LkWhGoodsStore set freezestock=freezestock - ?3 where specId = ?1 and storeId=?2")
-	int updateBySpecIdAndStoreId(int specId, int sellerId, int freezestock);
+	@Query("UPDATE LkWhGoodsStore set freezstock=freezstock - ?3 where specId = ?1 and storeId=?2")
+	int updateBySpecIdAndStoreId(int specId, int sellerId, int freezstock);
 }
 

@@ -67,12 +67,12 @@
 		<property name="packagesToScan" value="com.loukou.order.service.entity" />
 	</bean>
 
-	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+	<bean id="transactionManagerMall" class="org.springframework.orm.jpa.JpaTransactionManager">
 		<property name="entityManagerFactory" ref="entityManagerFactory" />
 	</bean>
 
 	<jpa:repositories base-package="com.loukou.order.service.dao"
 		entity-manager-factory-ref="entityManagerFactory"
-		transaction-manager-ref="transactionManager" />
-	<tx:annotation-driven transaction-manager="transactionManager" />
+		transaction-manager-ref="transactionManagerMall" />
+	<tx:annotation-driven transaction-manager="transactionManagerMall" />
 </beans>
