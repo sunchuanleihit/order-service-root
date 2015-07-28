@@ -24,6 +24,11 @@ public interface OrderReturnDao extends PagingAndSortingRepository<OrderReturn, 
 	@Query("UPDATE OrderReturn set goodsStatus = ?2 where orderIdR = ?1")
 	int updateGoodsStatusByOrderIdR(int orderIdR,int goodsStatus);
 	
+	@Transactional(value="transactionManagerMall")
+	@Modifying
+	@Query("UPDATE OrderReturn set goodsStatus = ?2 where orderId = ?1")
+	int updateGoodsStatusByOrderId(int orderId,int status);
+	
 	List<OrderReturn> findByOrderId(int orderId);
 }
 
