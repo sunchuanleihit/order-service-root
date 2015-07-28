@@ -39,7 +39,6 @@ import com.loukou.order.service.dao.CoupTypeDao;
 import com.loukou.order.service.dao.CouponSnDao;
 import com.loukou.order.service.dao.ExpressDao;
 import com.loukou.order.service.dao.GoodsSpecDao;
-import com.loukou.order.service.dao.LKWhGoodsStoreDao;
 import com.loukou.order.service.dao.LKWhStockInDao;
 import com.loukou.order.service.dao.LKWhStockInGoodsDao;
 import com.loukou.order.service.dao.MemberDao;
@@ -55,6 +54,7 @@ import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.SiteDao;
 import com.loukou.order.service.dao.StoreDao;
 import com.loukou.order.service.dao.TczcountRechargeDao;
+import com.loukou.order.service.dao.WeiCangGoodsStoreDao;
 import com.loukou.order.service.entity.Address;
 import com.loukou.order.service.entity.AsyncTask;
 import com.loukou.order.service.entity.CoupList;
@@ -199,7 +199,7 @@ public class OrderServiceImpl implements OrderService {
 	private GoodsSpecDao goodsSpecDao;
 
 	@Autowired
-	private LKWhGoodsStoreDao lkWhGoodsStoreDao;
+	private WeiCangGoodsStoreDao lkWhGoodsStoreDao;
 
 	@Autowired
 	private CartService cartService;
@@ -2165,9 +2165,9 @@ public class OrderServiceImpl implements OrderService {
 			return new ReturnStorageRespDto(403,"订单与微仓不一致");
 		}
 
-//		if(order.getGoodsReturnStatus() == OrderGoodsReturnStatusEnum.STATUS_RETURNED.getId()){
-//			return new ReturnStorageRespDto();
-//		}
+		//if(退货状态==“以退货”){
+		//	return new ReturnStorageRespDto();
+		//}
 		
 		//修改订单退货状态
 		//updateGoodsReturnStatus(order.getOrderId(),OrderGoodsReturnStatusEnum.STATUS_RETURNED);
@@ -2182,15 +2182,6 @@ public class OrderServiceImpl implements OrderService {
 
 		//增加库存
 		updateGoodsStock(whStockIn,stockInGoodsList);
-		
-		//查找退货单
-		//List<OrderReturn> orderReturnList = orderRDao.findByOrderId(order.getOrderId());
-		
-		//修改退货单商品状态
-		//updateOrderReturnGoodsStatus(orderReturnList,OrderReturnGoodsStatusEnum.STATUS_RETURNED.getId());
-		
-		//触发退款
-		//createAsyncTask(order,AsyncTaskActionEnum.ACTION_REFUND);
 		
 		return new ReturnStorageRespDto();
 	}
