@@ -1,8 +1,11 @@
 package com.loukou.order.service.resp.dto;
 
+import java.io.Serializable;
 
-public class OrderBonusRespDto  {
 
+public class OrderBonusRespDto implements Serializable  {
+
+	private static final long serialVersionUID = -4404649773018468121L;
 	private String timeStr;
 	private int orderNum;
 	private double feedback;
