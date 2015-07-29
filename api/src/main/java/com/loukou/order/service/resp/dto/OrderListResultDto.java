@@ -1,14 +1,15 @@
 package com.loukou.order.service.resp.dto;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class OrderListResultDto implements Serializable {
 
 	private static final long serialVersionUID = -1434301276931075935L;
 
-	private List<OrderListDto> orderList;
-	private int orderCount;
+	private List<OrderListDto> orderList = new ArrayList<OrderListDto>();
+	private int orderCount = 0;
 
 	public List<OrderListDto> getOrderList() {
 		return orderList;

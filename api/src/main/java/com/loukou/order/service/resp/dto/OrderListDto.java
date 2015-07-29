@@ -1,6 +1,7 @@
 package com.loukou.order.service.resp.dto;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class OrderListDto implements Serializable {
@@ -9,10 +10,10 @@ public class OrderListDto implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 5016662529411604501L;
-	private OrderListBaseDto base;
-	private ShippingMsgDto shippingmsg;
-	private List<GoodsListDto> goodsList;
-	private ExtmMsgDto extmMsg;
+	private OrderListBaseDto base = new OrderListBaseDto();
+	private ShippingMsgDto shippingmsg = new ShippingMsgDto();
+	private List<GoodsListDto> goodsList = new ArrayList<GoodsListDto>();
+	private ExtmMsgDto extmMsg = new ExtmMsgDto();
 
 	
 	public OrderListBaseDto getBase() {

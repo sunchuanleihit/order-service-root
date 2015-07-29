@@ -9,8 +9,8 @@ public class ShippingListResultDto implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -4046797300333866394L;
-	private String shippingName;
-	private String payType;
+	private String shippingName = "";
+	private String payType = "";
 	private List<ShippingListDto> shippingList = new ArrayList<ShippingListDto>();
 
 	public String getShippingName() {

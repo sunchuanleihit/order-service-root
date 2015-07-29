@@ -9,9 +9,9 @@ public class ExtmMsgDto implements Serializable {
 	 */
 	private static final long serialVersionUID = -4852348544033722979L;
 
-	private String consignee;
-	private String phoneMob;
-	private String address;
+	private String consignee = "";
+	private String phoneMob = "";
+	private String address = "";
 
 	public String getConsignee() {
 		return consignee;

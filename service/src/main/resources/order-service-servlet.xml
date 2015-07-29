@@ -15,7 +15,7 @@
 	
 	<!-- 声明需要暴露的服务接口 -->
 	<dubbo:service ref="orderService" interface="com.loukou.order.service.api.OrderService" />
-	
+	<dubbo:service ref="payService" interface="com.loukou.order.service.api.PayService" />
 	
 	<!-- 引用的服务 -->
 	<dubbo:reference id="userService" interface="com.serverstarted.user.api.UserService" />

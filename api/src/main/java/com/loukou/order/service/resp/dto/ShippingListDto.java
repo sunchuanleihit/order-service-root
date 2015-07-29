@@ -7,9 +7,9 @@ public class ShippingListDto implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 5641901360425123642L;
-	private String taoOrderSn;
-	private String description;
-	private String createTime;
+	private String taoOrderSn = "";
+	private String description = "";
+	private String createTime = "";
 
 	public String getTaoOrderSn() {
 		return taoOrderSn;

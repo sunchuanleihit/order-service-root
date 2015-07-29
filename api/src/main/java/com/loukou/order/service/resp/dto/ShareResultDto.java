@@ -8,11 +8,11 @@ public class ShareResultDto implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -280100977315243934L;
-	private String image;
-	private String arrivalCode;
+	private String image = "";
+	private String arrivalCode = "";
 
-	private String desc;
-	private ShareDto share;
+	private String desc = "";
+	private ShareDto share = new ShareDto();
 
 	public String getImage() {
 		return image;

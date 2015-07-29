@@ -7,13 +7,13 @@ public class GoodsListDto implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 6150083226198763019L;
-	private String goodsImage;
-	private String goodsName;
-	private String specification;
-	private double pricePurchase;
-	private int quantity;
-	private int specId;
-	private int goodsId;
+	private String goodsImage = "";
+	private String goodsName = "";
+	private String specification = "";
+	private double pricePurchase = 0;
+	private int quantity = 0;
+	private int specId = 0;
+	private int goodsId = 0;
 
 	public String getGoodsImage() {
 		return goodsImage;
