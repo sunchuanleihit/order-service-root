@@ -1,6 +1,12 @@
 package com.loukou.order.service.resp.dto;
 
-public class ReturnStorageResultDto {
+import java.io.Serializable;
+
+public class ReturnStorageResultDto implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -677825744191017373L;
 	private String message="";
 
 	public String getMessage() {
