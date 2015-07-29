@@ -13,6 +13,8 @@ import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
+import com.loukou.order.service.resp.dto.RefuseReasonDto;
+import com.loukou.order.service.resp.dto.RefuseReasonListDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
@@ -135,4 +137,6 @@ public interface OrderService {
 	 *     确认预售订单到货
 	 */
 	public OResponseDto<String> confirmBookOrder(String taoOrderSn,String userName);
+	
+	public OResponseDto<RefuseReasonListDto> getRefuseReasonList();
 }

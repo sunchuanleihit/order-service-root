@@ -76,6 +76,7 @@ import com.loukou.order.service.entity.OrderLnglat;
 import com.loukou.order.service.entity.OrderPay;
 import com.loukou.order.service.entity.OrderPayR;
 import com.loukou.order.service.entity.OrderRefuse;
+import com.loukou.order.service.entity.OrderRefuseConfig;
 import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Site;
 import com.loukou.order.service.entity.Store;
@@ -113,6 +114,8 @@ import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgRespDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
+import com.loukou.order.service.resp.dto.RefuseReasonDto;
+import com.loukou.order.service.resp.dto.RefuseReasonListDto;
 import com.loukou.order.service.resp.dto.ShareDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShareResultDto;
@@ -2539,6 +2542,18 @@ public class OrderServiceImpl implements OrderService {
                     orderActionDao.save(orderAction);
                     orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_ALLOCATED.getId());
                     return new OResponseDto<String>(200, "成功");
+    }
+
+    @Override
+    public OResponseDto<RefuseReasonListDto> getRefuseReasonList() {
+        List<RefuseReasonDto> reasonDtos =  new ArrayList<RefuseReasonDto>();
+       Iterable<OrderRefuseConfig> configRefuseReason = orderRefuseConfigDao.findAll(); 
+       List<OrderRefuseConfig> list = Lists.newArrayList(configRefuseReason);
+       for(OrderRefuseConfig config : list){
+           reasonDtos.add(new RefuseReasonDto(config.getId(),config.getReason()));
+       }
+       
+        return new OResponseDto<RefuseReasonListDto>(200, new RefuseReasonListDto(reasonDtos));
     }
 
 	
