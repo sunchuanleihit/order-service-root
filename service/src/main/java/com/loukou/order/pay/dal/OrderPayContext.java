@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
+import com.loukou.order.pay.processor.GetDaoProcessor;
 import com.loukou.order.service.dao.OrderDao;
 import com.loukou.order.service.dao.OrderPayDao;
 import com.loukou.order.service.entity.Order;
@@ -17,10 +17,8 @@ public class OrderPayContext extends BasePayContext {
 
 	private final Logger logger = Logger.getLogger(OrderPayContext.class);
 
-	@Autowired
 	private OrderDao orderDao;
 
-	@Autowired
 	private OrderPayDao orderPayDao;
 	
 	//子单列表
@@ -30,8 +28,10 @@ public class OrderPayContext extends BasePayContext {
 	 * @param userId 可能为空，因为支付完成时不需要user信息
 	 * @param orderSnMain
 	 */
-	public OrderPayContext(int userId, String orderSnMain) {
-		super(userId, orderSnMain);
+	public OrderPayContext(int userId, String orderSnMain,GetDaoProcessor getDaoProcessor) {
+		super(userId, orderSnMain,getDaoProcessor);
+		this.orderDao = getDaoProcessor.getOrderDao();
+		this.orderPayDao = getDaoProcessor.getOrderPayDao();
 	}
 
 	/**
@@ -47,7 +47,7 @@ public class OrderPayContext extends BasePayContext {
 			return false;
 		}
 		for (Order order : orders) {
-			OrderModel oneModel = new OrderModel(order);
+			OrderModel oneModel = new OrderModel(order,orderDao,orderPayDao);
 			allModels.add(oneModel);
 		}
 		return true;

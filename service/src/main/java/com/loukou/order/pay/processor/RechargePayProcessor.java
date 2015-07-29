@@ -2,6 +2,7 @@ package com.loukou.order.pay.processor;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.loukou.order.pay.dal.RechargePayContext;
 import com.loukou.order.pay.impl.AliPay;
@@ -11,6 +12,7 @@ import com.loukou.order.service.enums.PaymentEnum;
 import com.loukou.order.service.resp.dto.ALiPayOrderResultDto;
 import com.loukou.order.service.resp.dto.WeixinPayOrderResultDto;
 
+@Service
 public class RechargePayProcessor {
 
 	private final Logger logger = Logger.getLogger(RechargePayProcessor.class);
@@ -21,6 +23,8 @@ public class RechargePayProcessor {
 	@Autowired
 	private WeiXinPay wxPay;
 
+	@Autowired
+	private GetDaoProcessor getDaoProcessor;
 	/**
 	 * 充值订单的微信支付
 	 * 
@@ -31,7 +35,7 @@ public class RechargePayProcessor {
 	 * @return
 	 */
 	public WeixinPayOrderResultDto payWx(int userId, String orderSnMain) {
-		RechargePayContext context = new RechargePayContext(userId, orderSnMain);
+		RechargePayContext context = new RechargePayContext(userId, orderSnMain,getDaoProcessor);
 		if (context.init()) {
 			context.recordAction(OrderActionTypeEnum.TYPE_CHOOSE_PAY,
 					"选择支付方式在线支付");
@@ -55,7 +59,7 @@ public class RechargePayProcessor {
 	 * @return
 	 */
 	public ALiPayOrderResultDto payAli(int userId, String orderSnMain) {
-		RechargePayContext context = new RechargePayContext(userId, orderSnMain);
+		RechargePayContext context = new RechargePayContext(userId, orderSnMain,getDaoProcessor);
 		if (context.init()) {
 			context.recordAction(OrderActionTypeEnum.TYPE_CHOOSE_PAY,
 					"选择支付方式在线支付");
@@ -80,7 +84,7 @@ public class RechargePayProcessor {
 	 */
 	public boolean finishRecharge(PaymentEnum paymentEnum, double totalFee,
 			String orderSnMain) {
-		RechargePayContext context = new RechargePayContext(0, orderSnMain);
+		RechargePayContext context = new RechargePayContext(0, orderSnMain,getDaoProcessor);
 		if (!context.init()) {
 			logger.error(String
 					.format("finishRecharge fail to init order_sn_main[%s] total_fee[%f]",
