@@ -33,6 +33,7 @@ public class ReturnStorageRespDto implements Serializable{
 	public ReturnStorageRespDto(int code, String errorMsg) {
 		this.code = code;
 		this.errorMsg = errorMsg;
+		this.result = new ReturnStorageResultDto();
 	}
 	
 	public ReturnStorageRespDto(String message) {

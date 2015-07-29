@@ -2156,12 +2156,17 @@ public class OrderServiceImpl implements OrderService {
 			return new ReturnStorageRespDto(403,"订单与微仓不一致");
 		}
 
-		if(isGoodsReturned(order.getOrderId())){
+		List<OrderReturn> orderReturnList = getGoodsReturnList(order.getOrderId(),order.getTaoOrderSn(),returnStorageReqDto.getStoreId());
+		if(orderReturnList.size()==0){
+			return new ReturnStorageRespDto(404,"退货单不存在");
+		}
+		
+		if(isGoodsReturned(orderReturnList)){
 			return new ReturnStorageRespDto();
 		}
 		
 		//修改订单退货状态
-		updateOrderReturnGoodsStatus(order.getOrderId(),OrderReturnGoodsStatusEnum.STATUS_RETURNED);
+		updateOrderReturnGoodsStatus(orderReturnList,OrderReturnGoodsStatusEnum.STATUS_RETURNED);
 		
 		//创建操作日志
 		createAction(order,OrderActionTypeEnum.TYPE_RETURN_STORAGE,"","退货入库");
@@ -2177,11 +2182,19 @@ public class OrderServiceImpl implements OrderService {
 		return new ReturnStorageRespDto();
 	}
 	
-	private boolean isGoodsReturned(int orderId){
+	private List<OrderReturn> getGoodsReturnList(int orderId,String orderSnMain,int storeId){
 		List<OrderReturn> orderReturnList = orderRDao.findByOrderId(orderId);
 		
-		if(orderReturnList.size()>0){
-			if(orderReturnList.get(0).getGoodsStatus()!=OrderReturnGoodsStatusEnum.STATUS_RETURNED.getId()){
+		if(orderReturnList.size() == 0){
+			orderReturnList = orderRDao.findByOrderSnMainAndSellerId(orderSnMain, storeId);
+		}
+		
+		return orderReturnList;
+	}
+	
+	private boolean isGoodsReturned(List<OrderReturn> orderReturnList){
+		for (OrderReturn orderReturn : orderReturnList) {
+			if(orderReturn.getGoodsStatus()!=OrderReturnGoodsStatusEnum.STATUS_RETURNED.getId()){
 				return false;
 			}
 		}
@@ -2195,10 +2208,19 @@ public class OrderServiceImpl implements OrderService {
 	 * @param returnStatus 退货状态
 	 * @return
 	 */
-	private int updateOrderReturnGoodsStatus(int orderId,OrderReturnGoodsStatusEnum goodsStatus){
-		return orderRDao.updateGoodsStatusByOrderId(orderId,goodsStatus.getId());
+	private int updateOrderReturnGoodsStatus(List<OrderReturn> orderReturnList,OrderReturnGoodsStatusEnum goodsStatus){
+		List<Integer> orderIdRList = new ArrayList<Integer>();
+		for (OrderReturn orderReturn : orderReturnList) {
+			orderIdRList.add(orderReturn.getOrderIdR());
+		}
+
+		if(orderIdRList.size()==0){
+			return 0;
+		}
+		
+		return orderRDao.updateGoodsStatusByOrderIdRList(orderIdRList,goodsStatus.getId());
 	}
-	
+		
 	private LKWhStockIn createLKWhStockIn(Order order){
 		LKWhStockIn whStockIn = new LKWhStockIn();
 		whStockIn.setStoreId(order.getSellerId());
