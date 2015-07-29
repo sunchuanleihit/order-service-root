@@ -1931,10 +1931,10 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		// 获取淘心卡
-		double txkNum = virtualAccountProcessor
-				.getVirtualBalanceByUserId(userId);
+		double txkNum = accountTxkProcessor.getTxkBalanceByUserId(userId); 
 		// 获取虚账户
-		double vcount = accountTxkProcessor.getTxkBalanceByUserId(userId);
+		double vcount = virtualAccountProcessor
+				.getVirtualBalanceByUserId(userId);
 
 		PayBeforeRespDto resp = new PayBeforeRespDto(200, "");
 		PayOrderMsgDto orderMsgDto = resp.getResult().getOrderMsg();
