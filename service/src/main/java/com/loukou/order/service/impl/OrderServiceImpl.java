@@ -71,6 +71,7 @@ import com.loukou.order.service.entity.OrderPay;
 import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Site;
 import com.loukou.order.service.entity.Store;
+import com.loukou.order.service.entity.WeiCangGoodsStore;
 import com.loukou.order.service.enums.AsyncTaskActionEnum;
 import com.loukou.order.service.enums.AsyncTaskStatusEnum;
 import com.loukou.order.service.enums.OpearteTypeEnum;
@@ -84,6 +85,7 @@ import com.loukou.order.service.enums.OrderTypeEnums;
 import com.loukou.order.service.enums.PayStatusEnum;
 import com.loukou.order.service.enums.RefundStatusEnum;
 import com.loukou.order.service.enums.ReturnStatusEnum;
+import com.loukou.order.service.enums.WeiCangGoodsStoreStatusEnum;
 import com.loukou.order.service.req.dto.OrderListParamDto;
 import com.loukou.order.service.req.dto.ReturnStorageGoodsReqDto;
 import com.loukou.order.service.req.dto.ReturnStorageReqDto;
@@ -2252,18 +2254,33 @@ public class OrderServiceImpl implements OrderService {
 	 * @param order
 	 * @param goodsList
 	 */
-	private int updateGoodsStock(LKWhStockIn whStockIn,List<LKWhStockInGoods> stockInGoodsList){
+	private void updateGoodsStock(LKWhStockIn whStockIn,List<LKWhStockInGoods> stockInGoodsList){
 		if(whStockIn==null || stockInGoodsList==null){
-			return 0 ;
+			return ;
 		}
 		
-		int count=0;
 		for (LKWhStockInGoods stockInGoods : stockInGoodsList) {
-			count+=lkWhGoodsStoreDao.updateBySpecIdAndStoreId(stockInGoods.getSpecId(),
+			int tempCount = lkWhGoodsStoreDao.updateBySpecIdAndStoreId(stockInGoods.getSpecId(),
 					whStockIn.getStoreId(),-stockInGoods.getStock(),0);
+			
+			if(tempCount==0){
+				createWeiCangGoodsStore(whStockIn,stockInGoods);
+			}
 		}
 		
-		return count;
+		return;
+	}
+	
+	private WeiCangGoodsStore createWeiCangGoodsStore(LKWhStockIn whStockIn,LKWhStockInGoods stockInGoods){
+		WeiCangGoodsStore weiCangGoodsStore = new WeiCangGoodsStore();
+		weiCangGoodsStore.setStockS(stockInGoods.getStock());
+		weiCangGoodsStore.setSpecId(stockInGoods.getSpecId());
+		weiCangGoodsStore.setGoodsId(stockInGoods.getGoodsId());
+		weiCangGoodsStore.setStatus(WeiCangGoodsStoreStatusEnum.STATUS_ONSHELVES.getId());
+		weiCangGoodsStore.setStoreId(whStockIn.getStoreId());
+		weiCangGoodsStore.setUpdateTime(new Date());
+		
+		return lkWhGoodsStoreDao.save(weiCangGoodsStore);
 	}
 	
 	/**
