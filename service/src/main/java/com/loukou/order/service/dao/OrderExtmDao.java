@@ -11,4 +11,6 @@ public interface OrderExtmDao extends CrudRepository<OrderExtm, Integer>{
 
 	List<OrderExtm> findByOrderSnMain(String orderSnMain);
 
+	List<OrderExtm> findByOrderSnMainIn(List<String> orderSnMainList);
+
 }
