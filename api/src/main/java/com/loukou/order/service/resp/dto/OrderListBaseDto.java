@@ -19,8 +19,8 @@ public class OrderListBaseDto implements Serializable {
 	private int status;
 	private String taoOrderSn;
 	private int isshouhuo;
-	private String totalPrice;
-	private String needPayPrice;
+	private double totalPrice;
+	private double needPayPrice;
 	private double shippingFee;
 	private String packageStatus;
 	private String shipping;
@@ -28,12 +28,12 @@ public class OrderListBaseDto implements Serializable {
 	private int commentStatus;
 	private String storePhone;
 	private String refundStatus;
-	private String discount;
+	private double discount;
 	private String shippingtype;
 	private String payType;
 	private String invoiceHeader;
 	private String postscript;
-	private String isOrder;
+	private int isOrder;
 
 	public int getOrderId() {
 		return orderId;
@@ -123,20 +123,21 @@ public class OrderListBaseDto implements Serializable {
 		this.isshouhuo = isshouhuo;
 	}
 
-	public String getNeedPayPrice() {
-		return needPayPrice;
-	}
-
-	public void setNeedPayPrice(String needPayPrice) {
-		this.needPayPrice = needPayPrice;
-	}
-
-	public String getTotalPrice() {
+	
+	public double getTotalPrice() {
 		return totalPrice;
 	}
 
-	public void setTotalPrice(String totalPrice) {
+	public void setTotalPrice(double totalPrice) {
 		this.totalPrice = totalPrice;
+	}
+
+	public double getNeedPayPrice() {
+		return needPayPrice;
+	}
+
+	public void setNeedPayPrice(double needPayPrice) {
+		this.needPayPrice = needPayPrice;
 	}
 
 	public double getShippingFee() {
@@ -195,11 +196,12 @@ public class OrderListBaseDto implements Serializable {
 		this.refundStatus = refundStatus;
 	}
 
-	public String getDiscount() {
+	
+	public double getDiscount() {
 		return discount;
 	}
 
-	public void setDiscount(String discount) {
+	public void setDiscount(double discount) {
 		this.discount = discount;
 	}
 
@@ -243,11 +245,11 @@ public class OrderListBaseDto implements Serializable {
 		this.postscript = postscript;
 	}
 
-	public String getIsOrder() {
+	public int getIsOrder() {
 		return isOrder;
 	}
 
-	public void setIsOrder(String isOrder) {
+	public void setIsOrder(int isOrder) {
 		this.isOrder = isOrder;
 	}
 
