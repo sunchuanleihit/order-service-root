@@ -247,6 +247,10 @@ public class OrderServiceImpl implements OrderService {
 //				orderSnMainlistCount = orderList.size();//TODO
 			}
 		}
+		if (orderList.size() == 0) {
+			return resp;
+		}
+
 		OrderListResultDto resultDto = new OrderListResultDto();
 		List<OrderListDto> orderListResult = new ArrayList<OrderListDto>();
 		List<Integer> orderIds = new ArrayList<Integer>();
