@@ -12,6 +12,8 @@ public enum OrderStatusEnum {
 	STATUS_INVALID(2),	// 无效
 	
 	STATUS_REVIEWED(3), // 已审核
+	
+	STATUS_PICKED(5), //已提货
 
 	STATUS_ALLOCATED(6), // 已拣货
 
@@ -19,7 +21,7 @@ public enum OrderStatusEnum {
 	
 	STATUS_DELIVERIED(13),	// 已发货
 	
-	STATUS_14(14),//
+	STATUS_14(14),// 已发货
 	
 	STATUS_FINISHED(15); // 回单
 	
