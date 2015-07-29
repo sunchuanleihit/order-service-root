@@ -1,6 +1,13 @@
 package com.loukou.order.service.req.dto;
 
-public class ReturnStorageReqDto {
+import java.io.Serializable;
+
+public class ReturnStorageReqDto implements Serializable {
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -782046267292089115L;
 	private String taoOrderSn;
 	private int storeId;
 	private ReturnStorageGoodsReqDto[] specList;
