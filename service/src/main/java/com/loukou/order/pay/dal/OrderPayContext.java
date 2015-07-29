@@ -41,7 +41,7 @@ public class OrderPayContext extends BasePayContext {
 	 */
 	@Override
 	public boolean init() {
-		List<OrderModel> allModels = new ArrayList<OrderModel>();
+		allModels = new ArrayList<OrderModel>();
 		List<Order> orders = orderDao.findByOrderSnMain(getOrderSnMain());
 		if (CollectionUtils.isEmpty(orders)) {
 			return false;
