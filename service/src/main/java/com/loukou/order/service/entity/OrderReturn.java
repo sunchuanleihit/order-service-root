@@ -16,7 +16,7 @@ public class OrderReturn {
 	private int orderIdR;
 
 	@Column(name = "order_id")
-	private int orderId;
+	private Integer orderId;
 
 	/*
 	 * 主单号 如141107091685349
@@ -64,37 +64,37 @@ public class OrderReturn {
 	 * 0商品订单1服务订单2jiazheng
 	 */
 	@Column(name = "goods_type")
-	private int goodsType;
+	private Integer goodsType;
 
 	/*
 	 * 0退货订单1拒收订单2多付款退款 3退运费 4.客户赔偿 5其他退款,6客户自己取消订单退款 7:特殊退款
 	 */
 	@Column(name = "order_type")
-	private int orderType;
+	private Integer orderType;
 
 	/*
 	 * 0正常1取消
 	 */
 	@Column(name = "order_status")
-	private int orderStatus;
+	private Integer orderStatus;
 
 	/*
 	 * 0未取货1已指派2损耗3待退商家4已退商
 	 */
 	@Column(name = "goods_status")
-	private int goodsStatus;
+	private Integer goodsStatus;
 
 	/*
 	 * 是否退款0未退款1已退款
 	 */
 	@Column(name = "refund_status")
-	private int refundStatus;
+	private Integer refundStatus;
 
 	/*
 	 * 对账状态0未对账1已对账
 	 */
 	@Column(name = "statement_status")
-	private int statementStatus;
+	private Integer statementStatus;
 
 	/*
 	 * 备注
@@ -112,25 +112,25 @@ public class OrderReturn {
 	 * 0未打印 1已打印
 	 */
 	@Column(name = "printed")
-	private int printed;
+	private Integer printed;
 
 	/*
 	 * 消费码主键
 	 */
 	@Column(name = "con_id")
-	private int conId;
+	private Integer conId;
 
 	/*
 	 * 1:超单 2:客户取消订单 3:退运费 4:客户赔偿 5:其它
 	 */
 	@Column(name = "reason")
-	private int reason;
+	private Integer reason;
 
 	/*
 	 * 0虚拟账户1原路返回
 	 */
 	@Column(name = "repay_way")
-	private int repayWay;
+	private Integer repayWay;
 
 	public int getOrderIdR() {
 		return orderIdR;
