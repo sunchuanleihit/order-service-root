@@ -19,17 +19,12 @@ public class OrderModel {
 
 	private final Logger logger = Logger.getLogger(OrderModel.class);
 
-	@Autowired
-	private OrderDao orderDao;
-
-	@Autowired
-	private OrderPayDao orderPayDao;
-
 	private Order order;
-
+	private OrderDao orderDao;
+	private OrderPayDao orderPayDao;
 	private List<OrderPay> pays = null;
 
-	public OrderModel(Order order) {
+	public OrderModel(Order order,OrderDao orderDao,OrderPayDao orderPayDao) {
 		this.order = order;
 		pays = orderPayDao.findByOrderId(order.getOrderId());
 		if (pays == null) {

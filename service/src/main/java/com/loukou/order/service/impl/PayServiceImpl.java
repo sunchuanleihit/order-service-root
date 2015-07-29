@@ -3,6 +3,7 @@ package com.loukou.order.service.impl;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.loukou.order.pay.processor.OrderPayProcessor;
 import com.loukou.order.pay.processor.RechargePayProcessor;
@@ -18,6 +19,7 @@ import com.loukou.order.service.resp.dto.AbstractPayOrderRespDto;
 import com.loukou.order.service.resp.dto.WeixinPayOrderRespDto;
 import com.loukou.order.service.resp.dto.WeixinPayOrderResultDto;
 
+@Service("payService")
 public class PayServiceImpl implements PayService {
 
 	private final Logger logger = Logger.getLogger(PayServiceImpl.class);

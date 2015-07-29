@@ -2,12 +2,15 @@ package com.loukou.order.pay.processor;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.loukou.order.pay.dal.OrderPayContext;
 import com.loukou.order.pay.impl.AliPay;
 import com.loukou.order.pay.impl.TXKPay;
 import com.loukou.order.pay.impl.VAcountPay;
 import com.loukou.order.pay.impl.WeiXinPay;
+import com.loukou.order.service.dao.OrderDao;
+import com.loukou.order.service.dao.OrderPayDao;
 import com.loukou.order.service.enums.PaymentEnum;
 import com.loukou.order.service.resp.dto.ALiPayOrderResultDto;
 import com.loukou.order.service.resp.dto.WeixinPayOrderResultDto;
@@ -18,6 +21,7 @@ import com.loukou.order.service.resp.dto.WeixinPayOrderResultDto;
  * @author nonggia
  *
  */
+@Service
 public class OrderPayProcessor {
 
 	private final Logger logger = Logger.getLogger(OrderPayProcessor.class);
@@ -34,6 +38,14 @@ public class OrderPayProcessor {
 	@Autowired
 	private WeiXinPay wxPay;
 	
+	@Autowired
+	private OrderDao orderDao;
+
+	@Autowired
+	private OrderPayDao orderPayDao;
+	
+	@Autowired
+	private GetDaoProcessor getDaoProcessor;
 	/**
 	 * 支付宝支付普通订单
 	 * 
@@ -49,7 +61,7 @@ public class OrderPayProcessor {
 	 */
 	public ALiPayOrderResultDto payAli(int userId, String orderSnMain,
 			boolean useVcount, boolean useTxk) {
-		OrderPayContext context = new OrderPayContext(userId, orderSnMain);
+		OrderPayContext context = new OrderPayContext(userId, orderSnMain,getDaoProcessor);
 		if (context.init() && 
 				(!useVcount || vaPay.pay(context)) && 
 				(!useTxk || txkPay.pay(context))) {
@@ -79,7 +91,7 @@ public class OrderPayProcessor {
 	 */
 	public WeixinPayOrderResultDto payWx(int userId, String orderSnMain,
 			boolean useVcount, boolean useTxk) {
-		OrderPayContext context = new OrderPayContext(userId, orderSnMain);
+		OrderPayContext context = new OrderPayContext(userId, orderSnMain,getDaoProcessor);
 		if (context.init() && 
 				(!useVcount || vaPay.pay(context)) && 
 				(!useTxk || txkPay.pay(context))) {
@@ -105,7 +117,7 @@ public class OrderPayProcessor {
 	 */
 	public boolean finishOrder(PaymentEnum paymentEnum, double totalFee, String orderSnMain) {
 		//注意⚠这里使用userid=0
-		OrderPayContext context = new OrderPayContext(0, orderSnMain);
+		OrderPayContext context = new OrderPayContext(0, orderSnMain,getDaoProcessor);
 		if (!context.init()) {
 			logger.error(String
 					.format("finishOrder fail to init order_sn_main[%s] total_fee[%f]",

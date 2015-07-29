@@ -3,8 +3,8 @@ package com.loukou.order.pay.dal;
 import java.util.Date;
 
 import org.apache.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import com.loukou.order.pay.processor.GetDaoProcessor;
 import com.loukou.order.service.dao.TczcountRechargeDao;
 import com.loukou.order.service.entity.TczcountRecharge;
 import com.loukou.order.service.enums.PaymentEnum;
@@ -14,13 +14,13 @@ public class RechargePayContext extends BasePayContext {
 
 	private final Logger logger = Logger.getLogger(RechargePayContext.class);
 
-	@Autowired
 	private TczcountRechargeDao rechargeDao;
 
 	private TczcountRecharge rechargeOrder = null;
 
-	public RechargePayContext(int userId, String orderSnMain) {
-		super(userId, orderSnMain);
+	public RechargePayContext(int userId, String orderSnMain,GetDaoProcessor getDaoProcessor) {
+		super(userId, orderSnMain,getDaoProcessor);
+		rechargeDao = getDaoProcessor.getTczcountRechargeDao();
 	}
 
 	/**
