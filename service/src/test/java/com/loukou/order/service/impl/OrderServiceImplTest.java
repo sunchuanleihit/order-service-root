@@ -51,8 +51,8 @@ public class OrderServiceImplTest extends AbstractTestObject {
 	
 	@Test
 	public void getOrderInfoTest() {
-		@SuppressWarnings("unused")
-		OrderListRespDto resp = orderService.getOrderInfo(1156347, "150629161315204", 1);
+//		@SuppressWarnings("unused")
+//		OrderListRespDto resp = orderService.getOrderInfo(1156347, "150629161315204", 1);
 	}
 	
 	@Test
