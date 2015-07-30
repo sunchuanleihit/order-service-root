@@ -43,11 +43,11 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	@Query("UPDATE Order set shippingNo = ?1 where orderId = ?2")
 	int updateShippingNo(String shippingNo,int orderId);
 
-	Iterable<Order> findByOrderSnMainIn(Iterable<String> orderSnMains);
+	Iterable<Order> findByOrderSnMainIn(Iterable<String> orderSnMains, Pageable pageable);
 
 	List<Order> findByshippingNoIn(List<String> shippingNo);
 
-	List<Order> findByBuyerIdAndIsDel(int userId, int isDel);
+	List<Order> findByBuyerIdAndIsDel(int userId, int isDel, Pageable pageable);
 
 	@Transactional(value = "transactionManagerMall")
 	@Modifying
@@ -62,7 +62,7 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	Order updateOrderPayedAndStatus(int orderId, double payedMoney, int status);
 
 	List<Order> findByBuyerIdAndIsDelAndStatusIn(int userId, int isDel,
-			List<Integer> statusList);
+			List<Integer> statusList, Pageable pagealbe);
 
 }
 

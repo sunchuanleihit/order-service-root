@@ -14,6 +14,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -93,6 +95,7 @@ import com.loukou.order.service.resp.dto.ShippingMsgDto;
 import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderResultDto;
+import com.loukou.order.service.resp.dto.UserOrderNumRespDto;
 import com.loukou.order.service.util.DateUtils;
 import com.loukou.order.service.util.DoubleUtils;
 import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
@@ -213,6 +216,35 @@ public class OrderServiceImpl implements OrderService {
 	private UserService userService;
 	
 	@Override
+	public UserOrderNumRespDto getOrderNum(int userId) {
+		UserOrderNumRespDto resp = new UserOrderNumRespDto();
+		Pageable pageable = new PageRequest(0, 100000);
+		List<Order> orderList = orderDao.findByBuyerIdAndIsDel(userId, 0, pageable);
+		int toPayNum = 0;
+		int toRecieve = 0;
+		int refund = 0;
+		for(Order order : orderList) {
+			if (order.getStatus() == OrderStatusEnum.STATUS_NEW.getId()) {
+				toPayNum++;
+			} else if (order.getStatus() == OrderStatusEnum.STATUS_REVIEWED.getId()
+					|| order.getStatus() == OrderStatusEnum.STATUS_PICKED.getId()
+					|| order.getStatus() == OrderStatusEnum.STATUS_ALLOCATED.getId()
+					|| order.getStatus() == OrderStatusEnum.STATUS_PACKAGED.getId()
+					|| order.getStatus() == OrderStatusEnum.STATUS_DELIVERIED.getId()) {
+				toRecieve++;
+			}	
+		}
+		
+		List<OrderReturn> orderReturns = orderRDao.findByBuyerIdAndOrderStatus(userId, 0, pageable);
+		refund = orderReturns.size();
+		resp.setPayNum(toPayNum);
+		resp.setDeliveryNum(toRecieve);
+		resp.setRefundNum(refund);
+		return resp;
+	}
+
+	
+	@Override
 	public OrderListRespDto getOrderList(int userId, int flag, int pageSize,
 			int pageNum) {
 		OrderListRespDto resp = new OrderListRespDto(200, "");
@@ -225,25 +257,27 @@ public class OrderServiceImpl implements OrderService {
 		List<Integer> statusList = new ArrayList<Integer>();
 		List<OrderReturn> orderReturns = null;
 		Set<String> orderSnMains = new HashSet<String>();
+		Pageable pageable = new PageRequest(pageNum, pageSize);
 		if(flag == FlagType.ALL) {
-			orderList = orderDao.findByBuyerIdAndIsDel(userId, 0);
+			orderList = orderDao.findByBuyerIdAndIsDel(userId, 0, pageable);
 		} else if (flag == FlagType.TO_PAY) {
 			statusList.add(OrderStatusEnum.STATUS_NEW.getId());
-			orderList = orderDao.findByBuyerIdAndIsDelAndStatusIn(userId, 0, statusList);
+			orderList = orderDao.findByBuyerIdAndIsDelAndStatusIn(userId, 0, statusList, pageable);
 		} else if (flag == FlagType.TO_RECIEVE) {
 			statusList.add(OrderStatusEnum.STATUS_REVIEWED.getId());
 			statusList.add(OrderStatusEnum.STATUS_PICKED.getId());
 			statusList.add(OrderStatusEnum.STATUS_ALLOCATED.getId());
 			statusList.add(OrderStatusEnum.STATUS_PACKAGED.getId());
 			statusList.add(OrderStatusEnum.STATUS_DELIVERIED.getId());
-			orderList = orderDao.findByBuyerIdAndIsDelAndStatusIn(userId, 0, statusList);
+			
+			orderList = orderDao.findByBuyerIdAndIsDelAndStatusIn(userId, 0, statusList, pageable);
 		} else if (flag == FlagType.REFUND) {
-			orderReturns = orderRDao.findByBuyerIdAndOrderStatus(userId, 0);
+			orderReturns = orderRDao.findByBuyerIdAndOrderStatus(userId, 0, pageable);
 			if( !CollectionUtils.isEmpty(orderReturns)) {
 				for (OrderReturn orderReturn : orderReturns) {
 					orderSnMains.add(orderReturn.getOrderSnMain());
 				}
-				orderList = (List<Order>) orderDao.findByOrderSnMainIn(orderSnMains);
+				orderList = (List<Order>) orderDao.findByOrderSnMainIn(orderSnMains, pageable);
 //				orderSnMainlistCount = orderList.size();//TODO
 			}
 		}
