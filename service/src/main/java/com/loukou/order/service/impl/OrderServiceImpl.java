@@ -1193,9 +1193,9 @@ public class OrderServiceImpl implements OrderService {
 
 		result.setDiscountAmount(payedMoney);
 		result.setOrderSnMain(orderSnMain);
-		result.setOrderTotal(orderTotal - shippingFee);
+		result.setOrderTotal(DoubleUtils.sub(orderTotal, shippingFee));
 		result.setShippingFee(shippingFee);
-		result.setTotal(orderTotal - payedMoney);
+		result.setTotal(DoubleUtils.sub(orderTotal, payedMoney));
 		result.setTxkNum(txkValue);
 		result.setVcount(vCountValue);
 		resp.setResult(result);
