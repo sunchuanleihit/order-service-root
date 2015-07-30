@@ -336,7 +336,6 @@ public class OrderServiceImpl implements OrderService {
 			//合并未支付的子单
 			resultDto.setOrderList(finalListDto);
 			resultDto.setOrderCount((int)orderList.getTotalElements());
-			resp.setCode(200);
 			resp.setResult(resultDto);
 		}
 		return resp;
