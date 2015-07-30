@@ -43,7 +43,7 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	@Query("UPDATE Order set shippingNo = ?1 where orderId = ?2")
 	int updateShippingNo(String shippingNo,int orderId);
 
-	Iterable<Order> findByOrderSnMainIn(Iterable<String> orderSnMains, Pageable pageable);
+	List<Order> findByOrderSnMainIn(Iterable<String> orderSnMains, Pageable pageable);
 
 	List<Order> findByshippingNoIn(List<String> shippingNo);
 
