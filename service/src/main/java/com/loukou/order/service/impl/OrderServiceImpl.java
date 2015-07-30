@@ -1177,11 +1177,12 @@ public class OrderServiceImpl implements OrderService {
 
 		List<Order> orders = (List<Order>) orderDao
 				.findByOrderSnMain(orderSnMain);
-		double orderTotal = 0, shippingFee = 0;
+		double orderTotal = 0;
+		double shippingFee = 0;
 		for (Order o : orders) {
 			orderTotal = DoubleUtils.add(orderTotal, o.getGoodsAmount());
 			orderTotal = DoubleUtils.add(orderTotal, o.getShippingFee());
-			shippingFee += o.getShippingFee();
+			shippingFee = DoubleUtils.add(shippingFee, o.getShippingFee());
 		}
 
 		double payedMoney = orderPayDao
