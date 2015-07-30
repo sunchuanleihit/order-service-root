@@ -247,8 +247,8 @@ public class OrderServiceImpl implements OrderService {
 
 	
 	@Override
-	public OrderListRespDto getOrderList(int userId, int flag, int pageSize,
-			int pageNum) {
+	public OrderListRespDto getOrderList(int userId, int flag,
+			int pageNum, int pageSize) {
 		OrderListRespDto resp = new OrderListRespDto(200, "");
 		if (userId <= 0 || flag <= 0) {
 			resp.setCode(400);
@@ -259,7 +259,7 @@ public class OrderServiceImpl implements OrderService {
 		List<Integer> statusList = new ArrayList<Integer>();
 		Page<OrderReturn> orderReturns = null;
 		Set<String> orderSnMains = new HashSet<String>();
-		Pageable pageable = new PageRequest(pageNum, pageSize);
+		Pageable pageable = new PageRequest(pageNum-1, pageSize);
 		if(flag == FlagType.ALL) {
 			orderList = orderDao.findByBuyerIdAndIsDel(userId, 0, pageable);
 		} else if (flag == FlagType.TO_PAY) {

@@ -1,6 +1,13 @@
 package com.loukou.order.service.resp.dto;
 
-public class UserOrderNumRespDto {
+import java.io.Serializable;
+
+public class UserOrderNumRespDto implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -382158094870622521L;
 
 	private int payNum = 0;
 	
