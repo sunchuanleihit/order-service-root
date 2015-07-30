@@ -38,7 +38,7 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	@Query("SELECT o FROM Order o WHERE orderSnMain=?1 ")
 	List<Order> getCvsBackOrders(String orderSnMain);
 	
-	@Transactional(value = "transactionManagerMall")
+	@Transactional
 	@Modifying
 	@Query("UPDATE Order set shippingNo = ?1 where orderId = ?2")
 	int updateShippingNo(String shippingNo,int orderId);
@@ -49,14 +49,14 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 
 	Page<Order> findByBuyerIdAndIsDel(int userId, int isDel, Pageable pageable);
 
-	@Transactional(value = "transactionManagerMall")
+	@Transactional
 	@Modifying
 	@Query("UPDATE Order set status = ?2 where orderId = ?1")
 	void updateOrderStatus(int orderId, int status);
 
 	Order findByOrderId(int orderId);
 	
-	@Transactional(value = "transactionManagerMall")
+	@Transactional
 	@Modifying
 	@Query("UPDATE Order set payStatus = ?3, orderPayed = ?2 where orderId = ?1")
 	Order updateOrderPayedAndStatus(int orderId, double payedMoney, int status);

@@ -95,6 +95,7 @@ import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgDto;
+import com.loukou.order.service.resp.dto.PayOrderMsgRespDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
 import com.loukou.order.service.resp.dto.ShareDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
@@ -400,6 +401,9 @@ public class OrderServiceImpl implements OrderService {
 		double needToPay = DoubleUtils.sub(order.getGoodsAmount() + order.getShippingFee(), order.getOrderPayed());
 		needToPay = DoubleUtils.sub(needToPay, order.getDiscount());
 		baseDto.setNeedPayPrice(needToPay);// 还需支付金额
+		if (needToPay > 0) {
+			baseDto.setState("未付款");	// FIXME
+		}
 		baseDto.setShippingFee(getTotalShippingFee(order.getOrderSnMain()));// 订单总运费
 		baseDto.setPackageStatus(ReturnStatusEnum.parseType(order.getStatus()).getComment());// 包裹的状态
 		baseDto.setShipping(getShippingMsg(order));
@@ -944,6 +948,7 @@ public class OrderServiceImpl implements OrderService {
 				OrderGoods orderGoods = new OrderGoods();
 				orderGoods.setOrderId(newOrder.getOrderId());
 				orderGoods.setGoodsId(g.getGoodsId());
+				orderGoods.setSpecId(g.getSpecId());
 				orderGoods.setGoodsName(g.getGoodsName());
 				orderGoods.setSpecification(g.getSpecName());
 				orderGoods.setStoreId(storeId);
@@ -1187,8 +1192,11 @@ public class OrderServiceImpl implements OrderService {
 			shippingFee = DoubleUtils.add(shippingFee, o.getShippingFee());
 		}
 
-		double payedMoney = orderPayDao
+		Double payedMoney = orderPayDao
 				.getPayedAmountByOrderSnMain(orderSnMain);
+		if (payedMoney == null) {
+			payedMoney = 0.0;
+		}
 		double txkValue = AccountTxkProcessor.getProcessor()
 				.getTxkBalanceByUserId(userId);
 		double vCountValue = VirtualAccountProcessor.getProcessor()
@@ -1201,7 +1209,9 @@ public class OrderServiceImpl implements OrderService {
 		result.setTotal(DoubleUtils.sub(orderTotal, payedMoney));
 		result.setTxkNum(txkValue);
 		result.setVcount(vCountValue);
-		resp.setResult(result);
+		PayOrderMsgRespDto payOrderMsgRespDto = new PayOrderMsgRespDto();
+		payOrderMsgRespDto.setOrderMsg(result);
+		resp.setResult(payOrderMsgRespDto);
 
 		return resp;
 
