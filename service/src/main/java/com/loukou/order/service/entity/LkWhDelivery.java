@@ -1,13 +1,17 @@
 package com.loukou.order.service.entity;
 
 import javax.persistence.Column;
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-
+import javax.persistence.Table;
+@Entity
+@Table(name="lk_wh_delivery")
 public class LkWhDelivery {
     @Id
     @GeneratedValue
     @Column(name = "d_id")
+    
     private int dId;
 
     @Column(name = "d_name")

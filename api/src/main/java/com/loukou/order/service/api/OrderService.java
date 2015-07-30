@@ -101,7 +101,7 @@ public interface OrderService {
 	/**
 	 * 订单详情
 	 */
-	public  OResponseDto<OrderInfoDto> getOrderGoodsInfo(String orderId);
+	public  OResponseDto<OrderInfoDto> getOrderGoodsInfo(String taoOrderSn);
 	
 	/**
 	 * 订单　预售订单列表

@@ -39,4 +39,10 @@ public class RefuseReasonDto  implements Serializable{
     public void setReason(String reason) {
         this.reason = reason;
     }
+
+    @Override
+    public String toString() {
+        return "RefuseReasonDto [id=" + id + ", reason=" + reason + "]";
+    }
+    
 }

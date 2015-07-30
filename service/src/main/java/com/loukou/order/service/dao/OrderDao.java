@@ -1,6 +1,7 @@
 
 package com.loukou.order.service.dao;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -49,14 +50,20 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 
 	Page<Order> findByBuyerIdAndIsDel(int userId, int isDel, Pageable pageable);
 
+<<<<<<< HEAD
 	@Transactional
+=======
+>>>>>>> add testCase
 	@Modifying
 	@Query("UPDATE Order set status = ?2 where orderId = ?1")
 	void updateOrderStatus(int orderId, int status);
 
 	Order findByOrderId(int orderId);
 	
+<<<<<<< HEAD
 	@Transactional
+=======
+>>>>>>> add testCase
 	@Modifying
 	@Query("UPDATE Order set payStatus = ?3, orderPayed = ?2 where orderId = ?1")
 	Order updateOrderPayedAndStatus(int orderId, double payedMoney, int status);
@@ -69,8 +76,12 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	Page<Order> findBySellerIdAndTypeAndStatus(int sellerId,String type,int status,Pageable page);
 	
 	@Modifying
-    @Query("UPDATE Order set status = ?2 where orderId = ?1")
-    void updateOrderStatusAndreceiveNo(int orderId,String receiveNo, int status);
+    @Query("UPDATE Order set status = ?2, receiveNo=?3 where orderId = ?1")
+    void updateOrderStatusAndreceiveNo(int orderId, int status, String receiveNo);
+	
+	@Modifying
+    @Query("UPDATE Order set status = ?1, finishedTime=?2 where orderId = ?3")
+	void updateStatusAndFinishedTime(int status,int finishedTime,int orderId);
 	
 }
 
