@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -219,11 +220,12 @@ public class OrderServiceImpl implements OrderService {
 	public UserOrderNumRespDto getOrderNum(int userId) {
 		UserOrderNumRespDto resp = new UserOrderNumRespDto();
 		Pageable pageable = new PageRequest(0, 100000);
-		List<Order> orderList = orderDao.findByBuyerIdAndIsDel(userId, 0, pageable);
+		Page<Order> orderList = orderDao.findByBuyerIdAndIsDel(userId, 0, pageable);
 		int toPayNum = 0;
 		int toRecieve = 0;
 		int refund = 0;
-		for(Order order : orderList) {
+		List<Order> orders = orderList.getContent();
+		for(Order order : orders) {
 			if (order.getStatus() == OrderStatusEnum.STATUS_NEW.getId()) {
 				toPayNum++;
 			} else if (order.getStatus() == OrderStatusEnum.STATUS_REVIEWED.getId()
@@ -235,8 +237,8 @@ public class OrderServiceImpl implements OrderService {
 			}	
 		}
 		
-		List<OrderReturn> orderReturns = orderRDao.findByBuyerIdAndOrderStatus(userId, 0, pageable);
-		refund = orderReturns.size();
+		Page<OrderReturn> orderReturns = orderRDao.findByBuyerIdAndOrderStatus(userId, 0, pageable);
+		refund = (int) orderReturns.getTotalElements();
 		resp.setPayNum(toPayNum);
 		resp.setDeliveryNum(toRecieve);
 		resp.setRefundNum(refund);
@@ -253,9 +255,9 @@ public class OrderServiceImpl implements OrderService {
 			return resp;
 		}
 		
-		List<Order> orderList = null;
+		Page<Order> orderList = null;
 		List<Integer> statusList = new ArrayList<Integer>();
-		List<OrderReturn> orderReturns = null;
+		Page<OrderReturn> orderReturns = null;
 		Set<String> orderSnMains = new HashSet<String>();
 		Pageable pageable = new PageRequest(pageNum, pageSize);
 		if(flag == FlagType.ALL) {
@@ -273,15 +275,16 @@ public class OrderServiceImpl implements OrderService {
 			orderList = orderDao.findByBuyerIdAndIsDelAndStatusIn(userId, 0, statusList, pageable);
 		} else if (flag == FlagType.REFUND) {
 			orderReturns = orderRDao.findByBuyerIdAndOrderStatus(userId, 0, pageable);
-			if( !CollectionUtils.isEmpty(orderReturns)) {
+			List<OrderReturn> returns = orderReturns.getContent();
+			if( !CollectionUtils.isEmpty(returns)) {
 				for (OrderReturn orderReturn : orderReturns) {
 					orderSnMains.add(orderReturn.getOrderSnMain());
 				}
-				orderList = (List<Order>) orderDao.findByOrderSnMainIn(orderSnMains, pageable);
+				orderList = orderDao.findByOrderSnMainIn(orderSnMains, pageable);
 //				orderSnMainlistCount = orderList.size();//TODO
 			}
 		}
-		if (orderList.size() == 0) {
+		if (orderList.getTotalElements() == 0) {
 			return resp;
 		}
 
