@@ -8,8 +8,11 @@ import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
+import com.loukou.order.service.resp.dto.UserOrderNumRespDto;
 
 public interface OrderService {
+	
+	public UserOrderNumRespDto getOrderNum(int userId);
 	
 	/**
 	 * 
