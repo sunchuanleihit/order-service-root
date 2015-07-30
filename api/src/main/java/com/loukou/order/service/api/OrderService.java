@@ -37,11 +37,12 @@ public interface OrderService {
 	/**
 	 * 
 	 * @param userId 用户ID
-	 * @param orderSnMain 订单ID
+	 * @param orderSnMain 主单号
 	 * @param flag flag 1:全部 2:待付款 3:待收货 4:退货
+	 * @param orderId @param userId 用户ID
 	 * @return 订单详情
 	 */
-	public OrderListRespDto getOrderInfo(int userId, String orderSnMain, int flag);
+	public OrderListRespDto getOrderInfo(int userId, String orderSnMain, int flag, int orderId);
 		
 	public SubmitOrderRespDto submitOrder(SubmitOrderReqDto req);
 

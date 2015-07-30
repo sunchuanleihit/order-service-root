@@ -440,7 +440,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 	
 	@Override
-	public OrderListRespDto getOrderInfo(int userId, String orderSnMain, int flag) {
+	public OrderListRespDto getOrderInfo(int userId, String orderSnMain, int flag, int orderId) {
 		OrderListRespDto resp = new OrderListRespDto(200, "");
 		if (userId <= 0 || flag <= 0 || StringUtils.isEmpty(orderSnMain)) {
 			resp.setCode(400);
@@ -525,7 +525,18 @@ public class OrderServiceImpl implements OrderService {
 			orderListResult.addAll(orderListMap.values());
 			//合并未支付的子单
 			List<OrderListDto> finalListDto = mergeUnpayOrderDto(orderListResult);
-			resultDto.setOrderList(finalListDto);
+			if (finalListDto.size() > 1) {
+				List<OrderListDto> listDto = new ArrayList<OrderListDto>();
+				for(OrderListDto dto : finalListDto) {
+					if(dto.getBase().getOrderId() == orderId) {
+						listDto.add(dto);
+					}
+				}
+				resultDto.setOrderList(listDto);
+			} else {
+				resultDto.setOrderList(finalListDto);
+			}
+			
 			resultDto.setOrderCount(1);
 			resp.setCode(200);
 			resp.setResult(resultDto);
