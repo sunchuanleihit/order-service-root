@@ -332,7 +332,7 @@ public class OrderServiceImpl implements OrderService {
 			List<OrderListDto> finalListDto = mergeUnpayOrderDto(orderListResult);
 			//合并未支付的子单
 			resultDto.setOrderList(finalListDto);
-			resultDto.setOrderCount(finalListDto.size());
+			resultDto.setOrderCount((int)orderList.getTotalElements());
 			resp.setCode(200);
 			resp.setResult(resultDto);
 		}
@@ -526,7 +526,7 @@ public class OrderServiceImpl implements OrderService {
 			//合并未支付的子单
 			List<OrderListDto> finalListDto = mergeUnpayOrderDto(orderListResult);
 			resultDto.setOrderList(finalListDto);
-			resultDto.setOrderCount(finalListDto.size());
+			resultDto.setOrderCount(1);
 			resp.setCode(200);
 			resp.setResult(resultDto);
 		}
