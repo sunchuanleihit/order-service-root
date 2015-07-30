@@ -275,15 +275,19 @@ public class OrderServiceImpl implements OrderService {
 			orderList = orderDao.findByBuyerIdAndIsDel(userId, 0, pageable);
 		} else if (flag == FlagType.TO_PAY) {
 			statusList.add(OrderStatusEnum.STATUS_NEW.getId());
-			orderList = orderDao.findByBuyerIdAndIsDelAndStatusIn(userId, 0, statusList, pageable);
+			orderList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusIn(userId, 0, 
+					PayStatusEnum.STATUS_UNPAY.getId(), statusList, pageable);
+			
 		} else if (flag == FlagType.TO_RECIEVE) {
 			statusList.add(OrderStatusEnum.STATUS_REVIEWED.getId());
 			statusList.add(OrderStatusEnum.STATUS_PICKED.getId());
 			statusList.add(OrderStatusEnum.STATUS_ALLOCATED.getId());
 			statusList.add(OrderStatusEnum.STATUS_PACKAGED.getId());
 			statusList.add(OrderStatusEnum.STATUS_DELIVERIED.getId());
-			
-			orderList = orderDao.findByBuyerIdAndIsDelAndStatusIn(userId, 0, statusList, pageable);
+			statusList.add(OrderStatusEnum.STATUS_NEW.getId());
+			orderList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusIn(userId, 0, 
+					PayStatusEnum.STATUS_PAYED.getId(),statusList, pageable);
+	
 		} else if (flag == FlagType.REFUND) {
 			orderReturns = orderRDao.findByBuyerIdAndOrderStatus(userId, 0, pageable);
 			List<OrderReturn> returns = orderReturns.getContent();
@@ -292,7 +296,6 @@ public class OrderServiceImpl implements OrderService {
 					orderSnMains.add(orderReturn.getOrderSnMain());
 				}
 				orderList = orderDao.findByOrderSnMainIn(orderSnMains, pageable);
-//				orderSnMainlistCount = orderList.size();//TODO
 			}
 		}
 		if (orderList.getTotalElements() == 0) {
