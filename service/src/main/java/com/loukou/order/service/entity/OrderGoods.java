@@ -122,7 +122,7 @@ public class OrderGoods {
 	 * 对cvs来说留空字符串，not null
 	 */
 	@Column(name = "comment")
-	private String comment;
+	private String comment = "";
 
 	/*
 	 * 对cvs=0
