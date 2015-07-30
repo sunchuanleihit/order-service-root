@@ -37,6 +37,7 @@ public class AliPay {
 		// 构造收银台结构
 		ALiPayOrderResultDto result = new ALiPayOrderResultDto();
 		result.setNeedPay(needToPay);
+		//fix url by yy
 		result.setNotifyUrl(AlipayConfig.notify_url);
 		result.setOrderSnMain(context.getOrderSnMain());
 		//外部交易号用orderSnMain
