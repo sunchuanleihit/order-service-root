@@ -14,12 +14,12 @@ public class ShareRespDto extends ResponseCodeDto implements Serializable {
 	private static final long serialVersionUID = 7395161364751922342L;
 
 	private ShareResultDto result = new ShareResultDto();
-	
-	public ShareResultDto getShareResultDto() {
+
+	public ShareResultDto getResult() {
 		return result;
 	}
 
-	public void setShareResultDto(ShareResultDto result) {
+	public void setResult(ShareResultDto result) {
 		this.result = result;
 	}
 

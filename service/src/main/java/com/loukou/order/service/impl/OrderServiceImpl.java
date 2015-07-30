@@ -2200,7 +2200,7 @@ public class OrderServiceImpl implements OrderService {
 		resultDto.setImage("http://pic1.taocz.cn//201505061136566745.jpg");
 		resultDto.setShare(shareDto);
 
-		resp.setShareResultDto(resultDto);
+		resp.setResult(resultDto);
 		return resp;
 	}
 

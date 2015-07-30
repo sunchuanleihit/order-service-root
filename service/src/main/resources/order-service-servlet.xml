@@ -18,9 +18,9 @@
 	<dubbo:service ref="payService" interface="com.loukou.order.service.api.PayService" />
 	
 	<!-- 引用的服务 -->
-	<dubbo:reference id="userService" interface="com.serverstarted.user.api.UserService" />
+	<dubbo:reference id="userService" interface="com.serverstarted.user.api.UserService" retries="0" timeout="5000" />
 
-	<dubbo:reference id="storeService" interface="com.serverstarted.store.service.api.StoreService" />
+	<dubbo:reference id="storeService" interface="com.serverstarted.store.service.api.StoreService" retries="0" timeout="5000" />
 	<dubbo:reference id="goodsService" interface="com.serverstarted.goods.service.api.GoodsService" />
 	<dubbo:reference id="goodsSpecService" interface="com.serverstarted.goods.service.api.GoodsSpecService" />
 	
