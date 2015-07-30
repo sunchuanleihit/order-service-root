@@ -277,7 +277,7 @@ public class OrderServiceImpl implements OrderService {
 			orderReturns = orderRDao.findByBuyerIdAndOrderStatus(userId, 0, pageable);
 			List<OrderReturn> returns = orderReturns.getContent();
 			if( !CollectionUtils.isEmpty(returns)) {
-				for (OrderReturn orderReturn : orderReturns) {
+				for (OrderReturn orderReturn : returns) {
 					orderSnMains.add(orderReturn.getOrderSnMain());
 				}
 				orderList = orderDao.findByOrderSnMainIn(orderSnMains, pageable);
