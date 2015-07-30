@@ -11,6 +11,7 @@ public enum PaymentEnum {
 //	PAY_WEIXIN(33, "weixin"),
 	PAY_VACOUNT(2, "taocz"),//, "虚拟账户"
 	PAY_TXK(6, "taoxinka"),//, "桃心卡"
+	PAY_YHQ(14, "yhq"),//, "优惠券"
 	PAY_CASH(1, "cash");//,送货上门，看货后付款
 	
 	private String code;

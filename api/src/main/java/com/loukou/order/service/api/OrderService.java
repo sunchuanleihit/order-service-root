@@ -2,6 +2,7 @@ package com.loukou.order.service.api;
 
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
+import com.loukou.order.service.resp.dto.OrderCancelRespDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
@@ -50,7 +51,7 @@ public interface OrderService {
 	 * @param orderSnMain
 	 * @return 取消订单（用户app接口，暂搁置不用）
 	 */
-//	public OrderCancelRespDto cancelOrder(int userId, String orderSnMain);
+	public OrderCancelRespDto cancelOrder(int userId, String orderSnMain);
 
 	/**
 	 * 

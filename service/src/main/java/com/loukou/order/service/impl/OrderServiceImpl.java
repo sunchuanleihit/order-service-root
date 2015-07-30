@@ -32,6 +32,7 @@ import com.loukou.order.service.constants.CouponType;
 import com.loukou.order.service.constants.FlagType;
 import com.loukou.order.service.constants.OS;
 import com.loukou.order.service.constants.OrderPayType;
+import com.loukou.order.service.constants.ReturnGoodsType;
 import com.loukou.order.service.constants.ShippingMsgDesc;
 import com.loukou.order.service.dao.AddressDao;
 import com.loukou.order.service.dao.CoupListDao;
@@ -64,14 +65,21 @@ import com.loukou.order.service.entity.OrderExtm;
 import com.loukou.order.service.entity.OrderGoods;
 import com.loukou.order.service.entity.OrderLnglat;
 import com.loukou.order.service.entity.OrderPay;
+import com.loukou.order.service.entity.OrderPayR;
 import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Site;
 import com.loukou.order.service.entity.Store;
+import com.loukou.order.service.enums.OpearteTypeEnum;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
 import com.loukou.order.service.enums.OrderPayTypeEnum;
+import com.loukou.order.service.enums.OrderReturnGoodsType;
 import com.loukou.order.service.enums.OrderSourceEnum;
 import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.enums.OrderTypeEnums;
+import com.loukou.order.service.enums.PayStatusEnum;
+import com.loukou.order.service.enums.PaymentEnum;
+import com.loukou.order.service.enums.ReturnGoodsStatus;
+import com.loukou.order.service.enums.ReturnOrderStatus;
 import com.loukou.order.service.enums.ReturnStatusEnum;
 import com.loukou.order.service.req.dto.SpecShippingTime;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
@@ -80,6 +88,7 @@ import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.CouponListResultDto;
 import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
+import com.loukou.order.service.resp.dto.OrderCancelRespDto;
 import com.loukou.order.service.resp.dto.OrderListBaseDto;
 import com.loukou.order.service.resp.dto.OrderListDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
@@ -100,7 +109,9 @@ import com.loukou.order.service.resp.dto.UserOrderNumRespDto;
 import com.loukou.order.service.util.DateUtils;
 import com.loukou.order.service.util.DoubleUtils;
 import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
+import com.loukou.pos.client.txk.req.TxkCardRefundRespVO;
 import com.loukou.pos.client.vaccount.processor.VirtualAccountProcessor;
+import com.loukou.pos.client.vaccount.resp.VaccountUpdateRespVO;
 import com.loukou.search.service.api.GoodsSearchService;
 import com.loukou.search.service.dto.GoodsCateDto;
 import com.serverstarted.cart.service.api.CartService;
@@ -1863,152 +1874,160 @@ public class OrderServiceImpl implements OrderService {
 	/**
 	 * 用户app接口，暂时不用
 	 */
-	// @Override
-	// public OrderCancelRespDto cancelOrder(int userId, String orderSnMain) {
-	// OrderCancelRespDto resp = new OrderCancelRespDto();
-	// if(userId <= 0 || StringUtils.isBlank(orderSnMain)) {
-	// resp.setCode(400);
-	// return resp;
-	// }
-	// List<Order> orders = orderDao.findByOrderSnMain(orderSnMain);
-	// if(CollectionUtils.isEmpty(orders)) {
-	// resp.setCode(400);
-	// return resp;
-	// }
-	// //0未支付 1已支付
-	// int payedStatus = orders.get(0).getPayStatus();
-	//
-	//
-	// for(Order order : orders) {
-	// List<String> couponCodes = new ArrayList<String>();
-	// double orderPayed = 0;
-	// if(order.getStatus() == 3 || order.getStatus() == 1) {
-	// resp.setCode(400);//TODO errorcode
-	// } else if(order.getOrderPayed() > 0) {
-	// orderPayed += order.getOrderPayed();
-	//
-	// //TODO 原php代码中为if($order['use_coupon_no'] <> "")
-	// if(StringUtils.isNotBlank(order.getUseCouponNo()) &&
-	// StringUtils.equals(order.getUseCouponNo(), "0")) {
-	// couponCodes.add(order.getUseCouponNo());
-	// }
-	// }
-	// if(orderPayed > 0) {//部分或全部支付
-	// Map<Integer, Double> paymentIdMoneyMap =
-	// getPay(order.getOrderId());//支付明细
-	// double returnAmountVcount = 0;
-	// double returnAmountTxk = 0;
-	// double returnAmountCoupon = 0;
-	// double returnAmount = 0;
-	// double returnSum = 0;
-	// for(Map.Entry<Integer, Double> entry : paymentIdMoneyMap.entrySet()) {
-	// if(entry.getKey() == 2) { //虚拟账户
-	// returnAmountVcount += entry.getValue();
-	// } else if(entry.getKey() == 6) {
-	// returnAmountTxk += entry.getValue();
-	// } else if(entry.getKey() == 14) {
-	// returnAmountCoupon += entry.getValue();
-	// } else {
-	// returnAmount += entry.getValue();
-	// }
-	// }
-	// returnSum = returnAmountVcount + returnAmountTxk + returnAmountCoupon +
-	// returnAmount;
-	//
-	// if(returnAmount > 0) {
-	// //有采用在线支付，则生成未退款单及应退明细记录
-	// int orderIdR = getOrderReturnAdd(orderSnMain, order.getOrderId(),
-	// order.getBuyerId(), order.getSellerId(),
-	// returnSum, 0, 0);
-	// for(Map.Entry<Integer, Double> entry : paymentIdMoneyMap.entrySet()) {
-	// OrderPayR orderPayR = new OrderPayR();
-	// orderPayR.setOrderIdR(orderIdR);
-	// orderPayR.setRepayWay(0);
-	// orderPayR.setPaymentId(entry.getKey());
-	// orderPayR.setValue(entry.getValue());
-	// orderPayRDao.save(orderPayR);
-	// }
-	// } else {
-	// //否则安照原先支付记录自动退款，并生成已退款单
-	// int orderIdR = getOrderReturnAdd(orderSnMain, order.getOrderId(),
-	// order.getBuyerId(),
-	// order.getSellerId(), returnSum, 1, 1);
-	// if(returnAmountVcount > 0) {//虚拟帐户原额退
-	// OrderPayR orderPayR = new OrderPayR();
-	// orderPayR.setOrderIdR(orderIdR);
-	// orderPayR.setRepayWay(0);
-	// orderPayR.setPaymentId(2);
-	// orderPayR.setValue(returnAmountVcount);
-	// orderPayRDao.save(orderPayR);
-	// VaccountUpdateRespVO vAccountResp =
-	// VirtualAccountProcessor.getProcessor()
-	// .refund(userId, order.getOrderId(), orderSnMain, returnAmountVcount,
-	// SDF.format(new Date()), 0, "取消订单退款:" + SDF.format(new Date()),
-	// order.getBuyerName());
-	//
-	// }
-	// if(returnAmountTxk > 0) {//淘心卡原额退
-	// OrderPayR orderPayR = new OrderPayR();
-	// orderPayR.setOrderIdR(orderIdR);
-	// orderPayR.setPaymentId(6);
-	// orderPayR.setRepayWay(0);
-	// orderPayR.setValue(returnAmountTxk);
-	// orderPayRDao.save(orderPayR);
-	// //TODO
-	// TxkCardRefundRespVO txkCardResp = AccountTxkProcessor.getProcessor()
-	// .refund(returnAmountTxk, orderSnMain, userId, order.getBuyerName());
-	// }
-	//
-	// if(returnAmountCoupon > 0) {//优惠券状态改成未使用
-	// if(CollectionUtils.isEmpty(couponCodes)) {
-	// for(String couponCode : couponCodes) {//TODO couponCode待确定
-	// couponSnDao.refundCouponSn(couponCode, userId);
-	// }
-	// }
-	// }
-	// }
-	//
-	//
-	//
-	// // $payment = $this->_get_pay(order.);//支付明细
-	// // foreach($payment['pay'] as $v)
-	// // {
-	// // $order_pay_r_mod->add(array("order_id_r" => $order_id_r, "repay_way"
-	// => 0, "payment_id" => $v['payment_id'], "value" => $v['money']));
-	// // }
-	//
-	// } else {
-	// //全部未支付，只需改订单状态及操作记录即可
-	// }
-	//
-	// /*更改订单状态、解冻库存*/
-	// orderDao.updateOrderStatus(order.getOrderId(), 1);
-	// releaseFreezStock(order.getOrderId(), order.getType(), 1);
-	//
-	// //order_action 只插入一条记录
-	// OrderAction orderAction = new OrderAction();
-	// orderAction.setAction(1);
-	// orderAction.setOrderSnMain(orderSnMain);
-	// orderAction.setTaoOrderSn(order.getTaoOrderSn());
-	// orderAction.setOrderId(order.getOrderId());
-	// orderAction.setActor(order.getBuyerName());
-	// orderAction.setActionTime(new Date());
-	// orderAction.setNotes("取消");
-	// orderActionDao.save(orderAction);
-	//
-	// if(order.getPayStatus() == 0) {//0未支付 1已支付
-	// resp.setCode(200);
-	// resp.setMessage("订单取消成功");
-	// // return resp;
-	// } else {
-	// resp.setCode(200);
-	// resp.setMessage("订单取消成功,您已支付的金额将在三个工作日内返还到您的账户中！");
-	// // return resp;
-	// }
-	// }
-	//
-	// return resp;
-	// }
+	@Override
+	public OrderCancelRespDto cancelOrder(int userId, String orderSnMain) {
+		OrderCancelRespDto resp = new OrderCancelRespDto(200, "");
+		if (userId <= 0 || StringUtils.isBlank(orderSnMain)) {
+			resp.setCode(400);
+			return resp;
+		}
+		List<Order> orders = orderDao.findByOrderSnMainAndPayStatus(
+				orderSnMain, PayStatusEnum.STATUS_UNPAY.getId());
+		if (CollectionUtils.isEmpty(orders)) {
+			return resp;
+		}
+
+		List<String> couponCodes = new ArrayList<String>();
+		double returnAmountVcount = 0;
+		double returnAmountTxk = 0;
+		double returnAmountCoupon = 0;
+		double returnAmount = 0;
+		double orderPayed = 0;
+
+		for (Order order : orders) {
+			if (order.getStatus() == OrderStatusEnum.STATUS_CANCELED.getId()
+					|| order.getStatus() == OrderStatusEnum.STATUS_REVIEWED
+							.getId()) {
+				// resp.setCode(400);
+				return resp;
+			}
+
+			if (order.getOrderPayed() > 0) {
+				orderPayed = DoubleUtils.add(orderPayed, order.getOrderPayed());
+				String useCouponNo = order.getUseCouponNo();
+				if (!StringUtils.equals(useCouponNo, "0")) {
+					couponCodes.add(useCouponNo);
+				}
+			}
+		}
+
+		if (orderPayed > 0) {
+			for (Order order : orders) {
+				Map<Integer, Double> paymentIdMoneyMap = getPay(order
+						.getOrderId());
+				for (Map.Entry<Integer, Double> entry : paymentIdMoneyMap
+						.entrySet()) {
+					if (entry.getKey() == PaymentEnum.PAY_VACOUNT.getId()) { // 虚拟账户
+						returnAmountVcount += entry.getValue();
+					} else if (entry.getKey() == PaymentEnum.PAY_TXK.getId()) {
+						returnAmountTxk += entry.getValue();
+					} else if (entry.getKey() == PaymentEnum.PAY_YHQ.getId()) {
+						returnAmountCoupon += entry.getValue();
+					} else {
+						returnAmount += entry.getValue();
+					}
+				}
+				double returnSum = returnAmountVcount + returnAmountTxk
+						+ returnAmountCoupon + returnAmount;
+
+				if (returnAmount > 0) {
+					// 有采用在线支付，则生成未退款单及应退明细记录
+					int orderIdR = getOrderReturnAdd(orderSnMain,
+							order.getOrderId(), order.getBuyerId(),
+							order.getSellerId(), returnSum, 0, 0);
+					for (Map.Entry<Integer, Double> entry : paymentIdMoneyMap
+							.entrySet()) {
+						OrderPayR orderPayR = new OrderPayR();
+						orderPayR.setOrderIdR(orderIdR);
+						orderPayR.setRepayWay(0);
+						orderPayR.setPaymentId(entry.getKey());
+						orderPayR.setValue(entry.getValue());
+						orderPayRDao.save(orderPayR);
+					}
+
+				} else {
+					// 否则安照原先支付记录自动退款，并生成已退款单
+					int orderIdR = getOrderReturnAdd(orderSnMain,
+							order.getOrderId(), order.getBuyerId(),
+							order.getSellerId(), returnSum, 1, 1);
+					if (returnAmountVcount > 0) {// 虚拟帐户原额退
+						OrderPayR orderPayR = new OrderPayR();
+						orderPayR.setOrderIdR(orderIdR);
+						orderPayR.setRepayWay(0);
+						orderPayR.setPaymentId(2);
+						orderPayR.setValue(returnAmountVcount);
+						orderPayRDao.save(orderPayR);
+						VaccountUpdateRespVO vAccountResp = VirtualAccountProcessor
+								.getProcessor().refund(userId,
+										order.getOrderId(), orderSnMain,
+										returnAmountVcount,
+										SDF.format(new Date()), 0,
+										"取消订单退款:" + SDF.format(new Date()),
+										order.getBuyerName());
+
+					}
+					if (returnAmountTxk > 0) {// 淘心卡原额退
+						OrderPayR orderPayR = new OrderPayR();
+						orderPayR.setOrderIdR(orderIdR);
+						orderPayR.setPaymentId(6);
+						orderPayR.setRepayWay(0);
+						orderPayR.setValue(returnAmountTxk);
+						orderPayRDao.save(orderPayR);
+						// TODO test
+						TxkCardRefundRespVO txkCardResp = AccountTxkProcessor
+								.getProcessor().refund(returnAmountTxk,
+										orderSnMain, userId,
+										order.getBuyerName());
+					}
+
+					if (returnAmountCoupon > 0) {// 优惠券状态改成未使用
+						if (CollectionUtils.isEmpty(couponCodes)) {
+							for (String couponCode : couponCodes) {
+								// TODO couponCode待确定
+								couponSnDao.refundCouponSn(couponCode, userId);
+							}
+						}
+					}
+				}
+				// 修改订单sattus为1
+				orderDao.updateOrderStatus(order.getOrderId(),
+						OrderStatusEnum.STATUS_CANCELED.getId());
+				// 释放库存 TODO test
+				releaseFreezStock(order.getOrderId(), order.getType(),
+						OpearteTypeEnum.OPERATE_CANCEL.getType());
+
+				// order_action 只插入一条记录
+				OrderAction orderAction = new OrderAction();
+				orderAction.setAction(1);
+				orderAction.setOrderSnMain(orderSnMain);
+				orderAction.setTaoOrderSn(order.getTaoOrderSn());
+				orderAction.setOrderId(order.getOrderId());
+				orderAction.setActor(order.getBuyerName());
+				orderAction.setActionTime(new Date());
+				orderAction.setNotes("取消");
+				orderActionDao.save(orderAction);
+
+				if (order.getPayStatus() == 0) {// 0未支付 1已支付
+					resp.setCode(200);
+					resp.setMessage("订单取消成功");
+					// return resp;
+				} else {
+					resp.setCode(200);
+					resp.setMessage("订单取消成功,您已支付的金额将在三个工作日内返还到您的账户中！");
+					// return resp;
+				}
+			} // end of for loop
+
+		} else {
+			// 全部未支付，只需改订单状态及操作记录即可
+			for (Order order : orders) {
+				// 修改订单sattus为1
+				orderDao.updateOrderStatus(order.getOrderId(),
+						OrderStatusEnum.STATUS_CANCELED.getId());
+			}
+		}
+		return resp;
+	}
 
 	/**
 	 * 释放锁定库存
@@ -2021,102 +2040,101 @@ public class OrderServiceImpl implements OrderService {
 	 * @param operate_type
 	 *            操作类型,1取消,2作废,6核验/发货
 	 */
-//	private boolean releaseFreezStock(int orderId, String orderType,
-//			int operateType) {
-//		if (orderId < 1 || StringUtils.equals(orderType, "") || operateType < 1) {
-//			return false;
-//		}
-//		Order order = orderDao.findByOrderId(orderId);
-//		List<OrderGoods> orderGoodsList = orderGoodsDao.findByOrderId(orderId);
-//		if (order.getSellerId() > 0 && !CollectionUtils.isEmpty(orderGoodsList)) {
-//			for (OrderGoods orderGoods : orderGoodsList) {
-//				if (StringUtils.equals(orderType,
-//						OrderTypeEnums.TYPE_WEI_WH.getType())
-//						|| StringUtils.equals(orderType,
-//								OrderTypeEnums.TYPE_WEI_SELF.getType())) {// 微仓订单
-//				// LkWhGoodsStore whStore = lkWhGoodsStoreDao.
-//				// findBySpecIdAndStoreId(orderGoods.getSpecId(),
-//				// order.getSellerId());
-//					if (operateType == OpearteTypeEnum.OPEARTE_CHECK_DELIVER.getType()) {// 发货
-//						lkWhGoodsStoreDao.updateBySpecIdAndStoreId(
-//								orderGoods.getSpecId(), order.getSellerId(),
-//								orderGoods.getQuantity(),
-//								orderGoods.getQuantity());
-//					} else {
-//						lkWhGoodsStoreDao.updateBySpecIdAndStoreId(
-//								orderGoods.getSpecId(), order.getSellerId(),
-//								orderGoods.getQuantity());
-//					}
-//				} else {
-//					// GoodsSpec goodsSpec =
-//					// goodsSpecDao.findBySpecId(orderGoods.getSpecId());
-//					if (operateType == OpearteTypeEnum.OPEARTE_CHECK_DELIVER.getType()) {// 发货
-//						goodsSpecDao.updateBySpecId(orderGoods.getSpecId(),
-//								orderGoods.getQuantity(),
-//								orderGoods.getQuantity());
-//					} else { // 取消
-//						goodsSpecDao.updateBySpecId(orderGoods.getSpecId(),
-//								orderGoods.getQuantity());
-//					}
-//				}
-//			}
-//			return true;
-//		}
-//		return false;
-//	}
+	private boolean releaseFreezStock(int orderId, String orderType,
+			int operateType) {
+		if (orderId < 1 || StringUtils.equals(orderType, "") || 
+				operateType < OpearteTypeEnum.OPERATE_CANCEL.getType()) {
+			return false;
+		}
+		Order order = orderDao.findByOrderId(orderId);
+		List<OrderGoods> orderGoodsList = orderGoodsDao.findByOrderId(orderId);
+		if (order.getSellerId() > 0 && !CollectionUtils.isEmpty(orderGoodsList)) {
+			for (OrderGoods orderGoods : orderGoodsList) {
+				if (StringUtils.equals(orderType, OrderTypeEnums.TYPE_WEI_WH.getType())
+						|| StringUtils.equals(orderType, OrderTypeEnums.TYPE_WEI_SELF.getType())) {
+					// 微仓订单
+					// LkWhGoodsStore whStore = lkWhGoodsStoreDao.
+					// findBySpecIdAndStoreId(orderGoods.getSpecId(),
+					// order.getSellerId());
+					if (operateType == OpearteTypeEnum.OPEARTE_CHECK_DELIVER.getType()) {// 发货
+						lkWhGoodsStoreDao.updateBySpecIdAndStoreId(
+								orderGoods.getSpecId(), order.getSellerId(),
+								orderGoods.getQuantity(),
+								orderGoods.getQuantity());
+					} else {
+						lkWhGoodsStoreDao.updateBySpecIdAndStoreId(
+								orderGoods.getSpecId(), order.getSellerId(),
+								orderGoods.getQuantity());
+					}
+				} else {
+					// GoodsSpec goodsSpec =
+					// goodsSpecDao.findBySpecId(orderGoods.getSpecId());
+					if (operateType == OpearteTypeEnum.OPEARTE_CHECK_DELIVER.getType()) {// 发货
+						goodsSpecDao.updateBySpecId(orderGoods.getSpecId(),
+								orderGoods.getQuantity(),
+								orderGoods.getQuantity());
+					} else { // 取消
+						goodsSpecDao.updateBySpecId(orderGoods.getSpecId(), orderGoods.getQuantity());
+					}
+				}
+			}
+			return true;
+		}
+		return false;
+	}
 
 	// 退款
-//	private int getOrderReturnAdd(String orderSnMain, int orderId, int buyerId,
-//			int sellerId, double returnSum, int refundStatus, int returnStatus) {
-//		OrderReturn orderReturn = new OrderReturn();
-//		orderReturn.setOrderSnMain(orderSnMain);
-//		orderReturn.setOrderId(orderId);
-//		orderReturn.setBuyerId(buyerId);
-//		orderReturn.setSellerId(sellerId);
-//		orderReturn.setReturnAmount(returnSum);
-//		orderReturn.setActor("system");
-//		orderReturn.setAddTime(SDF.format(new Date()));
-//		orderReturn.setGoodsType(0);
-//		orderReturn.setOrderType(6);
-//		orderReturn.setOrderStatus(0);
-//		orderReturn.setGoodsStatus(1);
-//		orderReturn.setRefundStatus(refundStatus);
-//		orderReturn.setStatementStatus(0);
-//		if (returnStatus == 1) {
-//			orderReturn.setRepayTime(SDF.format(new Date()));
-//		}
-//		orderReturn.setPostscript("客户自已取消订单");
-//		return orderRDao.save(orderReturn).getOrderIdR();
-//	}
+	private int getOrderReturnAdd(String orderSnMain, int orderId, int buyerId,
+			int sellerId, double returnSum, int refundStatus, int returnStatus) {
+		OrderReturn orderReturn = new OrderReturn();
+		orderReturn.setOrderSnMain(orderSnMain);
+		orderReturn.setOrderId(orderId);
+		orderReturn.setBuyerId(buyerId);
+		orderReturn.setSellerId(sellerId);
+		orderReturn.setReturnAmount(returnSum);
+		orderReturn.setActor("system");
+		orderReturn.setAddTime(SDF.format(new Date()));
+		orderReturn.setGoodsType(ReturnGoodsType.GOODS);
+		orderReturn.setOrderType(OrderReturnGoodsType.TYPE_SELF_CANCEL.getId());
+		orderReturn.setOrderStatus(ReturnOrderStatus.NORMAL.getId());
+		orderReturn.setGoodsStatus(ReturnGoodsStatus.ASSIGN.getId());
+		orderReturn.setRefundStatus(refundStatus);
+		orderReturn.setStatementStatus(0);
+		if (returnStatus == 1) {
+			orderReturn.setRepayTime(SDF.format(new Date()));
+		}
+		orderReturn.setPostscript("客户自已取消订单");
+		return orderRDao.save(orderReturn).getOrderIdR();
+	}
 
 	/*
 	 * 订单支付明细 orderId 订单ID
 	 */
-//	private Map<Integer, Double> getPay(int orderId) {
-//		List<OrderPay> orderPays = orderPayDao.findByOrderIdAndStatus(orderId,
-//				"succ");
-//		Map<Integer, Double> paymentIdMoney = new HashMap<Integer, Double>();
-//		if (!CollectionUtils.isEmpty(orderPays)) {
-//			// 相同支付方式的支付金额合并
-//			for (OrderPay orderPay : orderPays) {
-//				// if(orderPay.getPaymentId() != 14) {
-//				if (paymentIdMoney.containsKey(orderPay.getPaymentId())) {
-//					paymentIdMoney.put(orderPay.getPaymentId(),
-//							paymentIdMoney.get(orderPay.getPaymentId())
-//									+ orderPay.getMoney());
-//				} else {
-//					paymentIdMoney.put(orderPay.getPaymentId(),
-//							orderPay.getMoney());
-//				}
-//				// }
-//				// else {//需退优惠券 判断是否用优惠券支付过
-//				//
-//				// }
-//			}
-//		}
-//
-//		return paymentIdMoney;
-//	}
+	private Map<Integer, Double> getPay(int orderId) {
+		List<OrderPay> orderPays = orderPayDao.findByOrderIdAndStatus(orderId,
+				"succ");
+		Map<Integer, Double> paymentIdMoney = new HashMap<Integer, Double>();
+		if (!CollectionUtils.isEmpty(orderPays)) {
+			// 相同支付方式的支付金额合并
+			for (OrderPay orderPay : orderPays) {
+				// if(orderPay.getPaymentId() != 14) {
+				if (paymentIdMoney.containsKey(orderPay.getPaymentId())) {
+					paymentIdMoney.put(orderPay.getPaymentId(),
+							paymentIdMoney.get(orderPay.getPaymentId())
+									+ orderPay.getMoney());
+				} else {
+					paymentIdMoney.put(orderPay.getPaymentId(),
+							orderPay.getMoney());
+				}
+				// }
+				// else {//需退优惠券 判断是否用优惠券支付过
+				//
+				// }
+			}
+		}
+
+		return paymentIdMoney;
+	}
 
 	@Override
 	public ShareRespDto shareAfterPay(String orderSnMain) {
