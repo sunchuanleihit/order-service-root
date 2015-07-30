@@ -1,7 +1,5 @@
 package com.loukou.order.service.impl;
 
-import static org.junit.Assert.fail;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -32,7 +30,11 @@ public class PayServiceImplTest extends AbstractTestObject{
 
 	@Test
 	public void testFinishOrderPay() {
-		fail("Not yet implemented");
+		int paymentId = 4;
+		double totalFee = 0.1;
+		String orderSnMain = "121012145816991";
+		int result = payServiceImpl.finishOrderPay(paymentId, totalFee, orderSnMain);
+		System.out.println(result);
 	}
 
 }
