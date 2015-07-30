@@ -1886,7 +1886,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	/**
-	 * 用户app接口，暂时不用
+	 * 用户app接口
 	 */
 	@Override
 	public OrderCancelRespDto cancelOrder(int userId, String orderSnMain) {
