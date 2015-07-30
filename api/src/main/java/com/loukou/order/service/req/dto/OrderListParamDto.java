@@ -7,7 +7,7 @@ public class OrderListParamDto {
     private int storeId;
     private int orderStatus;
     private int orderType;
-    
+    private String finishedTime;
     
     public int getPageSize() {
         return pageSize;
@@ -33,16 +33,22 @@ public class OrderListParamDto {
     public void setOrderStatus(int orderStatus) {
         this.orderStatus = orderStatus;
     }
-    @Override
-    public String toString() {
-        return "OrderListParamDto [pageSize=" + pageSize + ", pageNum=" + pageNum + ", storeId=" + storeId
-                + ", orderStatus=" + orderStatus + "]";
-    }
     public int getOrderType() {
         return orderType;
     }
     public void setOrderType(int orderType) {
         this.orderType = orderType;
+    }
+    public String getFinishedTime() {
+        return finishedTime;
+    }
+    public void setFinishedTime(String finishedTime) {
+        this.finishedTime = finishedTime;
+    }
+    @Override
+    public String toString() {
+        return "OrderListParamDto [pageSize=" + pageSize + ", pageNum=" + pageNum + ", storeId=" + storeId
+                + ", orderStatus=" + orderStatus + ", orderType=" + orderType + ", finishedTime=" + finishedTime + "]";
     }
     
 }

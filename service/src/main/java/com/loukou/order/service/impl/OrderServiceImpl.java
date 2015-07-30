@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.DigestUtils;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -2337,11 +2338,11 @@ public class OrderServiceImpl implements OrderService {
         if(order.getStatus() ==OrderStatusEnum.STATUS_REFUSED.getId()){
             OrderRefuse orderRefuse =  orderRefuseDao.findByTaoOrderSn(order.getTaoOrderSn());
            orderInfoDto.setRejectReason(orderRefuse.getRefuseReason());
-           orderInfoDto.setRejectTime(orderRefuse.getRefuseTime());
+           orderInfoDto.setRejectTime(DateUtils.date2DateStr(orderRefuse.getRefuseTime()));
         }else   if(order.getStatus() ==OrderStatusEnum.STATUS_CANCELED.getId()){
             List<OrderAction> orderActions =  orderActionDao.findByTaoOrderSnAndAction(order.getTaoOrderSn(),OrderStatusEnum.STATUS_CANCELED.getId());
             OrderAction orderAction =orderActions.get(0);
-            orderInfoDto.setCancelTime(orderAction.getActionTime());
+            orderInfoDto.setCancelTime(DateUtils.date2DateStr2(orderAction.getActionTime()));
             //添加退货状态
             List<OrderReturn> returns =  orderRDao.findByOrderSnMain(order.getOrderSnMain());
             //good_status只要不是４　就是待退货
@@ -2351,9 +2352,7 @@ public class OrderServiceImpl implements OrderService {
                 orderInfoDto.setGoodsReturnStatus(2);
             }
         }else if(order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()){
-            List<OrderAction> orderActions =  orderActionDao.findByTaoOrderSnAndAction(order.getTaoOrderSn(),OrderStatusEnum.STATUS_FINISHED.getId());
-            OrderAction orderAction =orderActions.get(0);
-            orderInfoDto.setFinishTime(orderAction.getActionTime());
+            orderInfoDto.setFinishTime(SDF.format(new Date((long)(order.getFinishedTime())*1000)));
         }
         oResultDto.setCode(200);
         oResultDto.setResult(orderInfoDto);
@@ -2362,41 +2361,77 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OResponseDto<OrderListInfoDto> getOrderListInfo(OrderListParamDto param) {
-        PageRequest pagenation = new PageRequest(param.getPageNum(), param.getPageSize());
-        String type;
+        PageRequest pagenation = new PageRequest(param.getPageNum(),param.getPageSize());
+        List<String> types = new ArrayList<String>();
         switch (param.getOrderType()) {
         case 1:
-            type = "wei_wh";
+            types.add("wei_wh");
+            types.add("wei_self");
             break;
         case 2:
-            type = "booking";
+            types.add("booking");
         default:
-            type = "wei_wh";
+            types.add("wei_wh");
+            types.add("wei_self");
             break;
         }
-        Page<Order> orders  =orderDao.findBySellerIdAndTypeAndStatus(param.getStoreId(), type,param.getOrderStatus(),pagenation);
+        Page<Order> orders ;
+        if(param.getOrderStatus() == OrderStatusEnum.STATUS_FINISHED.getId()&&!StringUtils.isEmpty(param.getFinishedTime())){
+            //有问题　　　查询是要按天查询的　　必须要使用索引
+           long finishedTime = DateUtils.str2Date(param.getFinishedTime()).getTime();
+           orders = orderDao.findBySellerIdAndStatusAndFinishedTimeAndTypeIn(param.getStoreId(),param.getOrderStatus(),(int)(finishedTime/1000),types,pagenation);
+        }else {
+            orders  =orderDao.findBySellerIdAndStatusAndTypeIn(param.getStoreId(),param.getOrderStatus(),types,pagenation);
+        }
+       
         OrderListInfoDto orderListInfoDto = new OrderListInfoDto();
         List<OrderInfoDto> orderInfoDtos = new ArrayList<OrderInfoDto>();
+        
         for(Order order :orders.getContent()){
             OrderInfoDto orderInfoDto = new OrderInfoDto();
             orderInfoDto.setCreateTime(SDF.format(new Date((long)(order.getAddTime())*1000)));
             orderInfoDto.setGoodsAmount(order.getOrderAmount());
             orderInfoDto.setTaoOrderSn(order.getTaoOrderSn());
             orderInfoDto.setOrderStatus(order.getStatus());
-            orderInfoDtos.add(orderInfoDto);
-           
+            
+            List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
+            List<SpecDto> specList = new ArrayList<SpecDto>();
+            for(OrderGoods good :goods){
+                SpecDto spec = new SpecDto();
+                spec.setGoodInfo(new GoodsInfoDto(good.getGoodsId(), good.getGoodsName(), good.getGoodsImage()));
+                spec.setSpecId(good.getSpecId());
+                spec.setBuyNum(good.getQuantity());
+                specList.add(spec);
+            }
+            orderInfoDto.setSpecList(specList);
+            //指定送达时间
+            orderInfoDto.setNeedShippingTime(DateUtils.date2DateStr(order.getNeedShiptime())+order.getNeedShiptimeSlot());
+            
            if(order.getStatus() == OrderStatusEnum.STATUS_REVIEWED.getId()){
                
            }else if(order.getStatus() ==OrderStatusEnum.STATUS_CANCELED.getId()){
-               
-           }else if(order.getStatus() == OrderStatusEnum.STATUS_DELIVERIED.getId()) {
-            
-           }else if (order.getStatus() == OrderStatusEnum.STATUS_ALLOCATED.getId()) {
-            
+               List<OrderAction> orderActions =  orderActionDao.findByTaoOrderSnAndAction(order.getTaoOrderSn(),OrderStatusEnum.STATUS_CANCELED.getId());
+               OrderAction orderAction =orderActions.get(0);
+               orderInfoDto.setCancelTime(DateUtils.date2DateStr2(orderAction.getActionTime()));
+               //添加退货状态
+               List<OrderReturn> returns =  orderRDao.findByOrderSnMain(order.getOrderSnMain());
+               //good_status只要不是４　就是待退货
+               if(returns.get(0).getGoodsStatus()!=4){
+                   orderInfoDto.setGoodsReturnStatus(1);
+               }else{
+                   orderInfoDto.setGoodsReturnStatus(2);
+               }
+           }else if(order.getStatus() == OrderStatusEnum.STATUS_14.getId()) {
+                   
            }else if(order.getStatus() == OrderStatusEnum.STATUS_REFUSED.getId()){
-               
+               OrderRefuse orderRefuse =  orderRefuseDao.findByTaoOrderSn(order.getTaoOrderSn());
+               orderInfoDto.setRejectReason(orderRefuse.getRefuseReason());
+               orderInfoDto.setRejectTime(DateUtils.date2DateStr(orderRefuse.getRefuseTime()));
+           }else if(order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()){
+               orderInfoDto.setFinishTime(DateUtils.date2DateStr2(new Date((long)(order.getFinishedTime())*1000)));
            }
-            
+           
+           orderInfoDtos.add(orderInfoDto);
         }
         orderListInfoDto.setOrders(orderInfoDtos);
         orderListInfoDto.setStoreId(param.getStoreId());
