@@ -26,6 +26,8 @@ public class OrderModel {
 
 	public OrderModel(Order order,OrderDao orderDao,OrderPayDao orderPayDao) {
 		this.order = order;
+		this.orderDao = orderDao;
+		this.orderPayDao = orderPayDao;
 		pays = orderPayDao.findByOrderId(order.getOrderId());
 		if (pays == null) {
 			pays = new ArrayList<OrderPay>();
