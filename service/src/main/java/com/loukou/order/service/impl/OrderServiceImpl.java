@@ -333,7 +333,8 @@ public class OrderServiceImpl implements OrderService {
 			resp.setCode(400);
 		} else {
 			orderListResult.addAll(orderListMap.values());
-			List<OrderListDto> finalListDto = mergeUnpayOrderDto(orderListResult);
+			boolean forceMerge = false;
+			List<OrderListDto> finalListDto = mergeUnpayOrderDto(orderListResult, forceMerge);
 			//合并未支付的子单
 			resultDto.setOrderList(finalListDto);
 			resultDto.setOrderCount((int)orderList.getTotalElements());
@@ -342,11 +343,11 @@ public class OrderServiceImpl implements OrderService {
 		return resp;
 	}
 	
-	private List<OrderListDto> mergeUnpayOrderDto(List<OrderListDto> orderListResult) {
+	private List<OrderListDto> mergeUnpayOrderDto(List<OrderListDto> orderListResult, boolean forceMerge) {
 		List<OrderListDto> result = new ArrayList<OrderListDto>();
 		Map<String, OrderListDto> toMerge = new HashMap<String, OrderListDto>();
 		for(OrderListDto listDto : orderListResult) {
-			if(listDto.getBase().getStatus() < OrderStatusEnum.STATUS_REVIEWED.getId()) {
+			if(listDto.getBase().getStatus() < OrderStatusEnum.STATUS_REVIEWED.getId() || forceMerge == true) {
 				if(toMerge.containsKey(listDto.getBase().getOrderSnMain())) {
 					
 					OrderListDto existDto = toMerge.get(listDto.getBase().getOrderSnMain());
@@ -529,9 +530,13 @@ public class OrderServiceImpl implements OrderService {
 			resp.setCode(400);
 		} else {
 			orderListResult.addAll(orderListMap.values());
-			//合并未支付的子单
-			List<OrderListDto> finalListDto = mergeUnpayOrderDto(orderListResult);
-			if (finalListDto.size() > 1) {
+			//合并未支付或者orderid为空的的子单
+			boolean forceMerge = false;
+			if(orderId == 0) {
+				forceMerge = true;
+			}
+			List<OrderListDto> finalListDto = mergeUnpayOrderDto(orderListResult, forceMerge);
+			if (finalListDto.size() > 1 && forceMerge == false) {
 				List<OrderListDto> listDto = new ArrayList<OrderListDto>();
 				for(OrderListDto dto : finalListDto) {
 					if(dto.getBase().getOrderId() == orderId) {
