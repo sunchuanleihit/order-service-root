@@ -411,7 +411,7 @@ public class OrderServiceImpl implements OrderService {
 		if (needToPay > 0) {
 			baseDto.setState("未付款");	// FIXME
 		}
-		baseDto.setShippingFee(getTotalShippingFee(order.getOrderSnMain()));// 订单总运费
+		baseDto.setShippingFee(order.getShippingFee());// 订单运费
 		baseDto.setPackageStatus(ReturnStatusEnum.parseType(order.getStatus()).getComment());// 包裹的状态
 		baseDto.setShipping(getShippingMsg(order));
 		baseDto.setArrivalCode(order.getShippingNo());
@@ -1309,22 +1309,6 @@ public class OrderServiceImpl implements OrderService {
 		return StringUtils.removeEnd(shippingMsg.toString(), "、");
 	}
 
-	/**
-	 * 订单总运费-----为0显示免邮 $v['shipping_fee']
-	 */
-	private double getTotalShippingFee(String orderSnMain) {
-		List<Order> orders = orderDao.findByOrderSnMain(orderSnMain);
-		if (CollectionUtils.isEmpty(orders)) {
-			return 0;
-		}
-		double shippingFee = 0;
-		for (Order order : orders) {
-			shippingFee = DoubleUtils.add(shippingFee, order.getShippingFee());
-		}
-
-		return shippingFee;
-	}
-
 
 	// -------------------------------------------------shouhuo---------------------------------
 	/**
@@ -1399,17 +1383,19 @@ public class OrderServiceImpl implements OrderService {
 				for (Map.Entry<Integer, Double> entry : paymentIdMoneyMap
 						.entrySet()) {
 					if (entry.getKey() == PaymentEnum.PAY_VACOUNT.getId()) { // 虚拟账户
-						returnAmountVcount += entry.getValue();
+						returnAmountVcount = DoubleUtils.add(returnAmountVcount, entry.getValue());
 					} else if (entry.getKey() == PaymentEnum.PAY_TXK.getId()) {
-						returnAmountTxk += entry.getValue();
+						returnAmountTxk = DoubleUtils.add(returnAmountTxk, entry.getValue());
 					} else if (entry.getKey() == PaymentEnum.PAY_YHQ.getId()) {
-						returnAmountCoupon += entry.getValue();
+						returnAmountCoupon = DoubleUtils.add(returnAmountCoupon, entry.getValue());
 					} else {
-						returnAmount += entry.getValue();
+						returnAmount = DoubleUtils.add(returnAmount, entry.getValue());
 					}
 				}
-				double returnSum = returnAmountVcount + returnAmountTxk
-						+ returnAmountCoupon + returnAmount;
+				
+				double returnSum = DoubleUtils.add(returnAmountVcount, returnAmountTxk);
+				returnSum = DoubleUtils.add(returnSum, returnAmountCoupon);
+				returnSum = DoubleUtils.add(returnSum, returnAmount);
 
 				if (returnAmount > 0) {
 					// 有采用在线支付，则生成未退款单及应退明细记录
@@ -1450,7 +1436,7 @@ public class OrderServiceImpl implements OrderService {
 					if (returnAmountTxk > 0) {// 淘心卡原额退
 						OrderPayR orderPayR = new OrderPayR();
 						orderPayR.setOrderIdR(orderIdR);
-						orderPayR.setPaymentId(6);
+						orderPayR.setPaymentId(PaymentEnum.PAY_TXK.getId());
 						orderPayR.setRepayWay(0);
 						orderPayR.setValue(returnAmountTxk);
 						orderPayRDao.save(orderPayR);
@@ -1488,7 +1474,7 @@ public class OrderServiceImpl implements OrderService {
 				orderAction.setNotes("取消");
 				orderActionDao.save(orderAction);
 
-				if (order.getPayStatus() == 0) {// 0未支付 1已支付
+				if (order.getPayStatus() == PayStatusEnum.STATUS_UNPAY.getId()) {// 0未支付 1已支付
 					resp.setCode(200);
 					resp.setMessage("订单取消成功");
 					// return resp;
@@ -1505,6 +1491,17 @@ public class OrderServiceImpl implements OrderService {
 				// 修改订单sattus为1
 				orderDao.updateOrderStatus(order.getOrderId(),
 						OrderStatusEnum.STATUS_CANCELED.getId());
+				
+				// order_action 只插入一条记录
+				OrderAction orderAction = new OrderAction();
+				orderAction.setAction(1);
+				orderAction.setOrderSnMain(orderSnMain);
+				orderAction.setTaoOrderSn(order.getTaoOrderSn());
+				orderAction.setOrderId(order.getOrderId());
+				orderAction.setActor(order.getBuyerName());
+				orderAction.setActionTime(new Date());
+				orderAction.setNotes("取消");
+				orderActionDao.save(orderAction);
 			}
 		}
 		return resp;
