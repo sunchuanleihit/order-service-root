@@ -7,33 +7,33 @@ public class OrderListBaseDto implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 8713392709208727448L;
-	private int orderId;
-	private String orderSnMain;
-	private int sellerId;
-	private String source;
-	private String state;
-	private String addTime;
-	private String payTime;
-	private String shipTime;
-	private int payStatus;
-	private int status;
-	private String taoOrderSn;
-	private int isshouhuo;
-	private String totalPrice;
-	private String needPayPrice;
-	private double shippingFee;
-	private String packageStatus;
-	private String shipping;
-	private String arrivalCode;
-	private int commentStatus;
-	private String storePhone;
-	private String refundStatus;
-	private String discount;
-	private String shippingtype;
-	private String payType;
-	private String invoiceHeader;
-	private String postscript;
-	private String isOrder;
+	private int orderId = 0;
+	private String orderSnMain = "";
+	private int sellerId = 0;
+	private String source = "";
+	private String state = "";
+	private String addTime = "";
+	private String payTime = "";
+	private String shipTime = "";
+	private int payStatus = 0;
+	private int status = 0;
+	private String taoOrderSn = "";
+	private int isshouhuo = 0;
+	private double totalPrice = 0;
+	private double needPayPrice = 0;
+	private double shippingFee = 0;
+	private String packageStatus = "";
+	private String shipping = "";
+	private String arrivalCode = "";
+	private int commentStatus = 0;
+	private String storePhone = "";
+	private String refundStatus = "";
+	private double discount = 0;
+	private String shippingtype = "";
+	private String payType = "";
+	private String invoiceHeader = "";
+	private String postscript = "";
+	private int isOrder = 1;
 
 	public int getOrderId() {
 		return orderId;
@@ -123,20 +123,21 @@ public class OrderListBaseDto implements Serializable {
 		this.isshouhuo = isshouhuo;
 	}
 
-	public String getNeedPayPrice() {
-		return needPayPrice;
-	}
-
-	public void setNeedPayPrice(String needPayPrice) {
-		this.needPayPrice = needPayPrice;
-	}
-
-	public String getTotalPrice() {
+	
+	public double getTotalPrice() {
 		return totalPrice;
 	}
 
-	public void setTotalPrice(String totalPrice) {
+	public void setTotalPrice(double totalPrice) {
 		this.totalPrice = totalPrice;
+	}
+
+	public double getNeedPayPrice() {
+		return needPayPrice;
+	}
+
+	public void setNeedPayPrice(double needPayPrice) {
+		this.needPayPrice = needPayPrice;
 	}
 
 	public double getShippingFee() {
@@ -195,11 +196,12 @@ public class OrderListBaseDto implements Serializable {
 		this.refundStatus = refundStatus;
 	}
 
-	public String getDiscount() {
+	
+	public double getDiscount() {
 		return discount;
 	}
 
-	public void setDiscount(String discount) {
+	public void setDiscount(double discount) {
 		this.discount = discount;
 	}
 
@@ -243,11 +245,11 @@ public class OrderListBaseDto implements Serializable {
 		this.postscript = postscript;
 	}
 
-	public String getIsOrder() {
+	public int getIsOrder() {
 		return isOrder;
 	}
 
-	public void setIsOrder(String isOrder) {
+	public void setIsOrder(int isOrder) {
 		this.isOrder = isOrder;
 	}
 

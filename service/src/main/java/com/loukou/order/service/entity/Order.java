@@ -50,7 +50,7 @@ public class Order {
 	 * 没用，留空字符串，not null
 	 */
 	@Column(name = "extension")
-	private String extension;
+	private String extension = "";
 	
 	/*
 	 * 商家id，淘常州自营会细分
@@ -131,7 +131,7 @@ public class Order {
 	 * 对cvs来说留空字符串，not null
 	 */
 	@Column(name = "pay_message")
-	private String payMessage;
+	private String payMessage = "";
 
 	/*
 	 * 发货时间
@@ -255,7 +255,7 @@ public class Order {
 	 * 对cvs留空，not null
 	 */
 	@Column(name = "postscript")
-	private String postscript;
+	private String postscript = "";
 
 	/*
 	 * 对cvs=0
@@ -383,7 +383,20 @@ public class Order {
 	@Column(name = "is_del")
 	private int isDel;
 
-	public int getOrderId() {
+	@Column(name="receive_no")
+	private String receiveNo;
+	
+	
+
+    public String getReceiveNo() {
+        return receiveNo;
+    }
+
+    public void setReceiveNo(String receiveNo) {
+        this.receiveNo = receiveNo;
+    }
+
+    public int getOrderId() {
 		return orderId;
 	}
 

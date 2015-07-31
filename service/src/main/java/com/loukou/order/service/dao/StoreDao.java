@@ -20,4 +20,6 @@ public interface StoreDao extends CrudRepository<Store, Integer>{
 	List<Store> findByStoreType(String storeType);
 
 	List<Store> findByTelBusiness(String telBusiness);
+
+	List<Store> findByStoreIdIn(List<Integer> storeIds);
 }

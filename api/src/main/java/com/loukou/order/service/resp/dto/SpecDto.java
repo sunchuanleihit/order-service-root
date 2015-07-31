@@ -1,6 +1,12 @@
 package com.loukou.order.service.resp.dto;
 
-public class SpecDto {
+import java.io.Serializable;
+
+public class SpecDto implements Serializable{
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -7128000996746443423L;
     private int specId;
     private GoodsInfoDto goodInfo;
     private String specName;

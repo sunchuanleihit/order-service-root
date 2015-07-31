@@ -1,6 +1,7 @@
 
 package com.loukou.order.service.dao;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -44,25 +45,25 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	@Query("SELECT o FROM Order o WHERE orderSnMain=?1 ")
 	List<Order> getCvsBackOrders(String orderSnMain);
 	
-	@Transactional(value = "transactionManagerMall")
+	@Transactional
 	@Modifying
 	@Query("UPDATE Order set shippingNo = ?1 where orderId = ?2")
 	int updateShippingNo(String shippingNo,int orderId);
 
-	Iterable<Order> findByOrderSnMainIn(List<String> orderSnMains);
+	Page<Order> findByOrderSnMainIn(Iterable<String> orderSnMains, Pageable pageable);
 
 	List<Order> findByshippingNoIn(List<String> shippingNo);
 
-	List<Order> findByBuyerIdAndIsDel(int userId, int isDel);
+	Page<Order> findByBuyerIdAndIsDel(int userId, int isDel, Pageable pageable);
 
-	@Transactional(value = "transactionManagerMall")
+	@Transactional
 	@Modifying
 	@Query("UPDATE Order set status = ?2 where orderId = ?1")
 	void updateOrderStatus(int orderId, int status);
 
 	Order findByOrderId(int orderId);
 	
-	@Transactional(value = "transactionManagerMall")
+	@Transactional
 	@Modifying
 	@Query("UPDATE Order set payStatus = ?3, orderPayed = ?2 where orderId = ?1")
 	Order updateOrderPayedAndStatus(int orderId, double payedMoney, int status);
@@ -77,5 +78,21 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	@Query("SELECT COUNT(*) FROM Order d WHERE d.orderSnMain = ?1 and d.status <> ?2")
 	int countOrderByOrderSnMainAndStatusNot(String orderSnMain,int status);
 
+	Page<Order> findByBuyerIdAndIsDelAndPayStatusAndStatusIn(int userId, int isDel, int payStatus,
+			List<Integer> statusList, Pageable pagealbe);
+
+	List<Order> findByOrderSnMainAndPayStatus(String orderSnMain, int payStatus);
+
+	Page<Order> findBySellerIdAndStatusAndTypeIn(int sellerId,int status,List<String> types,Pageable page);
+	
+	Page<Order> findBySellerIdAndStatusAndFinishedTimeAndTypeIn(int sellerId,int status,int finishedTime,List<String> types,Pageable page);
+	@Modifying
+    @Query("UPDATE Order set status = ?2, receiveNo=?3 where orderId = ?1")
+    void updateOrderStatusAndreceiveNo(int orderId, int status, String receiveNo);
+	
+	@Modifying
+    @Query("UPDATE Order set status = ?1, finishedTime=?2 where orderId = ?3")
+	void updateStatusAndFinishedTime(int status,int finishedTime,int orderId);
+	
 }
 

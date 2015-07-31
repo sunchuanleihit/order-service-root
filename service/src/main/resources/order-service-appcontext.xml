@@ -20,14 +20,9 @@
 	  <constructor-arg index="4" value="database,solr" />
 	</bean>
 	
-<<<<<<< HEAD
-=======
-	<!-- 搜索 -->
-	<bean id="goodsSearchService" class="com.loukou.search.service.impl.GoodsSearchServiceImpl" />
 	
 	<context:annotation-config />
 	<context:component-scan base-package="com.loukou.order.service.impl" />
->>>>>>> 587576fbe313d99e98788390ca5a37ec200cc1cd
 
 	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
 		init-method="init" destroy-method="close">

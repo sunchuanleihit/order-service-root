@@ -10,5 +10,9 @@ import com.loukou.order.service.entity.OrderExtm;
 public interface OrderExtmDao extends CrudRepository<OrderExtm, Integer>{
 
 	List<OrderExtm> findByOrderSnMain(String orderSnMain);
+	
+	OrderExtm findByOrderId(Integer orderId);
+
+	List<OrderExtm> findByOrderSnMainIn(List<String> orderSnMainList);
 
 }

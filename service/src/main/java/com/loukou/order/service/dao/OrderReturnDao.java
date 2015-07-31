@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,9 +17,6 @@ public interface OrderReturnDao extends PagingAndSortingRepository<OrderReturn, 
 
 	List<OrderReturn> findByOrderSnMainAndOrderStatus(String orderSnMain, int orderStatus);
 
-	List<OrderReturn> findByBuyerIdAndOrderStatus(int userId, int orderStatus);
-
-	List<OrderReturn> findByOrderSnMain(String orderSnMain);
 
 	@Transactional(value="transactionManagerMall")
 	@Modifying
@@ -40,6 +39,12 @@ public interface OrderReturnDao extends PagingAndSortingRepository<OrderReturn, 
 	int updateGoodsStatusByOrderSnMainAndSellerId(String orderSnMain,int sellerId,int status);
 	
 	List<OrderReturn> findByOrderId(int orderId);
+	
+	Page<OrderReturn> findByBuyerIdAndOrderStatus(int userId, int orderStatus, Pageable pageable);
+
+	List<OrderReturn> findByBuyerIdAndOrderStatus(int userId, int orderStatus);
+
+	List<OrderReturn> findByOrderSnMain(String orderSnMain);
 	
 	List<OrderReturn> findByOrderSnMainAndSellerId(String orderSnMain,int sellerId);
 }

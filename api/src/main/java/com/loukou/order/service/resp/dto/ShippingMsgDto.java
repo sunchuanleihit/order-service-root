@@ -8,8 +8,8 @@ public class ShippingMsgDto implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 2507130177792278342L;
-	private String description;
-	private String creatTime;
+	private String description = "";
+	private String creatTime = "";
 
 	public String getDescription() {
 		return description;

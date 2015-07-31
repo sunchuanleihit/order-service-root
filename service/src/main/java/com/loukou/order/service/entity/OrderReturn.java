@@ -28,25 +28,25 @@ public class OrderReturn {
 	 * 对应member表user_id
 	 */
 	@Column(name = "buyer_id")
-	private int buyerId;
+	private Integer buyerId;
 
 	/*
 	 * 商家id，淘常州自营会细分 通过goods_spec关联到good_id 通过goods表关联到store_id
 	 */
 	@Column(name = "seller_id")
-	private int sellerId;
+	private Integer sellerId;
 
 	/**
 	 * 退款金额(包含运费)
 	 */
 	@Column(name = "return_amount")
-	private double returnAmount;
+	private Double returnAmount;
 
 	/*
 	 * 物流费 对cvs=0
 	 */
 	@Column(name = "shipping_fee")
-	private double shippingFee;
+	private Double shippingFee;
 
 	/*
 	 * 操作人
@@ -140,11 +140,11 @@ public class OrderReturn {
 		this.orderIdR = orderIdR;
 	}
 
-	public int getOrderId() {
+	public Integer getOrderId() {
 		return orderId;
 	}
 
-	public void setOrderId(int orderId) {
+	public void setOrderId(Integer orderId) {
 		this.orderId = orderId;
 	}
 
@@ -156,35 +156,35 @@ public class OrderReturn {
 		this.orderSnMain = orderSnMain;
 	}
 
-	public int getBuyerId() {
+	public Integer getBuyerId() {
 		return buyerId;
 	}
 
-	public void setBuyerId(int buyerId) {
+	public void setBuyerId(Integer buyerId) {
 		this.buyerId = buyerId;
 	}
 
-	public int getSellerId() {
+	public Integer getSellerId() {
 		return sellerId;
 	}
 
-	public void setSellerId(int sellerId) {
+	public void setSellerId(Integer sellerId) {
 		this.sellerId = sellerId;
 	}
 
-	public double getReturnAmount() {
+	public Double getReturnAmount() {
 		return returnAmount;
 	}
 
-	public void setReturnAmount(double returnAmount) {
+	public void setReturnAmount(Double returnAmount) {
 		this.returnAmount = returnAmount;
 	}
 
-	public double getShippingFee() {
+	public Double getShippingFee() {
 		return shippingFee;
 	}
 
-	public void setShippingFee(double shippingFee) {
+	public void setShippingFee(Double shippingFee) {
 		this.shippingFee = shippingFee;
 	}
 
@@ -204,51 +204,51 @@ public class OrderReturn {
 		this.addTime = addTime;
 	}
 
-	public int getGoodsType() {
+	public Integer getGoodsType() {
 		return goodsType;
 	}
 
-	public void setGoodsType(int goodsType) {
+	public void setGoodsType(Integer goodsType) {
 		this.goodsType = goodsType;
 	}
 
-	public int getOrderType() {
+	public Integer getOrderType() {
 		return orderType;
 	}
 
-	public void setOrderType(int orderType) {
+	public void setOrderType(Integer orderType) {
 		this.orderType = orderType;
 	}
 
-	public int getOrderStatus() {
+	public Integer getOrderStatus() {
 		return orderStatus;
 	}
 
-	public void setOrderStatus(int orderStatus) {
+	public void setOrderStatus(Integer orderStatus) {
 		this.orderStatus = orderStatus;
 	}
 
-	public int getGoodsStatus() {
+	public Integer getGoodsStatus() {
 		return goodsStatus;
 	}
 
-	public void setGoodsStatus(int goodsStatus) {
+	public void setGoodsStatus(Integer goodsStatus) {
 		this.goodsStatus = goodsStatus;
 	}
 
-	public int getRefundStatus() {
+	public Integer getRefundStatus() {
 		return refundStatus;
 	}
 
-	public void setRefundStatus(int refundStatus) {
+	public void setRefundStatus(Integer refundStatus) {
 		this.refundStatus = refundStatus;
 	}
 
-	public int getStatementStatus() {
+	public Integer getStatementStatus() {
 		return statementStatus;
 	}
 
-	public void setStatementStatus(int statementStatus) {
+	public void setStatementStatus(Integer statementStatus) {
 		this.statementStatus = statementStatus;
 	}
 
@@ -268,36 +268,35 @@ public class OrderReturn {
 		this.repayTime = repayTime;
 	}
 
-	public int getPrinted() {
+	public Integer getPrinted() {
 		return printed;
 	}
 
-	public void setPrinted(int printed) {
+	public void setPrinted(Integer printed) {
 		this.printed = printed;
 	}
 
-	public int getConId() {
+	public Integer getConId() {
 		return conId;
 	}
 
-	public void setConId(int conId) {
+	public void setConId(Integer conId) {
 		this.conId = conId;
 	}
 
-	public int getReason() {
+	public Integer getReason() {
 		return reason;
 	}
 
-	public void setReason(int reason) {
+	public void setReason(Integer reason) {
 		this.reason = reason;
 	}
 
-	public int getRepayWay() {
+	public Integer getRepayWay() {
 		return repayWay;
 	}
 
-	public void setRepayWay(int repayWay) {
+	public void setRepayWay(Integer repayWay) {
 		this.repayWay = repayWay;
 	}
-
 }

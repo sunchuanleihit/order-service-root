@@ -19,5 +19,7 @@ public interface OrderActionDao extends CrudRepository<OrderAction, Integer>{
 	List<OrderAction> findByActionAndOrderSnMainIn(int action, List<String> orderSnMain);
 
 	List<OrderAction> findByOrderSnMain(String orderSnMain);
+	
+	List<OrderAction> findByTaoOrderSnAndAction(String taoOrderSn,int action);
 
 }

@@ -12,12 +12,12 @@ public class PayOrderResultRespDto extends ResponseCodeDto implements Serializab
 		super(code, desc);
 	}
 	private static final long serialVersionUID = -1039422672447327463L;
-	private PayOrderMsgDto result;
+	private PayOrderMsgRespDto result = new PayOrderMsgRespDto();
 
-	public PayOrderMsgDto getResult() {
+	public PayOrderMsgRespDto getResult() {
 		return result;
 	}
-	public void setResult(PayOrderMsgDto result) {
+	public void setResult(PayOrderMsgRespDto result) {
 		this.result = result;
 	}
 	

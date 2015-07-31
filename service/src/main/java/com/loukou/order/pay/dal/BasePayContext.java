@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.loukou.order.pay.processor.GetDaoProcessor;
 import com.loukou.order.service.dao.MemberDao;
 import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderPaySignDao;
@@ -34,18 +35,18 @@ public abstract class BasePayContext {
 
 	private String orderSnMain;
 
-	@Autowired
 	protected MemberDao memberDao;
 
-	@Autowired
 	protected OrderPaySignDao orderPaySignDao;
 
-	@Autowired
 	protected OrderActionDao orderActionDao;
 
-	public BasePayContext(int userId, String orderSnMain) {
+	public BasePayContext(int userId, String orderSnMain,GetDaoProcessor getDaoProcessor) {
 		this.userId = userId;
 		this.orderSnMain = orderSnMain;
+		memberDao = getDaoProcessor.getMemberDao();
+		orderPaySignDao = getDaoProcessor.getOrderPaySignDao();
+		orderActionDao = getDaoProcessor.getOrderActionDao();
 	}
 
 	public boolean recordAction(OrderActionTypeEnum actionType, String notes) {

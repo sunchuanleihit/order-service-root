@@ -11,7 +11,7 @@ public class OrderListRespDto extends ResponseCodeDto implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 2646527710985526663L;
-	private OrderListResultDto result;
+	private OrderListResultDto result = new OrderListResultDto();
 	
 	public OrderListResultDto getResult() {
 		return result;
