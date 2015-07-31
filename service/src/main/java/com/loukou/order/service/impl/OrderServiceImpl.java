@@ -411,7 +411,7 @@ public class OrderServiceImpl implements OrderService {
 		if (needToPay > 0) {
 			baseDto.setState("未付款");	// FIXME
 		}
-		baseDto.setShippingFee(getTotalShippingFee(order.getOrderSnMain()));// 订单总运费
+		baseDto.setShippingFee(order.getShippingFee());// 订单运费
 		baseDto.setPackageStatus(ReturnStatusEnum.parseType(order.getStatus()).getComment());// 包裹的状态
 		baseDto.setShipping(getShippingMsg(order));
 		baseDto.setArrivalCode(order.getShippingNo());
@@ -1302,22 +1302,6 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		return StringUtils.removeEnd(shippingMsg.toString(), "、");
-	}
-
-	/**
-	 * 订单总运费-----为0显示免邮 $v['shipping_fee']
-	 */
-	private double getTotalShippingFee(String orderSnMain) {
-		List<Order> orders = orderDao.findByOrderSnMain(orderSnMain);
-		if (CollectionUtils.isEmpty(orders)) {
-			return 0;
-		}
-		double shippingFee = 0;
-		for (Order order : orders) {
-			shippingFee = DoubleUtils.add(shippingFee, order.getShippingFee());
-		}
-
-		return shippingFee;
 	}
 
 
