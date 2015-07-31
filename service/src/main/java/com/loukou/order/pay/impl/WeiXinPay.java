@@ -44,31 +44,34 @@ public class WeiXinPay {
 							context.getUserId(), context.getOrderSnMain(),
 							outTradeNo));
 		}
-		// 调用微信统一支付接口
-		String goodsName = String.format("订单号：%s", context.getOrderSnMain());
-		// !!!! 注意⚠这里外部交易号用的是主单号 跟支付宝不一样 !!!!
-		WxUnifiedOrderRespVO unifiedOrderResp = WxPayProcessor.getProcessor()
-				.pay(context.getOrderSnMain(), goodsName, needToPay);
-		if (!WxPayProcessor.isSuccessUnifiedOrder(unifiedOrderResp)) {
-			logger.error(String
-					.format("preparePay weixin fail to make unified order user_id[%d] order_sn_main[%s] out_trade_no[%s]",
-							context.getUserId(), context.getOrderSnMain(),
-							outTradeNo));
-			// 调用失败，滚粗
-			// TODO
-			return null;
-		} else {
-			logger.info(String
-					.format("preparePay weixin done to make unified order user_id[%d] order_sn_main[%s] out_trade_no[%s]",
-							context.getUserId(), context.getOrderSnMain(),
-							outTradeNo));
+		if(needToPay > 0.0)
+		{
+			// 调用微信统一支付接口
+			String goodsName = String.format("订单号：%s", context.getOrderSnMain());
+			// !!!! 注意⚠这里外部交易号用的是主单号 跟支付宝不一样 !!!!
+			WxUnifiedOrderRespVO unifiedOrderResp = WxPayProcessor.getProcessor()
+					.pay(context.getOrderSnMain(), goodsName, needToPay);
+			if (!WxPayProcessor.isSuccessUnifiedOrder(unifiedOrderResp)) {
+				logger.error(String
+						.format("preparePay weixin fail to make unified order user_id[%d] order_sn_main[%s] out_trade_no[%s]",
+								context.getUserId(), context.getOrderSnMain(),
+								outTradeNo));
+				// 调用失败，滚粗
+				// TODO
+				return null;
+			} else {
+				logger.info(String
+						.format("preparePay weixin done to make unified order user_id[%d] order_sn_main[%s] out_trade_no[%s]",
+								context.getUserId(), context.getOrderSnMain(),
+								outTradeNo));
+			}
+			result.setPrepayId(unifiedOrderResp.getPrepayId());
+			result.setNonceStr(unifiedOrderResp.getNoncestr());
 		}
 		// 构造收银台结构
 		result.setAppId(WxPayConstant.APPID);
 		result.setPartnerId(WxPayConstant.MCHID);
-		result.setPrepayId(unifiedOrderResp.getPrepayId());
 		result.setPackageX(WxPayConstant.PACKAGESTR);
-		result.setNonceStr(unifiedOrderResp.getNoncestr());
 		result.setTimestamp(String.valueOf(new Date().getTime() / 1000));
 		// 签名
 		// https://pay.weixin.qq.com/wiki/doc/api/app.php?chapter=9_12&index=2
