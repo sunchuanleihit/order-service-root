@@ -461,7 +461,6 @@ public class OrderServiceImpl implements OrderService {
 		}
 		List<Order> orderList = orderDao.findByOrderSnMain(orderSnMain);
 		if (CollectionUtils.isEmpty(orderList)) {
-			resp.setCode(400);
 			return resp;
 		}
 		
@@ -524,14 +523,16 @@ public class OrderServiceImpl implements OrderService {
 							if(order.getShipTime() == null || order.getShipTime() == 0) {
 								shippingMsgDto.setCreatTime("");
 							} else {
-								shippingMsgDto.setCreatTime(SDF.format(order.getShipTime() * 1000));
+								String shipTime = DateUtils.dateTimeToStr(order.getShipTime());
+								shippingMsgDto.setCreatTime(shipTime);
 							}
 						} else if (order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
 							shippingMsgDto.setDescription(ShippingMsgDesc.FINISH);
 							if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
 								shippingMsgDto.setCreatTime("");
 							} else {
-								shippingMsgDto.setCreatTime(SDF.format(order.getFinishedTime() * 1000));
+								String finishedTime = DateUtils.dateTimeToStr(order.getFinishedTime());
+								shippingMsgDto.setCreatTime(finishedTime);
 							}
 						}
 					} else {
@@ -539,7 +540,8 @@ public class OrderServiceImpl implements OrderService {
 						if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
 							shippingMsgDto.setCreatTime("");
 						} else {
-							shippingMsgDto.setCreatTime(SDF.format(order.getAddTime() * 1000));
+							String addTime = DateUtils.dateTimeToStr(order.getAddTime());
+							shippingMsgDto.setCreatTime(addTime);
 						}
 					}
 				} else {
@@ -549,14 +551,16 @@ public class OrderServiceImpl implements OrderService {
 						if(order.getShipTime() == null || order.getShipTime() == 0) {
 							shippingMsgDto.setCreatTime("");
 						} else {
-							shippingMsgDto.setCreatTime(SDF.format(order.getShipTime() * 1000));
+							String shipTime = DateUtils.dateTimeToStr(order.getShipTime());
+							shippingMsgDto.setCreatTime(shipTime);
 						}
 					} else if (order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
 						shippingMsgDto.setDescription(ShippingMsgDesc.FINISH);
 						if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
 							shippingMsgDto.setCreatTime("");
 						} else {
-							shippingMsgDto.setCreatTime(SDF.format(order.getFinishedTime() * 1000));
+							String finishedTime = DateUtils.dateTimeToStr(order.getFinishedTime());
+							shippingMsgDto.setCreatTime(finishedTime);
 						}
 					}
 				}
@@ -569,7 +573,7 @@ public class OrderServiceImpl implements OrderService {
 		
 		
 		if(orderListMap.isEmpty()) {
-			resp.setCode(400);
+			return resp;
 		} else {
 			orderListResult.addAll(orderListMap.values());
 			//合并未支付或者orderid为空的的子单
@@ -597,6 +601,7 @@ public class OrderServiceImpl implements OrderService {
 		return resp;
 	}
 
+	
 	@Override
 	public CouponListRespDto getCouponList(int cityId, int userId, int storeId,
 			String openId) {

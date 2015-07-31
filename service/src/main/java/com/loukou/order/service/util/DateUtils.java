@@ -38,10 +38,22 @@ public class DateUtils {
 		return dt.toString("yyyy-MM-dd HH:mm:ss");
 	}
 	
+
 	public static String date2DateStr3(Date date) {
 		DateTime dt = new DateTime(date);
 		return dt.toString("yyMMddHHmm");
 	}
+	
+	
+	/**
+	 * 将数据库中的php time转换成yyyy－MM-dd HH:mm:ss
+	 * @param args
+	 */
+	public static String dateTimeToStr(int datetime) {
+		DateTime dt = new DateTime((long)datetime * 1000);
+		return dt.toString("yyyy-MM-dd HH:mm:ss");
+	}
+	
 	
 	/**
 	 * 获得小时
@@ -84,6 +96,8 @@ public class DateUtils {
 		
 		return (int) (new Date().getTime()/1000);
 	}
+
+	
 	
 	public static void main(String[] args) {
 //		String time = "00:03:00";
