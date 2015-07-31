@@ -136,7 +136,6 @@ public class OrderServiceImpl implements OrderService {
 	private static final Logger LOGGER = Logger
 			.getLogger(OrderServiceImpl.class);
 
-	private SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 //	private static final DecimalFormat DECIMALFORMAT = new DecimalFormat(
 //			"###,###.##");
 	private VirtualAccountProcessor virtualAccountProcessor = VirtualAccountProcessor
@@ -392,13 +391,16 @@ public class OrderServiceImpl implements OrderService {
 		baseDto.setSource(OrderSourceEnum.parseSource(order.getSource()).getSource());
 		baseDto.setState(ReturnStatusEnum.parseType(order.getStatus()).getComment());
 		if (order.getAddTime() != null && order.getAddTime() != 0) {
-			baseDto.setAddTime(SDF.format(order.getAddTime() * 1000));
+			String addTime = DateUtils.dateTimeToStr(order.getAddTime());
+			baseDto.setAddTime(addTime);
 		}
 		if (order.getPayTime() != null && order.getPayTime() != 0) {
-			baseDto.setPayTime(SDF.format(order.getPayTime() * 1000));
+			String payTime = DateUtils.dateTimeToStr(order.getPayTime());
+			baseDto.setPayTime(payTime);
 		}
 		if (order.getShipTime() != null && order.getShipTime() != 0) {
-			baseDto.setShipTime(SDF.format(order.getShipTime() * 1000));
+			String shipTime = DateUtils.dateTimeToStr(order.getShipTime());
+			baseDto.setShipTime(shipTime);
 		}
 		baseDto.setPayStatus(order.getPayStatus());
 		baseDto.setStatus(order.getStatus());
@@ -1164,7 +1166,6 @@ public class OrderServiceImpl implements OrderService {
 		}
 		List<Order> orders = orderDao.findByOrderSnMain(orderSnMain);
 		if (CollectionUtils.isEmpty(orders)) {
-			resp.setCode(400);
 			return resp;
 		}
 
@@ -1292,7 +1293,7 @@ public class OrderServiceImpl implements OrderService {
 		StringBuilder shippingMsg = new StringBuilder();
 		
 		if(order != null) {
-			if (order.getType() == OrderTypeEnums.TYPE_BOOKING.getType()) {
+			if (StringUtils.equals(order.getType(), OrderTypeEnums.TYPE_BOOKING.getType())) {
 				shippingMsg.append("预售商品").append(order.getNeedShiptime())
 						.append(" ").append(order.getNeedShiptimeSlot())
 						.append("、");
@@ -1310,7 +1311,6 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 
-	// -------------------------------------------------shouhuo---------------------------------
 	/**
 	 * 判断是否显示 确认收货
 	 *
@@ -1422,12 +1422,14 @@ public class OrderServiceImpl implements OrderService {
 						orderPayR.setPaymentId(2);
 						orderPayR.setValue(returnAmountVcount);
 						orderPayRDao.save(orderPayR);
+						String addTime = DateUtils.date2DateStr2(new Date());
+						String noteStr = String.format("取消订单退款:%s", addTime);
 						VaccountUpdateRespVO vAccountResp = VirtualAccountProcessor
 								.getProcessor().refund(userId,
 										order.getOrderId(), orderSnMain,
 										returnAmountVcount,
-										SDF.format(new Date()), 0,
-										"取消订单退款:" + SDF.format(new Date()),
+										addTime, 0,
+										noteStr,
 										order.getBuyerName());
 
 					}
@@ -1567,7 +1569,8 @@ public class OrderServiceImpl implements OrderService {
 		orderReturn.setSellerId(sellerId);
 		orderReturn.setReturnAmount(returnSum);
 		orderReturn.setActor("system");
-		orderReturn.setAddTime(SDF.format(new Date()));
+		String addTime = DateUtils.date2DateStr2(new Date());
+		orderReturn.setAddTime(addTime);
 		orderReturn.setGoodsType(ReturnGoodsType.GOODS);
 		orderReturn.setOrderType(OrderReturnGoodsType.TYPE_SELF_CANCEL.getId());
 		orderReturn.setOrderStatus(ReturnOrderStatus.NORMAL.getId());
@@ -1575,7 +1578,7 @@ public class OrderServiceImpl implements OrderService {
 		orderReturn.setRefundStatus(refundStatus);
 		orderReturn.setStatementStatus(0);
 		if (returnStatus == 1) {
-			orderReturn.setRepayTime(SDF.format(new Date()));
+			orderReturn.setRepayTime(addTime);
 		}
 		orderReturn.setPostscript("客户自已取消订单");
 		return orderRDao.save(orderReturn).getOrderIdR();

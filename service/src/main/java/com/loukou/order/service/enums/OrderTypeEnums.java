@@ -14,7 +14,8 @@ public enum OrderTypeEnums {
 	private String comment;
 	
 	private OrderTypeEnums(String type, String comment) {
-		
+		this.type = type;
+		this.comment = comment;
 	}
 	
 	public static OrderTypeEnums parseType(String type) {
