@@ -524,14 +524,14 @@ public class OrderServiceImpl implements OrderService {
 							if(order.getShipTime() == null || order.getShipTime() == 0) {
 								shippingMsgDto.setCreatTime("");
 							} else {
-								shippingMsgDto.setCreatTime(SDF.format(order.getShipTime() * 1000));
+								shippingMsgDto.setCreatTime(SDF.format((long)order.getShipTime() * 1000));
 							}
 						} else if (order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
 							shippingMsgDto.setDescription(ShippingMsgDesc.FINISH);
 							if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
 								shippingMsgDto.setCreatTime("");
 							} else {
-								shippingMsgDto.setCreatTime(SDF.format(order.getFinishedTime() * 1000));
+								shippingMsgDto.setCreatTime(SDF.format((long)order.getFinishedTime() * 1000));
 							}
 						}
 					} else {
@@ -539,7 +539,7 @@ public class OrderServiceImpl implements OrderService {
 						if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
 							shippingMsgDto.setCreatTime("");
 						} else {
-							shippingMsgDto.setCreatTime(SDF.format(order.getAddTime() * 1000));
+							shippingMsgDto.setCreatTime(SDF.format((long)order.getAddTime() * 1000));
 						}
 					}
 				} else {
@@ -549,14 +549,14 @@ public class OrderServiceImpl implements OrderService {
 						if(order.getShipTime() == null || order.getShipTime() == 0) {
 							shippingMsgDto.setCreatTime("");
 						} else {
-							shippingMsgDto.setCreatTime(SDF.format(order.getShipTime() * 1000));
+							shippingMsgDto.setCreatTime(SDF.format((long)order.getShipTime() * 1000));
 						}
 					} else if (order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
 						shippingMsgDto.setDescription(ShippingMsgDesc.FINISH);
 						if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
 							shippingMsgDto.setCreatTime("");
 						} else {
-							shippingMsgDto.setCreatTime(SDF.format(order.getFinishedTime() * 1000));
+							shippingMsgDto.setCreatTime(SDF.format((long)order.getFinishedTime() * 1000));
 						}
 					}
 				}
