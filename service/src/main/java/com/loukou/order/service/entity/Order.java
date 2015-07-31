@@ -166,7 +166,7 @@ public class Order {
 	 * 对cvs来说0
 	 */
 	@Column(name = "finished_time")
-	private int finishedTime;
+	private Integer finishedTime;
 	
 	/*
 	 * 商品总价（不含运费）
@@ -559,11 +559,12 @@ public class Order {
 		this.invoiceTime = invoiceTime;
 	}
 
-	public int getFinishedTime() {
+
+	public Integer getFinishedTime() {
 		return finishedTime;
 	}
 
-	public void setFinishedTime(int finishedTime) {
+	public void setFinishedTime(Integer finishedTime) {
 		this.finishedTime = finishedTime;
 	}
 
