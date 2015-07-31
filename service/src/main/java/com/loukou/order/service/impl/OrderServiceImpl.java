@@ -336,7 +336,7 @@ public class OrderServiceImpl implements OrderService {
 			orderListMap.put(order.getTaoOrderSn(), orderListDto);
 		}
 		if(orderListMap.isEmpty()) {
-			resp.setCode(400);
+			return resp;
 		} else {
 			orderListResult.addAll(orderListMap.values());
 			boolean forceMerge = false;
@@ -1152,13 +1152,12 @@ public class OrderServiceImpl implements OrderService {
 			resp.setCode(400);
 			return resp;
 		}
-		if (CollectionUtils.isEmpty(orderDao.findByOrderSnMain(orderSnMain))) {
+		List<Order> orders = orderDao.findByOrderSnMain(orderSnMain);
+		if (CollectionUtils.isEmpty(orders)) {
 			resp.setCode(400);
 			return resp;
 		}
 
-		List<Order> orders = (List<Order>) orderDao
-				.findByOrderSnMain(orderSnMain);
 		double orderTotal = 0;
 		double shippingFee = 0;
 		for (Order o : orders) {
@@ -1213,17 +1212,13 @@ public class OrderServiceImpl implements OrderService {
 		}
 		Order order = orderDao.findByTaoOrderSn(taoOrderSn);
 		Express express = expressDao.findByCodeNum(order.getShippingCompany());
-		if (express == null) {
-			resp.setCode(400);
-			return resp;
-		}
 		StringBuilder sb = new StringBuilder();
 		if (order.getShippingId() == 0 || order.getShippingId() > 5) {
 			sb.append("淘常州小黄蜂配送");
 		} else {
 			sb.append("商家自送");
 		}
-		if (StringUtils.isNotBlank(express.getExpressName())) {
+		if ( express != null && StringUtils.isNotBlank(express.getExpressName())) {
 			sb.append("(").append(express.getExpressName()).append(")");
 			resultDto.setShippingName(sb.toString());
 		}
@@ -1347,7 +1342,6 @@ public class OrderServiceImpl implements OrderService {
 			return resp;
 		}
 
-		List<String> couponCodes = new ArrayList<String>();
 		double returnAmountVcount = 0;
 		double returnAmountTxk = 0;
 		double returnAmountCoupon = 0;
@@ -1358,16 +1352,12 @@ public class OrderServiceImpl implements OrderService {
 			if (order.getStatus() == OrderStatusEnum.STATUS_CANCELED.getId()
 					|| order.getStatus() == OrderStatusEnum.STATUS_REVIEWED
 							.getId()) {
-				// resp.setCode(400);
 				return resp;
 			}
 
 			if (order.getOrderPayed() > 0) {
 				orderPayed = DoubleUtils.add(orderPayed, order.getOrderPayed());
-				String useCouponNo = order.getUseCouponNo();
-				if (!StringUtils.equals(useCouponNo, "0")) {
-					couponCodes.add(useCouponNo);
-				}
+				
 			}
 		}
 
@@ -1375,6 +1365,9 @@ public class OrderServiceImpl implements OrderService {
 			for (Order order : orders) {
 				Map<Integer, Double> paymentIdMoneyMap = getPay(order
 						.getOrderId());
+				
+				String useCouponNo = order.getUseCouponNo();
+				
 				for (Map.Entry<Integer, Double> entry : paymentIdMoneyMap
 						.entrySet()) {
 					if (entry.getKey() == PaymentEnum.PAY_VACOUNT.getId()) { // 虚拟账户
@@ -1443,18 +1436,16 @@ public class OrderServiceImpl implements OrderService {
 					}
 
 					if (returnAmountCoupon > 0) {// 优惠券状态改成未使用
-						if (CollectionUtils.isEmpty(couponCodes)) {
-							for (String couponCode : couponCodes) {
-								// TODO couponCode待确定
-								couponSnDao.refundCouponSn(couponCode, userId);
-							}
+						
+						if(useCouponNo != null && !StringUtils.equals(useCouponNo, "0")) {
+							couponSnDao.refundCouponSn(useCouponNo, userId);
 						}
 					}
 				}
 				// 修改订单sattus为1
 				orderDao.updateOrderStatus(order.getOrderId(),
 						OrderStatusEnum.STATUS_CANCELED.getId());
-				// 释放库存 TODO test
+				// 释放库存
 				releaseFreezStock(order.getOrderId(), order.getType(),
 						OpearteTypeEnum.OPERATE_CANCEL.getType());
 
