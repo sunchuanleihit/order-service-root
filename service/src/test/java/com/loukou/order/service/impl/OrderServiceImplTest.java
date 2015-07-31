@@ -7,10 +7,10 @@ import com.loukou.order.AbstractTestObject;
 import com.loukou.order.service.api.OrderService;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
-import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
+import com.loukou.order.service.resp.dto.UserOrderNumRespDto;
 
 public class OrderServiceImplTest extends AbstractTestObject {
 
@@ -70,5 +70,14 @@ public class OrderServiceImplTest extends AbstractTestObject {
 	@Test
 	public void getOrderList() {
 		orderService.getOrderList(1032752, 1, 0, 10);
+	}
+	
+	@Test
+	public void getOrderNumTest() {
+		UserOrderNumRespDto resp = orderService.getOrderNum(1032752);
+		System.out.println(String.format("delieverNum = %d",  resp.getDeliveryNum()));
+		System.out.println(String.format("payNum = %d",  resp.getPayNum()));
+		System.out.println(String.format("refundNum = %d",  resp.getRefundNum()));
+		
 	}
 }
