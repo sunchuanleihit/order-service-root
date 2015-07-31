@@ -925,7 +925,7 @@ public class OrderServiceImpl implements OrderService {
 			String[] strs = needShippingTime.split(" ");
 			order.setNeedShiptime(DateUtils.str2Date(strs[0].trim()));
 			order.setNeedShiptimeSlot(strs[1].trim());
-			order.setType(pl.getPackageType());
+
 			int storeId = req.getStoreId();
 			StoreRespDto store = null;
 			GoodsRespDto goods = null;
@@ -939,6 +939,11 @@ public class OrderServiceImpl implements OrderService {
 			store = storeService.getByStoreId(req.getStoreId());
 			order.setSellerId(storeId);
 			order.setSellerName(store.getStoreName());
+			order.setType(pl.getPackageType());
+			if (PackageType.MATERIAL.equals(order.getType())) {
+				// 如果是material, 类型跟店铺类型走有个两种 wei_wh, wei_self
+				order.setType(store.getStoreType());
+			}
 			order.setBuyerId(req.getUserId());
 			order.setBuyerName(user.getName());
 			order.setPayType(OrderPayType.PAY_ONLINE);
