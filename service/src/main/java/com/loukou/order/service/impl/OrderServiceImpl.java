@@ -240,13 +240,16 @@ public class OrderServiceImpl implements OrderService {
 		int refund = 0;
 		List<Order> orders = orderList.getContent();
 		for(Order order : orders) {
-			if (order.getStatus() == OrderStatusEnum.STATUS_NEW.getId()) {
+			if (order.getStatus() == OrderStatusEnum.STATUS_NEW.getId() && 
+					order.getPayStatus() == PayStatusEnum.STATUS_UNPAY.getId()) {
 				toPayNum++;
-			} else if (order.getStatus() == OrderStatusEnum.STATUS_REVIEWED.getId()
+			} else if ((order.getStatus() == OrderStatusEnum.STATUS_REVIEWED.getId()
 					|| order.getStatus() == OrderStatusEnum.STATUS_PICKED.getId()
 					|| order.getStatus() == OrderStatusEnum.STATUS_ALLOCATED.getId()
 					|| order.getStatus() == OrderStatusEnum.STATUS_PACKAGED.getId()
-					|| order.getStatus() == OrderStatusEnum.STATUS_DELIVERIED.getId()) {
+					|| order.getStatus() == OrderStatusEnum.STATUS_DELIVERIED.getId())
+					&& order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId()
+					|| order.getStatus() == OrderStatusEnum.STATUS_NEW.getId()) {
 				toRecieve++;
 			}	
 		}
@@ -274,7 +277,7 @@ public class OrderServiceImpl implements OrderService {
 		Page<OrderReturn> orderReturns = null;
 		Set<String> orderSnMains = new HashSet<String>();
 		Sort sort = new Sort(Direction.DESC, "orderId");
-		Pageable pageable = new PageRequest(pageNum-1, pageSize, sort);
+		Pageable pageable = new PageRequest(pageNum - 1, pageSize, sort);
 		if(flag == FlagType.ALL) {
 			orderList = orderDao.findByBuyerIdAndIsDel(userId, 0, pageable);
 		} else if (flag == FlagType.TO_PAY) {
@@ -381,6 +384,41 @@ public class OrderServiceImpl implements OrderService {
 		return result;
 	}
 	
+	private List<OrderListDto> mergeUnpayOrderDtoNew(List<OrderListDto> orderListResult, boolean forceMerge) {
+		List<OrderListDto> result = new ArrayList<OrderListDto>();
+		Map<String, OrderListDto> toMerge = new HashMap<String, OrderListDto>();
+		for(OrderListDto listDto : orderListResult) {
+			if(listDto.getBase().getStatus() < OrderStatusEnum.STATUS_REVIEWED.getId() || forceMerge == true) {
+				if(toMerge.containsKey(listDto.getBase().getOrderSnMain())) {
+					
+					OrderListDto existDto = toMerge.get(listDto.getBase().getOrderSnMain());
+					//merge base
+					OrderListBaseDto baseExist = existDto.getBase();
+					baseExist.setTotalPrice(DoubleUtils.add(baseExist.getTotalPrice(), listDto.getBase().getTotalPrice()));
+					baseExist.setNeedPayPrice(DoubleUtils.add(baseExist.getNeedPayPrice(), 
+							listDto.getBase().getNeedPayPrice()));
+					baseExist.setShippingFee(DoubleUtils.add(baseExist.getShippingFee(), listDto.getBase().getShippingFee()));
+					baseExist.setTaoOrderSn(baseExist.getOrderSnMain());
+					baseExist.setIsOrder(BaseDtoIsOrderType.YES);
+					existDto.setBase(baseExist);
+					//merge goodslist
+					List<GoodsListDto> existGoodsDto = existDto.getGoodsList();
+					existGoodsDto.addAll(listDto.getGoodsList());
+					existDto.setGoodsList(existGoodsDto);
+					toMerge.put(listDto.getBase().getOrderSnMain(), existDto);
+					
+				} else {
+					toMerge.put(listDto.getBase().getOrderSnMain(), listDto);
+				}	
+			} else {
+				//不存在未支付的则不需要合并
+				result.add(listDto);
+			}
+		}
+		result.addAll(toMerge.values());
+		return result;
+	}
+	
 	private OrderListBaseDto createBaseDto(Order order, int type) {
 		OrderListBaseDto baseDto = new OrderListBaseDto();
 		baseDto.setOrderId(order.getOrderId());
@@ -402,7 +440,7 @@ public class OrderServiceImpl implements OrderService {
 		baseDto.setTaoOrderSn(order.getTaoOrderSn());
 		baseDto.setIsshouhuo(getReciveStatus(order));// 确认收货的判断
 		baseDto.setTotalPrice(DoubleUtils.add(order.getGoodsAmount(), order.getShippingFee()));
-		double needToPay = DoubleUtils.sub(order.getGoodsAmount() + order.getShippingFee(), order.getOrderPayed());
+		double needToPay = DoubleUtils.sub(baseDto.getTotalPrice(), order.getOrderPayed());
 		needToPay = DoubleUtils.sub(needToPay, order.getDiscount());
 		baseDto.setNeedPayPrice(needToPay);// 还需支付金额
 		if (needToPay > 0) {
@@ -512,10 +550,10 @@ public class OrderServiceImpl implements OrderService {
 			ShippingMsgDto shippingMsgDto = new ShippingMsgDto();
 			if(order.getStatus() < OrderStatusEnum.STATUS_REVIEWED.getId()) {
 				shippingMsgDto.setDescription(ShippingMsgDesc.NONE);
-				shippingMsgDto.setCreatTime(SDF.format(new Date()));//TODO确认时间
+				shippingMsgDto.setCreatTime(SDF.format(order.getShipTime() * 1000));//TODO确认时间
 			} else if (order.getStatus() < OrderStatusEnum.STATUS_FINISHED.getId()) {
 				shippingMsgDto.setDescription(ShippingMsgDesc.DELIEVER);
-				if(order.getShipTime() != 0 && order.getShipTime() != null) {
+				if(order.getShipTime() != null && order.getShipTime() != 0) {
 					shippingMsgDto.setCreatTime(SDF.format(order.getShipTime() * 1000));
 				}
 			} else if (order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
@@ -1697,15 +1735,16 @@ public class OrderServiceImpl implements OrderService {
 	// 不传参数 接口调用
 	@Override
 	public ShippingMsgRespDto getShippingResult(String taoOrderSn) {
-		ShippingMsgRespDto shippingResultDto = new ShippingMsgRespDto(200, "");
+		ShippingMsgRespDto resp = new ShippingMsgRespDto(200, "");
 		ShippingListResultDto resultDto = new ShippingListResultDto();
 		if (StringUtils.isEmpty(taoOrderSn)) {
-			return null;
+			resp.setCode(400);
+			return resp;
 		}
 		Order order = orderDao.findByTaoOrderSn(taoOrderSn);
 		Express express = expressDao.findByCodeNum(order.getShippingCompany());
 		if (express == null) {
-			return null;
+			return resp;
 		}
 		StringBuilder sb = new StringBuilder();
 		if (order.getShippingId() == 0 || order.getShippingId() > 5) {
@@ -1739,9 +1778,9 @@ public class OrderServiceImpl implements OrderService {
 			}
 		}
 		resultDto.setShippingList(shippingList);
-		shippingResultDto.setResult(resultDto);
-		shippingResultDto.setCode(0);// TODO 区分传参数和不传参数
-		return shippingResultDto;
+		resp.setResult(resultDto);
+		resp.setCode(200);// TODO 区分传参数和不传参数
+		return resp;
 	}
 
 	/**
@@ -1875,7 +1914,7 @@ public class OrderServiceImpl implements OrderService {
 		}
 		double shippingFee = 0;
 		for (Order order : orders) {
-			shippingFee += order.getShippingFee();
+			shippingFee = DoubleUtils.add(shippingFee, order.getShippingFee());
 		}
 
 		return shippingFee;
