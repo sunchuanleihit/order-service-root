@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.loukou.order.pay.processor.OrderPayProcessor;
 import com.loukou.order.pay.processor.RechargePayProcessor;
 import com.loukou.order.service.api.PayService;
+import com.loukou.order.service.constant.ResultRespDtoCode;
 import com.loukou.order.service.dao.OrderPaySignDao;
 import com.loukou.order.service.entity.OrderPaySign;
 import com.loukou.order.service.enums.FinishPayResultEnum;
@@ -41,7 +42,7 @@ public class PayServiceImpl implements PayService {
 		if (payType != OrderPayTypeEnum.TYPE_ONLINE.getId()) {
 			logger.error(String.format("payOrder unsupported paytype[%d]", payType));
 			resp = new AbstractPayOrderRespDto();
-			resp.setCode(400);
+			resp.setCode(ResultRespDtoCode.FAILED);
 			resp.setMessage("不支持货到付款");
 			return resp;
 		}
@@ -60,9 +61,10 @@ public class PayServiceImpl implements PayService {
 						orderSnMain, isVcount != 0, isTaoxinka != 0);
 				}
 				if (resultWx == null) {
-					respWx.setCode(400);
+					respWx.setCode(ResultRespDtoCode.FAILED);
+					respWx.setMessage("支付未成功");
 				} else {
-					respWx.setCode(200);
+					respWx.setCode(ResultRespDtoCode.SUCCESS);
 					respWx.setResult(resultWx);
 				}
 				resp = respWx; 
@@ -80,17 +82,17 @@ public class PayServiceImpl implements PayService {
 						orderSnMain, isVcount != 0, isTaoxinka != 0);
 				}
 				if (resultAli == null) {
-					respAli.setCode(400);
+					respAli.setCode(ResultRespDtoCode.FAILED);
+					respAli.setMessage("支付未成功");
 				} else {
-					respAli.setCode(200);
+					respAli.setCode(ResultRespDtoCode.SUCCESS);
 					respAli.setResult(resultAli);
 				}
 				resp = respAli;
 				break;
 				
 			default:
-				resp = new AbstractPayOrderRespDto();
-				resp.setCode(400);
+				resp = new AbstractPayOrderRespDto(ResultRespDtoCode.FAILED,"支付方式不正确");
 		}
 		return resp;
 	}
