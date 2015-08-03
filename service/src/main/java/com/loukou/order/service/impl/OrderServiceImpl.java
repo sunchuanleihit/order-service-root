@@ -1482,55 +1482,49 @@ public class OrderServiceImpl implements OrderService {
 						}
 					}
 				}
-				// 修改订单status为1
-				orderDao.updateOrderStatus(order.getOrderId(),
-						OrderStatusEnum.STATUS_CANCELED.getId());
-				// 释放库存
-				releaseFreezStock(order.getOrderId(), order.getType(),
-						OpearteTypeEnum.OPERATE_CANCEL.getType());
-
-				// order_action 只插入一条记录
-				OrderAction orderAction = new OrderAction();
-				orderAction.setAction(1);
-				orderAction.setOrderSnMain(orderSnMain);
-				orderAction.setTaoOrderSn(order.getTaoOrderSn());
-				orderAction.setOrderId(order.getOrderId());
-				orderAction.setActor(order.getBuyerName());
-				orderAction.setActionTime(new Date());
-				orderAction.setNotes("取消");
-				orderActionDao.save(orderAction);
-
-				if (order.getPayStatus() == PayStatusEnum.STATUS_UNPAY.getId()) {// 0未支付 1已支付
-					resp.setCode(200);
-					resp.setMessage("订单取消成功");
-					// return resp;
-				} else {
-					resp.setCode(200);
-					resp.setMessage("订单取消成功,您已支付的金额将在三个工作日内返还到您的账户中！");
-					// return resp;
-				}
+				
+				releaseAndLog(order, resp);
+				
 			} // end of for loop
 
 		} else {
 			// 全部未支付，只需改订单状态及操作记录即可
 			for (Order order : orders) {
-				// 修改订单sattus为1
-				orderDao.updateOrderStatus(order.getOrderId(),
-						OrderStatusEnum.STATUS_CANCELED.getId());
-				
-				// order_action 只插入一条记录
-				OrderAction orderAction = new OrderAction();
-				orderAction.setAction(1);
-				orderAction.setOrderSnMain(orderSnMain);
-				orderAction.setTaoOrderSn(order.getTaoOrderSn());
-				orderAction.setOrderId(order.getOrderId());
-				orderAction.setActor(order.getBuyerName());
-				orderAction.setActionTime(new Date());
-				orderAction.setNotes("取消");
-				orderActionDao.save(orderAction);
+				releaseAndLog(order, resp);
 			}
 		}
 		return resp;
+	}
+	
+	
+	private void releaseAndLog(Order order, OrderCancelRespDto resp) {
+		// 修改订单status为1
+		orderDao.updateOrderStatus(order.getOrderId(),
+				OrderStatusEnum.STATUS_CANCELED.getId());
+		// 释放库存
+		releaseFreezStock(order.getOrderId(), order.getType(),
+				OpearteTypeEnum.OPERATE_CANCEL.getType());
+
+		// order_action 只插入一条记录
+		OrderAction orderAction = new OrderAction();
+		orderAction.setAction(1);
+		orderAction.setOrderSnMain(order.getOrderSnMain());
+		orderAction.setTaoOrderSn(order.getTaoOrderSn());
+		orderAction.setOrderId(order.getOrderId());
+		orderAction.setActor(order.getBuyerName());
+		orderAction.setActionTime(new Date());
+		orderAction.setNotes("取消");
+		orderActionDao.save(orderAction);
+
+		if (order.getPayStatus() == PayStatusEnum.STATUS_UNPAY.getId()) {// 0未支付 1已支付
+			resp.setCode(200);
+			resp.setMessage("订单取消成功");
+			// return resp;
+		} else {
+			resp.setCode(200);
+			resp.setMessage("订单取消成功,您已支付的金额将在三个工作日内返还到您的账户中！");
+			// return resp;
+		}
 	}
 
 	/**
@@ -1560,15 +1554,19 @@ public class OrderServiceImpl implements OrderService {
 					// LkWhGoodsStore whStore = lkWhGoodsStoreDao.
 					// findBySpecIdAndStoreId(orderGoods.getSpecId(),
 					// order.getSellerId());
+//					String updateTime = DateUtils.date2DateStr2(new Date());
 					if (operateType == OpearteTypeEnum.OPEARTE_CHECK_DELIVER.getType()) {// 发货
-						lkWhGoodsStoreDao.updateBySpecIdAndStoreId(
+						//FIXME 库存小于0
+						lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(
 								orderGoods.getSpecId(), order.getSellerId(),
 								orderGoods.getQuantity(),
-								orderGoods.getQuantity());
+								orderGoods.getQuantity(),
+								new Date());
 					} else {
-						lkWhGoodsStoreDao.updateBySpecIdAndStoreId(
+						
+						lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(
 								orderGoods.getSpecId(), order.getSellerId(),
-								orderGoods.getQuantity());
+								orderGoods.getQuantity(), new Date());
 					}
 				} else {
 					// GoodsSpec goodsSpec =
