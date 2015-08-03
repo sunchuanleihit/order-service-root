@@ -42,6 +42,7 @@ public class PayServiceImpl implements PayService {
 			logger.error(String.format("payOrder unsupported paytype[%d]", payType));
 			resp = new AbstractPayOrderRespDto();
 			resp.setCode(400);
+			resp.setMessage("不支持货到付款");
 			return resp;
 		}
 		//在线支付
