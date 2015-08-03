@@ -2502,7 +2502,6 @@ public class OrderServiceImpl implements OrderService {
             orderAction.setOrderId(order.getOrderId());
             orderAction.setNotes("配送员"+lkDelivery.getdName()+",手机号"+lkDelivery.getdMobile());
             orderActionDao.save(orderAction);
-            orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_14.getId());
             
             OrderExtm orderExm = orderExtmDao.findByOrderId(order.getOrderId());
             if(orderExm!=null && !StringUtils.isEmpty(orderExm.getPhoneMob())){
@@ -2639,7 +2638,6 @@ public class OrderServiceImpl implements OrderService {
                     orderAction.setOrderId(order.getOrderId());
                     orderAction.setNotes("配货");
                     orderActionDao.save(orderAction);
-                    orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_ALLOCATED.getId());
                     return new OResponseDto<String>(200, "成功");
     }
 
