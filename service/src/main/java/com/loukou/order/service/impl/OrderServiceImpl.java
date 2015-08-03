@@ -1,6 +1,7 @@
 package com.loukou.order.service.impl;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -338,29 +340,54 @@ public class OrderServiceImpl implements OrderService {
 		} else {
 			orderListResult.addAll(orderListMap.values());
 			boolean forceMerge = false;
-			List<OrderListDto> finalListDto = mergeUnpayOrderDto(orderListResult, forceMerge);
 			//合并未支付的子单
-			resultDto.setOrderList(finalListDto);
+			List<OrderListDto> finalListDto = mergeUnpayOrderDto(orderListResult, forceMerge);
+			//对合并后的订单降序排序
+			List<OrderListDto> sortListDto = sortAfterMerge(finalListDto);
+			//合并未支付的子单
+			resultDto.setOrderList(sortListDto);
 			resultDto.setOrderCount((int)orderList.getTotalElements());
 			resp.setResult(resultDto);
 		}
 		return resp;
 	}
 	
+	private List<OrderListDto> sortAfterMerge(List<OrderListDto> orderListResult) {
+		List<OrderListDto> result = new ArrayList<OrderListDto>();
+		Map<Integer, OrderListDto> orderIdListDto = new TreeMap<Integer, OrderListDto>(new Comparator<Integer>() {
+
+			@Override
+			public int compare(Integer o1, Integer o2) {
+				return o2.compareTo(o1);//降序
+			}
+			
+		});
+		
+		for(OrderListDto dto : orderListResult) {
+			orderIdListDto.put(dto.getBase().getOrderId(), dto);
+		}
+		result = (List<OrderListDto>) orderIdListDto.values();
+		return result;
+	}
+	
 	private List<OrderListDto> mergeUnpayOrderDto(List<OrderListDto> orderListResult, boolean forceMerge) {
 		List<OrderListDto> result = new ArrayList<OrderListDto>();
 		Map<String, OrderListDto> toMerge = new HashMap<String, OrderListDto>();
+		String orderSnMain = null;
+		OrderListBaseDto baseDto = null;
 		for(OrderListDto listDto : orderListResult) {
 			if(listDto.getBase().getStatus() < OrderStatusEnum.STATUS_REVIEWED.getId() || forceMerge == true) {
-				if(toMerge.containsKey(listDto.getBase().getOrderSnMain())) {
+				orderSnMain = listDto.getBase().getOrderSnMain();
+				baseDto = listDto.getBase();
+				if(toMerge.containsKey(orderSnMain)) {
 					
-					OrderListDto existDto = toMerge.get(listDto.getBase().getOrderSnMain());
+					OrderListDto existDto = toMerge.get(orderSnMain);
 					//merge base
 					OrderListBaseDto baseExist = existDto.getBase();
-					baseExist.setTotalPrice(DoubleUtils.add(baseExist.getTotalPrice(), listDto.getBase().getTotalPrice()));
+					baseExist.setTotalPrice(DoubleUtils.add(baseExist.getTotalPrice(), baseDto.getTotalPrice()));
 					baseExist.setNeedPayPrice(DoubleUtils.add(baseExist.getNeedPayPrice(), 
-							listDto.getBase().getNeedPayPrice()));
-					baseExist.setShippingFee(DoubleUtils.add(baseExist.getShippingFee(), listDto.getBase().getShippingFee()));
+							baseDto.getNeedPayPrice()));
+					baseExist.setShippingFee(DoubleUtils.add(baseExist.getShippingFee(), baseDto.getShippingFee()));
 					baseExist.setTaoOrderSn(baseExist.getOrderSnMain());
 					baseExist.setIsOrder(BaseDtoIsOrderType.YES);
 					existDto.setBase(baseExist);
@@ -368,10 +395,10 @@ public class OrderServiceImpl implements OrderService {
 					List<GoodsListDto> existGoodsDto = existDto.getGoodsList();
 					existGoodsDto.addAll(listDto.getGoodsList());
 					existDto.setGoodsList(existGoodsDto);
-					toMerge.put(listDto.getBase().getOrderSnMain(), existDto);
+					toMerge.put(orderSnMain, existDto);
 					
 				} else {
-					toMerge.put(listDto.getBase().getOrderSnMain(), listDto);
+					toMerge.put(orderSnMain, listDto);
 				}	
 			} else {
 				//不存在未支付的则不需要合并
