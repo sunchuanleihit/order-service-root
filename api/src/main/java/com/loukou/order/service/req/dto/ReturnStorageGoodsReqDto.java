@@ -10,7 +10,7 @@ public class ReturnStorageGoodsReqDto implements Serializable{
 
 	private int specId;
 	
-	private int quantity;
+	private int confirmNum;
 
 	public int getSpecId() {
 		return specId;
@@ -20,13 +20,11 @@ public class ReturnStorageGoodsReqDto implements Serializable{
 		this.specId = specId;
 	}
 
-	public int getQuantity() {
-		return quantity;
+	public int getConfirmNum() {
+		return confirmNum;
 	}
 
-	public void setQuantity(int quantity) {
-		this.quantity = quantity;
+	public void setConfirmNum(int confirmNum) {
+		this.confirmNum = confirmNum;
 	}
-	
-	
 }

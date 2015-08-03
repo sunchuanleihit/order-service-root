@@ -2740,7 +2740,7 @@ public class OrderServiceImpl implements OrderService {
 		for (ReturnStorageGoodsReqDto returnStorageGoods : returnStorageReqDto.getSpecList()) {
 			LKWhStockInGoods stockInGoods = new LKWhStockInGoods();
 			stockInGoods.setSpecId(returnStorageGoods.getSpecId());
-			stockInGoods.setStock(returnStorageGoods.getQuantity());
+			stockInGoods.setStock(returnStorageGoods.getConfirmNum());
 			stockInGoods.setInId(whStockIn.getInId());
 			whStockInGoodsDao.save(stockInGoods);
 			stockInGoodsList.add(stockInGoods);
