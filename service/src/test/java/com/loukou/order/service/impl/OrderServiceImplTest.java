@@ -7,6 +7,8 @@ import com.loukou.order.AbstractTestObject;
 import com.loukou.order.service.api.OrderService;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
+import com.loukou.order.service.resp.dto.OrderListRespDto;
+import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
@@ -49,10 +51,11 @@ public class OrderServiceImplTest extends AbstractTestObject {
 		orderService.getPayOrderMsg(userId, orderSnMain);
 	}
 	
+	@SuppressWarnings("unused")
 	@Test
 	public void getOrderInfoTest() {
-//		@SuppressWarnings("unused")
-//		OrderListRespDto resp = orderService.getOrderInfo(1156347, "150629161315204", 1);
+		OrderListRespDto resp = orderService.getOrderInfo(1156347, "150629161315204", 1, 3430340);//3430340, 1
+		OrderListResultDto result = resp.getResult();
 	}
 	
 	@Test

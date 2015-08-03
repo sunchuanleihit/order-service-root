@@ -138,7 +138,7 @@ public class Order {
 	 * 对cvs来说null
 	 */
 	@Column(name = "ship_time")
-	private Integer shipTime;
+	private Integer shipTime = 0;
 
 	/*
 	 * 发票号，发货前录入
@@ -159,14 +159,14 @@ public class Order {
 	 * 对cvs来说留空null
 	 */
 	@Column(name = "invoice_time")
-	private Integer invoiceTime;
+	private Integer invoiceTime = 0;
 	
 	/*
-	 * 收货时间
+	 * 收货时间 not null
 	 * 对cvs来说0
 	 */
 	@Column(name = "finished_time")
-	private Integer finishedTime;
+	private Integer finishedTime = 0;
 	
 	/*
 	 * 商品总价（不含运费）

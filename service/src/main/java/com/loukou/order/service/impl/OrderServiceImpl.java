@@ -1,6 +1,5 @@
 package com.loukou.order.service.impl;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -136,7 +135,6 @@ public class OrderServiceImpl implements OrderService {
 	private static final Logger LOGGER = Logger
 			.getLogger(OrderServiceImpl.class);
 
-	private SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 //	private static final DecimalFormat DECIMALFORMAT = new DecimalFormat(
 //			"###,###.##");
 	private VirtualAccountProcessor virtualAccountProcessor = VirtualAccountProcessor
@@ -336,7 +334,7 @@ public class OrderServiceImpl implements OrderService {
 			orderListMap.put(order.getTaoOrderSn(), orderListDto);
 		}
 		if(orderListMap.isEmpty()) {
-			resp.setCode(400);
+			return resp;
 		} else {
 			orderListResult.addAll(orderListMap.values());
 			boolean forceMerge = false;
@@ -392,13 +390,16 @@ public class OrderServiceImpl implements OrderService {
 		baseDto.setSource(OrderSourceEnum.parseSource(order.getSource()).getSource());
 		baseDto.setState(ReturnStatusEnum.parseType(order.getStatus()).getComment());
 		if (order.getAddTime() != null && order.getAddTime() != 0) {
-			baseDto.setAddTime(SDF.format(order.getAddTime() * 1000));
+			String addTime = DateUtils.dateTimeToStr(order.getAddTime());
+			baseDto.setAddTime(addTime);
 		}
 		if (order.getPayTime() != null && order.getPayTime() != 0) {
-			baseDto.setPayTime(SDF.format(order.getPayTime() * 1000));
+			String payTime = DateUtils.dateTimeToStr(order.getPayTime());
+			baseDto.setPayTime(payTime);
 		}
 		if (order.getShipTime() != null && order.getShipTime() != 0) {
-			baseDto.setShipTime(SDF.format(order.getShipTime() * 1000));
+			String shipTime = DateUtils.dateTimeToStr(order.getShipTime());
+			baseDto.setShipTime(shipTime);
 		}
 		baseDto.setPayStatus(order.getPayStatus());
 		baseDto.setStatus(order.getStatus());
@@ -411,7 +412,7 @@ public class OrderServiceImpl implements OrderService {
 		if (needToPay > 0) {
 			baseDto.setState("未付款");	// FIXME
 		}
-		baseDto.setShippingFee(getTotalShippingFee(order.getOrderSnMain()));// 订单总运费
+		baseDto.setShippingFee(order.getShippingFee());// 订单运费
 		baseDto.setPackageStatus(ReturnStatusEnum.parseType(order.getStatus()).getComment());// 包裹的状态
 		baseDto.setShipping(getShippingMsg(order));
 		baseDto.setArrivalCode(order.getShippingNo());
@@ -461,7 +462,6 @@ public class OrderServiceImpl implements OrderService {
 		}
 		List<Order> orderList = orderDao.findByOrderSnMain(orderSnMain);
 		if (CollectionUtils.isEmpty(orderList)) {
-			resp.setCode(400);
 			return resp;
 		}
 		
@@ -524,14 +524,16 @@ public class OrderServiceImpl implements OrderService {
 							if(order.getShipTime() == null || order.getShipTime() == 0) {
 								shippingMsgDto.setCreatTime("");
 							} else {
-								shippingMsgDto.setCreatTime(SDF.format(order.getShipTime() * 1000));
+								String shipTime = DateUtils.dateTimeToStr(order.getShipTime());
+								shippingMsgDto.setCreatTime(shipTime);
 							}
 						} else if (order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
 							shippingMsgDto.setDescription(ShippingMsgDesc.FINISH);
 							if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
 								shippingMsgDto.setCreatTime("");
 							} else {
-								shippingMsgDto.setCreatTime(SDF.format(order.getFinishedTime() * 1000));
+								String finishedTime = DateUtils.dateTimeToStr(order.getFinishedTime());
+								shippingMsgDto.setCreatTime(finishedTime);
 							}
 						}
 					} else {
@@ -539,7 +541,8 @@ public class OrderServiceImpl implements OrderService {
 						if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
 							shippingMsgDto.setCreatTime("");
 						} else {
-							shippingMsgDto.setCreatTime(SDF.format(order.getAddTime() * 1000));
+							String addTime = DateUtils.dateTimeToStr(order.getAddTime());
+							shippingMsgDto.setCreatTime(addTime);
 						}
 					}
 				} else {
@@ -549,14 +552,16 @@ public class OrderServiceImpl implements OrderService {
 						if(order.getShipTime() == null || order.getShipTime() == 0) {
 							shippingMsgDto.setCreatTime("");
 						} else {
-							shippingMsgDto.setCreatTime(SDF.format(order.getShipTime() * 1000));
+							String shipTime = DateUtils.dateTimeToStr(order.getShipTime());
+							shippingMsgDto.setCreatTime(shipTime);
 						}
 					} else if (order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
 						shippingMsgDto.setDescription(ShippingMsgDesc.FINISH);
 						if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
 							shippingMsgDto.setCreatTime("");
 						} else {
-							shippingMsgDto.setCreatTime(SDF.format(order.getFinishedTime() * 1000));
+							String finishedTime = DateUtils.dateTimeToStr(order.getFinishedTime());
+							shippingMsgDto.setCreatTime(finishedTime);
 						}
 					}
 				}
@@ -569,7 +574,7 @@ public class OrderServiceImpl implements OrderService {
 		
 		
 		if(orderListMap.isEmpty()) {
-			resp.setCode(400);
+			return resp;
 		} else {
 			orderListResult.addAll(orderListMap.values());
 			//合并未支付或者orderid为空的的子单
@@ -597,6 +602,7 @@ public class OrderServiceImpl implements OrderService {
 		return resp;
 	}
 
+	
 	@Override
 	public CouponListRespDto getCouponList(int cityId, int userId, int storeId,
 			String openId) {
@@ -920,7 +926,7 @@ public class OrderServiceImpl implements OrderService {
 			String[] strs = needShippingTime.split(" ");
 			order.setNeedShiptime(DateUtils.str2Date(strs[0].trim()));
 			order.setNeedShiptimeSlot(strs[1].trim());
-			order.setType(pl.getPackageType());
+
 			int storeId = req.getStoreId();
 			StoreRespDto store = null;
 			GoodsRespDto goods = null;
@@ -934,6 +940,11 @@ public class OrderServiceImpl implements OrderService {
 			store = storeService.getByStoreId(req.getStoreId());
 			order.setSellerId(storeId);
 			order.setSellerName(store.getStoreName());
+			order.setType(pl.getPackageType());
+			if (PackageType.MATERIAL.equals(order.getType())) {
+				// 如果是material, 类型跟店铺类型走有个两种 wei_wh, wei_self
+				order.setType(store.getStoreType());
+			}
 			order.setBuyerId(req.getUserId());
 			order.setBuyerName(user.getName());
 			order.setPayType(OrderPayType.PAY_ONLINE);
@@ -1152,13 +1163,11 @@ public class OrderServiceImpl implements OrderService {
 			resp.setCode(400);
 			return resp;
 		}
-		if (CollectionUtils.isEmpty(orderDao.findByOrderSnMain(orderSnMain))) {
-			resp.setCode(400);
+		List<Order> orders = orderDao.findByOrderSnMain(orderSnMain);
+		if (CollectionUtils.isEmpty(orders)) {
 			return resp;
 		}
 
-		List<Order> orders = (List<Order>) orderDao
-				.findByOrderSnMain(orderSnMain);
 		double orderTotal = 0;
 		double shippingFee = 0;
 		for (Order o : orders) {
@@ -1213,17 +1222,13 @@ public class OrderServiceImpl implements OrderService {
 		}
 		Order order = orderDao.findByTaoOrderSn(taoOrderSn);
 		Express express = expressDao.findByCodeNum(order.getShippingCompany());
-		if (express == null) {
-			resp.setCode(400);
-			return resp;
-		}
 		StringBuilder sb = new StringBuilder();
 		if (order.getShippingId() == 0 || order.getShippingId() > 5) {
 			sb.append("淘常州小黄蜂配送");
 		} else {
 			sb.append("商家自送");
 		}
-		if (StringUtils.isNotBlank(express.getExpressName())) {
+		if ( express != null && StringUtils.isNotBlank(express.getExpressName())) {
 			sb.append("(").append(express.getExpressName()).append(")");
 			resultDto.setShippingName(sb.toString());
 		}
@@ -1287,7 +1292,7 @@ public class OrderServiceImpl implements OrderService {
 		StringBuilder shippingMsg = new StringBuilder();
 		
 		if(order != null) {
-			if (order.getType() == OrderTypeEnums.TYPE_BOOKING.getType()) {
+			if (StringUtils.equals(order.getType(), OrderTypeEnums.TYPE_BOOKING.getType())) {
 				shippingMsg.append("预售商品").append(order.getNeedShiptime())
 						.append(" ").append(order.getNeedShiptimeSlot())
 						.append("、");
@@ -1304,24 +1309,7 @@ public class OrderServiceImpl implements OrderService {
 		return StringUtils.removeEnd(shippingMsg.toString(), "、");
 	}
 
-	/**
-	 * 订单总运费-----为0显示免邮 $v['shipping_fee']
-	 */
-	private double getTotalShippingFee(String orderSnMain) {
-		List<Order> orders = orderDao.findByOrderSnMain(orderSnMain);
-		if (CollectionUtils.isEmpty(orders)) {
-			return 0;
-		}
-		double shippingFee = 0;
-		for (Order order : orders) {
-			shippingFee = DoubleUtils.add(shippingFee, order.getShippingFee());
-		}
 
-		return shippingFee;
-	}
-
-
-	// -------------------------------------------------shouhuo---------------------------------
 	/**
 	 * 判断是否显示 确认收货
 	 *
@@ -1363,7 +1351,6 @@ public class OrderServiceImpl implements OrderService {
 			return resp;
 		}
 
-		List<String> couponCodes = new ArrayList<String>();
 		double returnAmountVcount = 0;
 		double returnAmountTxk = 0;
 		double returnAmountCoupon = 0;
@@ -1374,16 +1361,12 @@ public class OrderServiceImpl implements OrderService {
 			if (order.getStatus() == OrderStatusEnum.STATUS_CANCELED.getId()
 					|| order.getStatus() == OrderStatusEnum.STATUS_REVIEWED
 							.getId()) {
-				// resp.setCode(400);
 				return resp;
 			}
 
 			if (order.getOrderPayed() > 0) {
 				orderPayed = DoubleUtils.add(orderPayed, order.getOrderPayed());
-				String useCouponNo = order.getUseCouponNo();
-				if (!StringUtils.equals(useCouponNo, "0")) {
-					couponCodes.add(useCouponNo);
-				}
+				
 			}
 		}
 
@@ -1391,20 +1374,25 @@ public class OrderServiceImpl implements OrderService {
 			for (Order order : orders) {
 				Map<Integer, Double> paymentIdMoneyMap = getPay(order
 						.getOrderId());
+				
+				String useCouponNo = order.getUseCouponNo();
+				
 				for (Map.Entry<Integer, Double> entry : paymentIdMoneyMap
 						.entrySet()) {
 					if (entry.getKey() == PaymentEnum.PAY_VACOUNT.getId()) { // 虚拟账户
-						returnAmountVcount += entry.getValue();
+						returnAmountVcount = DoubleUtils.add(returnAmountVcount, entry.getValue());
 					} else if (entry.getKey() == PaymentEnum.PAY_TXK.getId()) {
-						returnAmountTxk += entry.getValue();
+						returnAmountTxk = DoubleUtils.add(returnAmountTxk, entry.getValue());
 					} else if (entry.getKey() == PaymentEnum.PAY_YHQ.getId()) {
-						returnAmountCoupon += entry.getValue();
+						returnAmountCoupon = DoubleUtils.add(returnAmountCoupon, entry.getValue());
 					} else {
-						returnAmount += entry.getValue();
+						returnAmount = DoubleUtils.add(returnAmount, entry.getValue());
 					}
 				}
-				double returnSum = returnAmountVcount + returnAmountTxk
-						+ returnAmountCoupon + returnAmount;
+				
+				double returnSum = DoubleUtils.add(returnAmountVcount, returnAmountTxk);
+				returnSum = DoubleUtils.add(returnSum, returnAmountCoupon);
+				returnSum = DoubleUtils.add(returnSum, returnAmount);
 
 				if (returnAmount > 0) {
 					// 有采用在线支付，则生成未退款单及应退明细记录
@@ -1433,19 +1421,21 @@ public class OrderServiceImpl implements OrderService {
 						orderPayR.setPaymentId(2);
 						orderPayR.setValue(returnAmountVcount);
 						orderPayRDao.save(orderPayR);
+						String addTime = DateUtils.date2DateStr2(new Date());
+						String noteStr = String.format("取消订单退款:%s", addTime);
 						VaccountUpdateRespVO vAccountResp = VirtualAccountProcessor
 								.getProcessor().refund(userId,
 										order.getOrderId(), orderSnMain,
 										returnAmountVcount,
-										SDF.format(new Date()), 0,
-										"取消订单退款:" + SDF.format(new Date()),
+										addTime, 0,
+										noteStr,
 										order.getBuyerName());
 
 					}
 					if (returnAmountTxk > 0) {// 淘心卡原额退
 						OrderPayR orderPayR = new OrderPayR();
 						orderPayR.setOrderIdR(orderIdR);
-						orderPayR.setPaymentId(6);
+						orderPayR.setPaymentId(PaymentEnum.PAY_TXK.getId());
 						orderPayR.setRepayWay(0);
 						orderPayR.setValue(returnAmountTxk);
 						orderPayRDao.save(orderPayR);
@@ -1457,18 +1447,16 @@ public class OrderServiceImpl implements OrderService {
 					}
 
 					if (returnAmountCoupon > 0) {// 优惠券状态改成未使用
-						if (CollectionUtils.isEmpty(couponCodes)) {
-							for (String couponCode : couponCodes) {
-								// TODO couponCode待确定
-								couponSnDao.refundCouponSn(couponCode, userId);
-							}
+						
+						if(useCouponNo != null && !StringUtils.equals(useCouponNo, "0")) {
+							couponSnDao.refundCouponSn(useCouponNo, userId);
 						}
 					}
 				}
 				// 修改订单sattus为1
 				orderDao.updateOrderStatus(order.getOrderId(),
 						OrderStatusEnum.STATUS_CANCELED.getId());
-				// 释放库存 TODO test
+				// 释放库存
 				releaseFreezStock(order.getOrderId(), order.getType(),
 						OpearteTypeEnum.OPERATE_CANCEL.getType());
 
@@ -1483,7 +1471,7 @@ public class OrderServiceImpl implements OrderService {
 				orderAction.setNotes("取消");
 				orderActionDao.save(orderAction);
 
-				if (order.getPayStatus() == 0) {// 0未支付 1已支付
+				if (order.getPayStatus() == PayStatusEnum.STATUS_UNPAY.getId()) {// 0未支付 1已支付
 					resp.setCode(200);
 					resp.setMessage("订单取消成功");
 					// return resp;
@@ -1500,6 +1488,17 @@ public class OrderServiceImpl implements OrderService {
 				// 修改订单sattus为1
 				orderDao.updateOrderStatus(order.getOrderId(),
 						OrderStatusEnum.STATUS_CANCELED.getId());
+				
+				// order_action 只插入一条记录
+				OrderAction orderAction = new OrderAction();
+				orderAction.setAction(1);
+				orderAction.setOrderSnMain(orderSnMain);
+				orderAction.setTaoOrderSn(order.getTaoOrderSn());
+				orderAction.setOrderId(order.getOrderId());
+				orderAction.setActor(order.getBuyerName());
+				orderAction.setActionTime(new Date());
+				orderAction.setNotes("取消");
+				orderActionDao.save(orderAction);
 			}
 		}
 		return resp;
@@ -1569,7 +1568,8 @@ public class OrderServiceImpl implements OrderService {
 		orderReturn.setSellerId(sellerId);
 		orderReturn.setReturnAmount(returnSum);
 		orderReturn.setActor("system");
-		orderReturn.setAddTime(SDF.format(new Date()));
+		String addTime = DateUtils.date2DateStr2(new Date());
+		orderReturn.setAddTime(addTime);
 		orderReturn.setGoodsType(ReturnGoodsType.GOODS);
 		orderReturn.setOrderType(OrderReturnGoodsType.TYPE_SELF_CANCEL.getId());
 		orderReturn.setOrderStatus(ReturnOrderStatus.NORMAL.getId());
@@ -1577,7 +1577,7 @@ public class OrderServiceImpl implements OrderService {
 		orderReturn.setRefundStatus(refundStatus);
 		orderReturn.setStatementStatus(0);
 		if (returnStatus == 1) {
-			orderReturn.setRepayTime(SDF.format(new Date()));
+			orderReturn.setRepayTime(addTime);
 		}
 		orderReturn.setPostscript("客户自已取消订单");
 		return orderRDao.save(orderReturn).getOrderIdR();
