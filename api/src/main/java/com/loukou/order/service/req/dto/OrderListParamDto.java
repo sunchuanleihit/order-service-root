@@ -1,7 +1,13 @@
 package com.loukou.order.service.req.dto;
 
-public class OrderListParamDto {
+import java.io.Serializable;
 
+public class OrderListParamDto  implements Serializable{
+
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 9158079772509451759L;
     private int pageSize;
     private int pageNum;
     private int storeId;
