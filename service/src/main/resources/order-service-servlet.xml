@@ -11,7 +11,15 @@
  http://www.springframework.org/schema/context/spring-context.xsd
  http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
 
+	<import resource="classpath*:order-service-appcontext.xml" />
 	<import resource="classpath*:dubbo-ext-appcontext.xml" />
+	
+	 <!-- 注册中心配置 -->
+  	<dubbo:registry address="${dubbo.registry.address}" />
+  	<!-- 本地调试使用 
+  	<dubbo:registry address="zookeeper://127.0.0.1:2181" />-->
+	<dubbo:application name="order-service" />
+  	<dubbo:protocol name="dubbo" port="${dubbo.protocol.port.order.service}" />
 	
 	<!-- 声明需要暴露的服务接口 -->
 	<dubbo:service ref="orderService" interface="com.loukou.order.service.api.OrderService" retries="0" timeout="5000"  />
