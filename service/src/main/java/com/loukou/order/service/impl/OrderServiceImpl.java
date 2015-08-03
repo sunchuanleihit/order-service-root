@@ -2327,7 +2327,7 @@ public class OrderServiceImpl implements OrderService {
         List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
         for(OrderGoods good :goods){
             SpecDto spec = new SpecDto();
-            spec.setGoodInfo(new GoodsInfoDto(good.getGoodsId(), good.getGoodsName(), good.getGoodsImage()));
+            spec.setGoodsInfo(new GoodsInfoDto(good.getGoodsId(), good.getGoodsName(), good.getGoodsImage()));
             spec.setSpecId(good.getSpecId());
             spec.setBuyNum(good.getQuantity());
             specList.add(spec);
@@ -2420,7 +2420,7 @@ public class OrderServiceImpl implements OrderService {
             List<SpecDto> specList = new ArrayList<SpecDto>();
             for(OrderGoods good :goods){
                 SpecDto spec = new SpecDto();
-                spec.setGoodInfo(new GoodsInfoDto(good.getGoodsId(), good.getGoodsName(), good.getGoodsImage()));
+                spec.setGoodsInfo(new GoodsInfoDto(good.getGoodsId(), good.getGoodsName(), good.getGoodsImage()));
                 spec.setSpecId(good.getSpecId());
                 spec.setBuyNum(good.getQuantity());
                 specList.add(spec);

@@ -8,7 +8,7 @@ public class SpecDto implements Serializable{
      */
     private static final long serialVersionUID = -7128000996746443423L;
     private int specId;
-    private GoodsInfoDto goodInfo;
+    private GoodsInfoDto goodsInfo;
     private String specName;
     private int storeStock; // 微仓库存
     private Double purchasePrice; // 微仓采购价
@@ -25,13 +25,7 @@ public class SpecDto implements Serializable{
         this.specId = specId;
     }
 
-    public GoodsInfoDto getGoodInfo() {
-        return goodInfo;
-    }
-
-    public void setGoodInfo(GoodsInfoDto goodInfo) {
-        this.goodInfo = goodInfo;
-    }
+   
 
     public String getSpecName() {
         return specName;
@@ -91,9 +85,17 @@ public class SpecDto implements Serializable{
 
     @Override
     public String toString() {
-        return "SpecDto [specId=" + specId + ", goodInfo=" + goodInfo + ", specName=" + specName + ", storeStock="
+        return "SpecDto [specId=" + specId + ", goodInfo=" + goodsInfo + ", specName=" + specName + ", storeStock="
                 + storeStock + ", purchasePrice=" + purchasePrice + ", sellPrice=" + sellPrice + ", maxPurchaseNum="
                 + maxPurchaseNum + ", deliveryNum=" + deliveryNum + ", buyNum=" + buyNum + "]";
+    }
+
+    public GoodsInfoDto getGoodsInfo() {
+        return goodsInfo;
+    }
+
+    public void setGoodsInfo(GoodsInfoDto goodsInfo) {
+        this.goodsInfo = goodsInfo;
     }
 
 }
