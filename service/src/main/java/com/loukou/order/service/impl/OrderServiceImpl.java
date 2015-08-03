@@ -756,9 +756,9 @@ public class OrderServiceImpl implements OrderService {
 			// 遍历购物车所有商品，与分类券的二级分类做比较
 			for (PackageRespDto p: cart.getPackageList()) {
 				for (CartGoodsRespDto g: p.getGoodsList()) {
-//					if (!validsCateIds.contains(g.getNewCateIdTwo())) {
-//						return false;
-//					}
+					if (!validsCateIds.contains(g.getNewCateIdTwo())) {
+						return false;
+					}
 				}
 			}
 			return true;
@@ -2391,6 +2391,7 @@ public class OrderServiceImpl implements OrderService {
             break;
         case 2:
             types.add("booking");
+            break;
         default:
             types.add("wei_wh");
             types.add("wei_self");
