@@ -7,15 +7,10 @@ import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderBonusRespDto;
 import com.loukou.order.service.resp.dto.OrderCancelRespDto;
-import com.loukou.order.service.resp.dto.OResponseDto;
-import com.loukou.order.service.resp.dto.OrderInfoDto;
-import com.loukou.order.service.req.dto.OrderListParamDto;
-import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderInfoDto;
 import com.loukou.order.service.resp.dto.OrderListInfoDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
-import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
 import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
@@ -23,11 +18,7 @@ import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
 import com.loukou.order.service.resp.dto.basic.RespDto;
 
-import com.loukou.order.service.resp.dto.RefuseReasonDto;
 import com.loukou.order.service.resp.dto.RefuseReasonListDto;
-import com.loukou.order.service.resp.dto.ShareRespDto;
-import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
-import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
 import com.loukou.order.service.resp.dto.UserOrderNumRespDto;
 
 public interface OrderService {
