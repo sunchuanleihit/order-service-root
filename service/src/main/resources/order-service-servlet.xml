@@ -30,5 +30,4 @@
 	<context:annotation-config />
 	<context:component-scan base-package="com.loukou.order.service.impl" />
 	
-<dubbo:service ref="orderService" interface="com.loukou.order.service.api.OrderService"></dubbo:service>
 </beans>

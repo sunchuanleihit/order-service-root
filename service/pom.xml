@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.loukou</groupId>
 		<artifactId>order-service-root</artifactId>
-		<version>0.1.0-SNAPSHOT</version>
+		<version>0.2.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>order-service</artifactId>
 	<packaging>war</packaging>
@@ -41,13 +41,8 @@
 
 		<dependency>
 			<groupId>com.serverstarted</groupId>
-			<artifactId>goods-service</artifactId>
-			<version>0.1.0-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>com.serverstarted</groupId>
 			<artifactId>goods-api</artifactId>
-			<version>0.1.0-SNAPSHOT</version>
+			<version>0.2.0-SNAPSHOT</version>
 		</dependency>
 		<!-- dubbo-ext -->
 		<dependency>
