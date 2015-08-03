@@ -1,6 +1,7 @@
 package com.loukou.order.service.impl;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -265,7 +267,7 @@ public class OrderServiceImpl implements OrderService {
 	public OrderListRespDto getOrderList(int userId, int flag,
 			int pageNum, int pageSize) {
 		OrderListRespDto resp = new OrderListRespDto(200, "");
-		if (userId <= 0 || flag <= 0) {
+		if (userId <= 0 || flag <= 0 || pageNum < 1) {
 			resp.setCode(400);
 			return resp;
 		}
@@ -338,29 +340,57 @@ public class OrderServiceImpl implements OrderService {
 		} else {
 			orderListResult.addAll(orderListMap.values());
 			boolean forceMerge = false;
-			List<OrderListDto> finalListDto = mergeUnpayOrderDto(orderListResult, forceMerge);
 			//合并未支付的子单
-			resultDto.setOrderList(finalListDto);
+			List<OrderListDto> finalListDto = mergeUnpayOrderDto(orderListResult, forceMerge);
+			//对合并后的订单降序排序
+			List<OrderListDto> sortListDto = sortAfterMerge(finalListDto);
+			//合并未支付的子单
+			resultDto.setOrderList(sortListDto);
 			resultDto.setOrderCount((int)orderList.getTotalElements());
 			resp.setResult(resultDto);
 		}
 		return resp;
 	}
 	
+	private List<OrderListDto> sortAfterMerge(List<OrderListDto> orderListResult) {
+		List<OrderListDto> result = new ArrayList<OrderListDto>();
+		Map<Integer, OrderListDto> orderIdListDto = new TreeMap<Integer, OrderListDto>(new Comparator<Integer>() {
+
+			@Override
+			public int compare(Integer o1, Integer o2) {
+				return o2.compareTo(o1);//降序
+			}
+			
+		});
+		
+		for(OrderListDto dto : orderListResult) {
+			orderIdListDto.put(dto.getBase().getOrderId(), dto);
+		}
+		
+		for(Map.Entry<Integer, OrderListDto> dto : orderIdListDto.entrySet()) {
+			result.add(dto.getValue());
+		}
+		return result;
+	}
+	
 	private List<OrderListDto> mergeUnpayOrderDto(List<OrderListDto> orderListResult, boolean forceMerge) {
 		List<OrderListDto> result = new ArrayList<OrderListDto>();
 		Map<String, OrderListDto> toMerge = new HashMap<String, OrderListDto>();
+		String orderSnMain = null;
+		OrderListBaseDto baseDto = null;
 		for(OrderListDto listDto : orderListResult) {
 			if(listDto.getBase().getStatus() < OrderStatusEnum.STATUS_REVIEWED.getId() || forceMerge == true) {
-				if(toMerge.containsKey(listDto.getBase().getOrderSnMain())) {
+				orderSnMain = listDto.getBase().getOrderSnMain();
+				baseDto = listDto.getBase();
+				if(toMerge.containsKey(orderSnMain)) {
 					
-					OrderListDto existDto = toMerge.get(listDto.getBase().getOrderSnMain());
+					OrderListDto existDto = toMerge.get(orderSnMain);
 					//merge base
 					OrderListBaseDto baseExist = existDto.getBase();
-					baseExist.setTotalPrice(DoubleUtils.add(baseExist.getTotalPrice(), listDto.getBase().getTotalPrice()));
+					baseExist.setTotalPrice(DoubleUtils.add(baseExist.getTotalPrice(), baseDto.getTotalPrice()));
 					baseExist.setNeedPayPrice(DoubleUtils.add(baseExist.getNeedPayPrice(), 
-							listDto.getBase().getNeedPayPrice()));
-					baseExist.setShippingFee(DoubleUtils.add(baseExist.getShippingFee(), listDto.getBase().getShippingFee()));
+							baseDto.getNeedPayPrice()));
+					baseExist.setShippingFee(DoubleUtils.add(baseExist.getShippingFee(), baseDto.getShippingFee()));
 					baseExist.setTaoOrderSn(baseExist.getOrderSnMain());
 					baseExist.setIsOrder(BaseDtoIsOrderType.YES);
 					existDto.setBase(baseExist);
@@ -368,10 +398,10 @@ public class OrderServiceImpl implements OrderService {
 					List<GoodsListDto> existGoodsDto = existDto.getGoodsList();
 					existGoodsDto.addAll(listDto.getGoodsList());
 					existDto.setGoodsList(existGoodsDto);
-					toMerge.put(listDto.getBase().getOrderSnMain(), existDto);
+					toMerge.put(orderSnMain, existDto);
 					
 				} else {
-					toMerge.put(listDto.getBase().getOrderSnMain(), listDto);
+					toMerge.put(orderSnMain, listDto);
 				}	
 			} else {
 				//不存在未支付的则不需要合并
@@ -388,7 +418,7 @@ public class OrderServiceImpl implements OrderService {
 		baseDto.setOrderSnMain(order.getOrderSnMain());
 		baseDto.setSellerId(order.getSellerId());
 		baseDto.setSource(OrderSourceEnum.parseSource(order.getSource()).getSource());
-		baseDto.setState(ReturnStatusEnum.parseType(order.getStatus()).getComment());
+//		baseDto.setState(ReturnStatusEnum.parseType(order.getStatus()).getComment());
 		if (order.getAddTime() != null && order.getAddTime() != 0) {
 			String addTime = DateUtils.dateTimeToStr(order.getAddTime());
 			baseDto.setAddTime(addTime);
@@ -409,9 +439,8 @@ public class OrderServiceImpl implements OrderService {
 		double needToPay = DoubleUtils.sub(baseDto.getTotalPrice(), order.getOrderPayed());
 		needToPay = DoubleUtils.sub(needToPay, order.getDiscount());
 		baseDto.setNeedPayPrice(needToPay);// 还需支付金额
-		if (needToPay > 0) {
-			baseDto.setState("未付款");	// FIXME
-		}
+		String state = PayStatusEnum.parseStatus(order.getPayStatus()).getStatus();
+		baseDto.setState(state);
 		baseDto.setShippingFee(order.getShippingFee());// 订单运费
 		baseDto.setPackageStatus(ReturnStatusEnum.parseType(order.getStatus()).getComment());// 包裹的状态
 		baseDto.setShipping(getShippingMsg(order));
@@ -1453,55 +1482,49 @@ public class OrderServiceImpl implements OrderService {
 						}
 					}
 				}
-				// 修改订单sattus为1
-				orderDao.updateOrderStatus(order.getOrderId(),
-						OrderStatusEnum.STATUS_CANCELED.getId());
-				// 释放库存
-				releaseFreezStock(order.getOrderId(), order.getType(),
-						OpearteTypeEnum.OPERATE_CANCEL.getType());
-
-				// order_action 只插入一条记录
-				OrderAction orderAction = new OrderAction();
-				orderAction.setAction(1);
-				orderAction.setOrderSnMain(orderSnMain);
-				orderAction.setTaoOrderSn(order.getTaoOrderSn());
-				orderAction.setOrderId(order.getOrderId());
-				orderAction.setActor(order.getBuyerName());
-				orderAction.setActionTime(new Date());
-				orderAction.setNotes("取消");
-				orderActionDao.save(orderAction);
-
-				if (order.getPayStatus() == PayStatusEnum.STATUS_UNPAY.getId()) {// 0未支付 1已支付
-					resp.setCode(200);
-					resp.setMessage("订单取消成功");
-					// return resp;
-				} else {
-					resp.setCode(200);
-					resp.setMessage("订单取消成功,您已支付的金额将在三个工作日内返还到您的账户中！");
-					// return resp;
-				}
+				
+				releaseAndLog(order, resp);
+				
 			} // end of for loop
 
 		} else {
 			// 全部未支付，只需改订单状态及操作记录即可
 			for (Order order : orders) {
-				// 修改订单sattus为1
-				orderDao.updateOrderStatus(order.getOrderId(),
-						OrderStatusEnum.STATUS_CANCELED.getId());
-				
-				// order_action 只插入一条记录
-				OrderAction orderAction = new OrderAction();
-				orderAction.setAction(1);
-				orderAction.setOrderSnMain(orderSnMain);
-				orderAction.setTaoOrderSn(order.getTaoOrderSn());
-				orderAction.setOrderId(order.getOrderId());
-				orderAction.setActor(order.getBuyerName());
-				orderAction.setActionTime(new Date());
-				orderAction.setNotes("取消");
-				orderActionDao.save(orderAction);
+				releaseAndLog(order, resp);
 			}
 		}
 		return resp;
+	}
+	
+	
+	private void releaseAndLog(Order order, OrderCancelRespDto resp) {
+		// 修改订单status为1
+		orderDao.updateOrderStatus(order.getOrderId(),
+				OrderStatusEnum.STATUS_CANCELED.getId());
+		// 释放库存
+		releaseFreezStock(order.getOrderId(), order.getType(),
+				OpearteTypeEnum.OPERATE_CANCEL.getType());
+
+		// order_action 只插入一条记录
+		OrderAction orderAction = new OrderAction();
+		orderAction.setAction(1);
+		orderAction.setOrderSnMain(order.getOrderSnMain());
+		orderAction.setTaoOrderSn(order.getTaoOrderSn());
+		orderAction.setOrderId(order.getOrderId());
+		orderAction.setActor(order.getBuyerName());
+		orderAction.setActionTime(new Date());
+		orderAction.setNotes("取消");
+		orderActionDao.save(orderAction);
+
+		if (order.getPayStatus() == PayStatusEnum.STATUS_UNPAY.getId()) {// 0未支付 1已支付
+			resp.setCode(200);
+			resp.setMessage("订单取消成功");
+			// return resp;
+		} else {
+			resp.setCode(200);
+			resp.setMessage("订单取消成功,您已支付的金额将在三个工作日内返还到您的账户中！");
+			// return resp;
+		}
 	}
 
 	/**
@@ -1531,15 +1554,19 @@ public class OrderServiceImpl implements OrderService {
 					// LkWhGoodsStore whStore = lkWhGoodsStoreDao.
 					// findBySpecIdAndStoreId(orderGoods.getSpecId(),
 					// order.getSellerId());
+//					String updateTime = DateUtils.date2DateStr2(new Date());
 					if (operateType == OpearteTypeEnum.OPEARTE_CHECK_DELIVER.getType()) {// 发货
-						lkWhGoodsStoreDao.updateBySpecIdAndStoreId(
+						//FIXME 库存小于0
+						lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(
 								orderGoods.getSpecId(), order.getSellerId(),
 								orderGoods.getQuantity(),
-								orderGoods.getQuantity());
+								orderGoods.getQuantity(),
+								new Date());
 					} else {
-						lkWhGoodsStoreDao.updateBySpecIdAndStoreId(
+						
+						lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(
 								orderGoods.getSpecId(), order.getSellerId(),
-								orderGoods.getQuantity());
+								orderGoods.getQuantity(), new Date());
 					}
 				} else {
 					// GoodsSpec goodsSpec =

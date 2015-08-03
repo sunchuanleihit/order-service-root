@@ -19,6 +19,8 @@ public enum ReturnStatusEnum {
 	
 	STATUS_DELIVERIED(13, "已发货"), 
 	
+	STATUS_14(14, "已发货"),
+	
 	STATUS_RECIVED(15, "已收货"), 
 	
 	STATUS_REJECT(16, "拒收"), 
