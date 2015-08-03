@@ -388,7 +388,7 @@ public class OrderServiceImpl implements OrderService {
 		baseDto.setOrderSnMain(order.getOrderSnMain());
 		baseDto.setSellerId(order.getSellerId());
 		baseDto.setSource(OrderSourceEnum.parseSource(order.getSource()).getSource());
-//		baseDto.setState(ReturnStatusEnum.parseType(order.getStatus()).getComment());
+		baseDto.setState(ReturnStatusEnum.parseType(order.getStatus()).getComment());
 		if (order.getAddTime() != null && order.getAddTime() != 0) {
 			String addTime = DateUtils.dateTimeToStr(order.getAddTime());
 			baseDto.setAddTime(addTime);
@@ -409,8 +409,8 @@ public class OrderServiceImpl implements OrderService {
 		double needToPay = DoubleUtils.sub(baseDto.getTotalPrice(), order.getOrderPayed());
 		needToPay = DoubleUtils.sub(needToPay, order.getDiscount());
 		baseDto.setNeedPayPrice(needToPay);// 还需支付金额
-		String state = PayStatusEnum.parseStatus(order.getPayStatus()).getStatus();
-		baseDto.setState(state);
+//		String state = PayStatusEnum.parseStatus(order.getPayStatus()).getStatus();
+//		baseDto.setState(state);
 		baseDto.setShippingFee(order.getShippingFee());// 订单运费
 		baseDto.setPackageStatus(ReturnStatusEnum.parseType(order.getStatus()).getComment());// 包裹的状态
 		baseDto.setShipping(getShippingMsg(order));
