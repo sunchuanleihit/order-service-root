@@ -267,6 +267,7 @@ public class OrderServiceImpl implements OrderService {
 		OrderListRespDto resp = new OrderListRespDto(200, "");
 		if (userId <= 0 || flag <= 0) {
 			resp.setCode(400);
+			resp.setMessage("参数错误");
 			return resp;
 		}
 		
