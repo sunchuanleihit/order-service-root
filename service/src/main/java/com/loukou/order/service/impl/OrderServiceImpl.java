@@ -736,6 +736,7 @@ public class OrderServiceImpl implements OrderService {
 				couponListDto.setMoney(String.format("%.1f",
 						coupList.getMoney()));
 				couponListDto.setCouponMsg(coupRule.getCouponName());
+				couponListDto.setEndtime(DateUtils.date2DateStr2(coupList.getEndtime()));
 				couponListDtos.add(couponListDto);
 
 				if (coupList == recommendCoupList) {
@@ -1735,7 +1736,7 @@ public class OrderServiceImpl implements OrderService {
 
 		double couponMoney = 0.0;
 		if (couponId > 0) {
-			CoupList coupList = coupListDao.findOne(couponId);
+			CoupList coupList = coupListDao.getValidCoupList(userId, couponId);
 			if (coupList == null) {
 				return new PayBeforeRespDto(400, "无效的优惠券");
 			}
