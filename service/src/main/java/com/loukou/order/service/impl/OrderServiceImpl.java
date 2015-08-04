@@ -35,6 +35,7 @@ import com.loukou.order.service.constants.CouponType;
 import com.loukou.order.service.constants.FlagType;
 import com.loukou.order.service.constants.OS;
 import com.loukou.order.service.constants.OrderPayType;
+import com.loukou.order.service.constants.OrderReturnStatus;
 import com.loukou.order.service.constants.ReturnGoodsType;
 import com.loukou.order.service.constants.ShippingMsgDesc;
 import com.loukou.order.service.dao.AddressDao;
@@ -411,14 +412,35 @@ public class OrderServiceImpl implements OrderService {
 		result.addAll(toMerge.values());
 		return result;
 	}
-		
+	
+	//生成订单返回状态state
+	private String createState(Order order) {
+		int status = order.getStatus();
+		String state = "";
+		if(status == OrderStatusEnum.STATUS_CANCELED.getId()) {
+			state = OrderReturnStatus.CANCELED;
+		} else if (status == OrderStatusEnum.STATUS_INVALID.getId()) {
+			state = OrderReturnStatus.INVALID;
+		} else if (status == OrderStatusEnum.STATUS_FINISHED.getId()) {
+			state = OrderReturnStatus.RECEIVED;
+		} else if ((status >= OrderStatusEnum.STATUS_REVIEWED.getId() && 
+				status <= OrderStatusEnum.STATUS_14.getId()) 
+				|| (status == OrderStatusEnum.STATUS_NEW.getId() 
+						&& order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId())) {
+			state = OrderReturnStatus.TO_RECIEVE;
+		} else if (status == OrderStatusEnum.STATUS_NEW.getId() 
+				&& order.getPayStatus() == PayStatusEnum.STATUS_UNPAY.getId()) {
+			state = OrderReturnStatus.UN_PAY;
+		}
+		return state;
+	}
+	
 	private OrderListBaseDto createBaseDto(Order order, int type) {
 		OrderListBaseDto baseDto = new OrderListBaseDto();
 		baseDto.setOrderId(order.getOrderId());
 		baseDto.setOrderSnMain(order.getOrderSnMain());
 		baseDto.setSellerId(order.getSellerId());
 		baseDto.setSource(OrderSourceEnum.parseSource(order.getSource()).getSource());
-//		baseDto.setState(ReturnStatusEnum.parseType(order.getStatus()).getComment());
 		if (order.getAddTime() != null && order.getAddTime() != 0) {
 			String addTime = DateUtils.dateTimeToStr(order.getAddTime());
 			baseDto.setAddTime(addTime);
@@ -439,8 +461,9 @@ public class OrderServiceImpl implements OrderService {
 		double needToPay = DoubleUtils.sub(baseDto.getTotalPrice(), order.getOrderPayed());
 		needToPay = DoubleUtils.sub(needToPay, order.getDiscount());
 		baseDto.setNeedPayPrice(needToPay);// 还需支付金额
-		String state = PayStatusEnum.parseStatus(order.getPayStatus()).getStatus();
-		baseDto.setState(state);
+		
+		baseDto.setState(createState(order));
+		
 		baseDto.setShippingFee(order.getShippingFee());// 订单运费
 		baseDto.setPackageStatus(ReturnStatusEnum.parseType(order.getStatus()).getComment());// 包裹的状态
 		baseDto.setShipping(getShippingMsg(order));
@@ -487,6 +510,7 @@ public class OrderServiceImpl implements OrderService {
 		OrderListRespDto resp = new OrderListRespDto(200, "");
 		if (userId <= 0 || flag <= 0 || StringUtils.isEmpty(orderSnMain)) {
 			resp.setCode(400);
+			resp.setMessage("参数不正确");
 			return resp;
 		}
 		List<Order> orderList = orderDao.findByOrderSnMain(orderSnMain);
@@ -542,65 +566,11 @@ public class OrderServiceImpl implements OrderService {
 			orderListDto.setExtmMsg(extmMsgDto);
 			//物流信息
 			if(order.getStatus() > OrderStatusEnum.STATUS_REVIEWED.getId()) {
-				
-				ShippingMsgRespDto shippingDto = getShippingResult(order.getTaoOrderSn());
-				ShippingMsgDto shippingMsgDto = new ShippingMsgDto();
-				if(shippingDto.getInnerCode() == 0) {
-					if(StringUtils.isBlank(shippingDto.getResult().getShippingList().get(0).getDescription())) {
-						if(order.getStatus() == OrderStatusEnum.STATUS_DELIVERIED.getId()
-								|| order.getStatus() == OrderStatusEnum.STATUS_14.getId()) {
-							shippingMsgDto.setDescription(ShippingMsgDesc.DELIEVER);
-							if(order.getShipTime() == null || order.getShipTime() == 0) {
-								shippingMsgDto.setCreatTime("");
-							} else {
-								String shipTime = DateUtils.dateTimeToStr(order.getShipTime());
-								shippingMsgDto.setCreatTime(shipTime);
-							}
-						} else if (order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
-							shippingMsgDto.setDescription(ShippingMsgDesc.FINISH);
-							if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
-								shippingMsgDto.setCreatTime("");
-							} else {
-								String finishedTime = DateUtils.dateTimeToStr(order.getFinishedTime());
-								shippingMsgDto.setCreatTime(finishedTime);
-							}
-						}
-					} else {
-						shippingMsgDto.setDescription(shippingDto.getResult().getShippingList().get(0).getDescription());
-						if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
-							shippingMsgDto.setCreatTime("");
-						} else {
-							String addTime = DateUtils.dateTimeToStr(order.getAddTime());
-							shippingMsgDto.setCreatTime(addTime);
-						}
-					}
-				} else {
-					if(order.getStatus() == OrderStatusEnum.STATUS_DELIVERIED.getId()
-							|| order.getStatus() == OrderStatusEnum.STATUS_14.getId()) {
-						shippingMsgDto.setDescription(ShippingMsgDesc.DELIEVER);
-						if(order.getShipTime() == null || order.getShipTime() == 0) {
-							shippingMsgDto.setCreatTime("");
-						} else {
-							String shipTime = DateUtils.dateTimeToStr(order.getShipTime());
-							shippingMsgDto.setCreatTime(shipTime);
-						}
-					} else if (order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
-						shippingMsgDto.setDescription(ShippingMsgDesc.FINISH);
-						if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
-							shippingMsgDto.setCreatTime("");
-						} else {
-							String finishedTime = DateUtils.dateTimeToStr(order.getFinishedTime());
-							shippingMsgDto.setCreatTime(finishedTime);
-						}
-					}
-				}
-
-				orderListDto.setShippingmsg(shippingMsgDto);
+				getLogistics(order, orderListDto);
 			}
 			
 			orderListMap.put(order.getTaoOrderSn(), orderListDto);
 		}
-		
 		
 		if(orderListMap.isEmpty()) {
 			return resp;
@@ -631,6 +601,67 @@ public class OrderServiceImpl implements OrderService {
 		return resp;
 	}
 
+	//获取物流信息
+	private void getLogistics(Order order, OrderListDto orderListDto) {
+		ShippingMsgRespDto shippingDto = getShippingResult(order.getTaoOrderSn());
+		ShippingMsgDto shippingMsgDto = new ShippingMsgDto();
+		if(shippingDto.getInnerCode() == 0) {
+			List<ShippingListDto> shippingList = shippingDto.getResult().getShippingList();
+			if(!CollectionUtils.isEmpty(shippingList)) {
+				if(StringUtils.isBlank(shippingList.get(0).getDescription())) {
+					if(order.getStatus() == OrderStatusEnum.STATUS_DELIVERIED.getId()
+							|| order.getStatus() == OrderStatusEnum.STATUS_14.getId()) {
+						shippingMsgDto.setDescription(ShippingMsgDesc.DELIEVER);
+						if(order.getShipTime() == null || order.getShipTime() == 0) {
+							shippingMsgDto.setCreatTime("");
+						} else {
+							String shipTime = DateUtils.dateTimeToStr(order.getShipTime());
+							shippingMsgDto.setCreatTime(shipTime);
+						}
+					} else if (order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
+						shippingMsgDto.setDescription(ShippingMsgDesc.FINISH);
+						if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
+							shippingMsgDto.setCreatTime("");
+						} else {
+							String finishedTime = DateUtils.dateTimeToStr(order.getFinishedTime());
+							shippingMsgDto.setCreatTime(finishedTime);
+						}
+					}
+				} else {
+					shippingMsgDto.setDescription(shippingDto.getResult().getShippingList().get(0).getDescription());
+					if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
+						shippingMsgDto.setCreatTime("");
+					} else {
+						String addTime = DateUtils.dateTimeToStr(order.getAddTime());
+						shippingMsgDto.setCreatTime(addTime);
+					}
+				}
+			}
+			
+		} else {
+			if(order.getStatus() == OrderStatusEnum.STATUS_DELIVERIED.getId()
+					|| order.getStatus() == OrderStatusEnum.STATUS_14.getId()) {
+				shippingMsgDto.setDescription(ShippingMsgDesc.DELIEVER);
+				if(order.getShipTime() == null || order.getShipTime() == 0) {
+					shippingMsgDto.setCreatTime("");
+				} else {
+					String shipTime = DateUtils.dateTimeToStr(order.getShipTime());
+					shippingMsgDto.setCreatTime(shipTime);
+				}
+			} else if (order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
+				shippingMsgDto.setDescription(ShippingMsgDesc.FINISH);
+				if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
+					shippingMsgDto.setCreatTime("");
+				} else {
+					String finishedTime = DateUtils.dateTimeToStr(order.getFinishedTime());
+					shippingMsgDto.setCreatTime(finishedTime);
+				}
+			}
+		}
+
+		orderListDto.setShippingmsg(shippingMsgDto);
+	
+	}
 	
 	@Override
 	public CouponListRespDto getCouponList(int cityId, int userId, int storeId,
