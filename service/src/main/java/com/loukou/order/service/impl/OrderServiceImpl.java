@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 
@@ -47,6 +48,9 @@ import com.loukou.order.service.dao.ExpressDao;
 import com.loukou.order.service.dao.GoodsSpecDao;
 import com.loukou.order.service.dao.LKWhStockInDao;
 import com.loukou.order.service.dao.LKWhStockInGoodsDao;
+import com.loukou.order.service.dao.LkConfigureDao;
+import com.loukou.order.service.dao.LkStatusDao;
+import com.loukou.order.service.dao.LkStatusItemDao;
 import com.loukou.order.service.dao.LkWhDeliveryDao;
 import com.loukou.order.service.dao.LkWhDeliveryOrderDao;
 import com.loukou.order.service.dao.MemberDao;
@@ -73,6 +77,9 @@ import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.Express;
 import com.loukou.order.service.entity.LKWhStockIn;
 import com.loukou.order.service.entity.LKWhStockInGoods;
+import com.loukou.order.service.entity.LkConfigure;
+import com.loukou.order.service.entity.LkStatus;
+import com.loukou.order.service.entity.LkStatusItem;
 import com.loukou.order.service.entity.LkWhDelivery;
 import com.loukou.order.service.entity.LkWhDeliveryOrder;
 import com.loukou.order.service.entity.Order;
@@ -116,6 +123,7 @@ import com.loukou.order.service.resp.dto.DeliveryInfo;
 import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsInfoDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
+import com.loukou.order.service.resp.dto.LkStatusItemDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderBonusRespDto;
 import com.loukou.order.service.resp.dto.OrderCancelRespDto;
@@ -280,6 +288,15 @@ public class OrderServiceImpl implements OrderService {
 
 	@Autowired
 	private UserService userService;
+	
+	@Autowired
+	private LkStatusDao lkStatusDao;
+	
+	@Autowired
+	private LkStatusItemDao lkStatusItemDao;
+	
+	@Autowired
+	private LkConfigureDao lkConfigureDao;
 	
 	@Override
 	public UserOrderNumRespDto getOrderNum(int userId) {
@@ -2876,5 +2893,82 @@ public class OrderServiceImpl implements OrderService {
 		bonusDto.setTimeStr(String.format("%d年%d月", currentYear, currentMonth ));
 		
 		return new RespDto(200, "ok", bonusDto);
+	}
+	
+	private Map<Integer,LkStatus> getLkStatusMap(){
+		Iterable<LkStatus> lkStatusList = lkStatusDao.findAll();
+		Map<Integer,LkStatus> statusMap=new HashMap<Integer,LkStatus>();
+		for (LkStatus lkStatus : lkStatusList) {
+			statusMap.put(lkStatus.getId(), lkStatus) ;
+		}
+		
+		return statusMap;
+	}
+	
+	public Map<String,List<LkStatusItemDto>> getLkStatusItemMap(){
+		Map<String,List<LkStatusItemDto>> result = new HashMap<String,List<LkStatusItemDto>>();
+		Iterable<LkStatusItem> lkStatusItemList = lkStatusItemDao.findAll();
+		Map<Integer,LkStatus> statusMap = getLkStatusMap();
+		
+		for (LkStatusItem lkStatusItem : lkStatusItemList) {
+			LkStatus lkStatus = statusMap.get(lkStatusItem.getStatusId());
+			if(lkStatus == null){
+				continue;
+			}
+			
+			List<LkStatusItemDto> statusItemList = result.get(lkStatus.getStatusName());
+			if(statusItemList==null){
+				statusItemList = new ArrayList<LkStatusItemDto>();
+			}
+			
+			statusItemList.add(new LkStatusItemDto(lkStatusItem.getStatusValue(),lkStatusItem.getStatusTitle()));
+			result.put(lkStatus.getStatusName(), statusItemList);
+		}
+		
+		return result;
+	}
+	
+	public Map<String,Object> getLkConfigureMap(){
+		Iterable<LkConfigure> lkConfigureList = lkConfigureDao.findAll();
+		Map<String,Map<String,Object>> listConfigMap = new HashMap<String, Map<String,Object>>();
+		
+		Map<String,Object> resultConfig = new HashMap<String, Object>();
+		
+		for (LkConfigure lkConfigure : lkConfigureList) {
+			Object value = getValue(lkConfigure);
+			
+			if(org.springframework.util.StringUtils.isEmpty(lkConfigure.getConfigureName())){
+				resultConfig.put(lkConfigure.getItemName(), value);
+				continue;
+			}
+			
+			Map<String,Object> configMap = listConfigMap.get(lkConfigure.getConfigureName());
+			
+			if(configMap==null){
+				configMap = new HashMap<String,Object>();
+			}
+			
+			configMap.put(lkConfigure.getItemName(),value);
+			
+			listConfigMap.put(lkConfigure.getConfigureName(), configMap);
+		}
+		
+		for (Entry<String, Map<String, Object>> entry : listConfigMap.entrySet()) {
+			resultConfig.put(entry.getKey(), entry.getValue());
+		}
+		
+		return resultConfig;
+	}
+	
+	private Object getValue(LkConfigure configure){
+		String value = configure.getItemValue();
+		switch(configure.getItemType()){
+			case "int":
+				return Integer.parseInt(value);
+			case "double":
+				return Double.parseDouble(value);
+		}
+		
+		return value;
 	}
 }

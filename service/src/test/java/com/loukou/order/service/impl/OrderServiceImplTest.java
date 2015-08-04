@@ -28,7 +28,7 @@ public class OrderServiceImplTest extends AbstractTestObject {
 
 	@Autowired
 	private OrderService orderService;
-	
+
 	@Test
 	public void submitOrder() {
 		SubmitOrderReqDto req = new SubmitOrderReqDto();
@@ -39,68 +39,77 @@ public class OrderServiceImplTest extends AbstractTestObject {
 		req.setAddressId(128);
 		req.setOs("ios");
 		req.getShippingTimes().getMaterial().add("2015-07-28 09:00:00");
-		
+
 		SubmitOrderRespDto resp = orderService.submitOrder(req);
 		System.out.println(object2String(resp));
 	}
-	
+
 	@Test
 	public void getCouponList() {
 		int cityId = 1;
 		int userId = 113981;
 		int storeId = 18055;
 		String openId = "test-openId";
-		CouponListRespDto resp = orderService.getCouponList(cityId, userId, storeId, openId);
+		CouponListRespDto resp = orderService.getCouponList(cityId, userId,
+				storeId, openId);
 		System.out.println(object2String(resp));
 	}
-	
-	
-	
+
 	@Test
 	public void getOrderList() {
 		orderService.getOrderList(1032752, 1, 0, 10);
 	}
 
-    @Test
-    public void getOrder() {
-        int userId = 48635;
-        String orderSnMain = "120108035625905";
-        orderService.getPayOrderMsg(userId, orderSnMain);
-    }
+	@Test
+	public void getOrder() {
+		int userId = 48635;
+		String orderSnMain = "120108035625905";
+		orderService.getPayOrderMsg(userId, orderSnMain);
+	}
 
+	@Test
+	public void testGetOrderInfo() {
+		// ResponseDto<OrderListResultDto> result =
+		// orderService.getOrderInfo("120108035625905");
+		// System.out.println(result);
+	}
 
-    @Test
-    public void testGetOrderInfo() {
-//        ResponseDto<OrderListResultDto> result = orderService.getOrderInfo("120108035625905");
-//        System.out.println(result);
-    }
-    
-    @Test
-	public void returnStorage(){
+	@Test
+	public void returnStorage() {
 		ReturnStorageReqDto req = new ReturnStorageReqDto();
 		req.setStoreId(1432);
 		req.setTaoOrderSn("nj0131021214077861");
-		
+
 		ReturnStorageGoodsReqDto[] goodsList = new ReturnStorageGoodsReqDto[3];
-		
-		ReturnStorageGoodsReqDto goo=new ReturnStorageGoodsReqDto();
+
+		ReturnStorageGoodsReqDto goo = new ReturnStorageGoodsReqDto();
 		goo.setSpecId(608017);
-		goo.setQuantity(10);
-		
-		ReturnStorageGoodsReqDto goo1=new ReturnStorageGoodsReqDto();
+		goo.setConfirmNum(10);
+
+		ReturnStorageGoodsReqDto goo1 = new ReturnStorageGoodsReqDto();
 		goo1.setSpecId(610927);
-		goo1.setQuantity(11);
-		
-		ReturnStorageGoodsReqDto goo2=new ReturnStorageGoodsReqDto();
+		goo1.setConfirmNum(11);
+
+		ReturnStorageGoodsReqDto goo2 = new ReturnStorageGoodsReqDto();
 		goo2.setSpecId(622294);
-		goo2.setQuantity(12);
-		
-		goodsList[0]=goo;
-		goodsList[1]=goo1;
-		goodsList[2]=goo2;
+		goo2.setConfirmNum(12);
+
+		goodsList[0] = goo;
+		goodsList[1] = goo1;
+		goodsList[2] = goo2;
 		req.setSpecList(goodsList);
 		System.out.println(object2String(req));
 		ReturnStorageRespDto resp = orderService.returnStorage(req);
 		System.out.println(object2String(resp));
+	}
+
+	@Test
+	public void getLkStatusItemMap() {
+		System.out.println(object2String(orderService.getLkStatusItemMap()));
+	}
+
+	@Test
+	public void getLkConfigureMap() {
+		System.out.println(object2String(orderService.getLkConfigureMap()));
 	}
 }

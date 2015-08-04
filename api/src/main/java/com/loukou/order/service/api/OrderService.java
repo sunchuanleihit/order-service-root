@@ -1,5 +1,8 @@
 package com.loukou.order.service.api;
 
+import java.util.List;
+import java.util.Map;
+
 import com.loukou.order.service.req.dto.OrderListParamDto;
 import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
@@ -10,6 +13,7 @@ import com.loukou.order.service.resp.dto.OrderCancelRespDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderInfoDto;
 import com.loukou.order.service.req.dto.OrderListParamDto;
+import com.loukou.order.service.resp.dto.LkStatusItemDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderInfoDto;
 import com.loukou.order.service.resp.dto.OrderListInfoDto;
@@ -22,7 +26,6 @@ import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
 import com.loukou.order.service.resp.dto.basic.RespDto;
-
 import com.loukou.order.service.resp.dto.RefuseReasonDto;
 import com.loukou.order.service.resp.dto.RefuseReasonListDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
@@ -164,4 +167,8 @@ public interface OrderService {
 
 	
 	public OResponseDto<RefuseReasonListDto> getRefuseReasonList();
+	
+	public Map<String,List<LkStatusItemDto>> getLkStatusItemMap();
+	
+	public Map<String,Object> getLkConfigureMap();
 }
