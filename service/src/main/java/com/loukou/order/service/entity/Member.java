@@ -18,64 +18,64 @@ public class Member {
 	private int userId;
 
 	@Column(name = "user_name")
-	private String userName;
+	private String userName = "";
 	
 	@Column(name = "real_name")
-	private String realName;
+	private String realName = "";
 
 	@Column(name = "gender")
-	private int gender;
+	private int gender = 0;
 	
 	@Column(name = "birthday")
-	private Date birthday;
+	private Date birthday = new Date();;
 
 	@Column(name = "password")
-	private String password;
+	private String password = "";
 	
 	@Column(name = "address")
-	private String address;
+	private String address = "";
 
 	@Column(name = "reg_time")
-	private Long regTime;
+	private Long regTime = 0L;
 	
 	@Column(name = "phone_mob")
-	private String phoneMob;
+	private String phoneMob = "";
 
 	@Column(name = "PhoneChecked")
-	private Integer phoneChecked;
+	private Integer phoneChecked = 0;
 
 	@Column(name = "PhoneChecktime")
-	private Long phoneChecktime;
+	private Long phoneChecktime = 0L;
 
 	@Column(name = "PhoneCheckCode")
-	private String phoneCheckCode;
+	private String phoneCheckCode = "";
 
 	@Column(name = "site_type")
-	private String siteType;
+	private String siteType = "";
 	
 	@Column(name = "card_no")
-	private String cardNo;
+	private String cardNo = "";
 
 	@Column(name = "card_secret")
-	private String cardSecret;
+	private String cardSecret = "";
 	
 	@Column(name = "card_status")
-	private int cardStatus;
+	private int cardStatus = 0;
 
 	@Column(name = "verify_amount")
-	private double verifyAmount;
+	private double verifyAmount = 0.0;
 
 	@Column(name = "region_id")
-	private int regionId;
+	private int regionId = 0;
 
 	@Column(name = "points")
-	private int points;
+	private int points = 0;
 
 	@Column(name = "freezpoint")
-	private int freezpoint;
+	private int freezpoint = 0;
 
 	@Column(name = "source")
-	private Integer source;
+	private Integer source = 0;
 	
 	public int getUserId() {
 		return userId;
