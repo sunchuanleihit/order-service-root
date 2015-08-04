@@ -286,7 +286,10 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired
 	private OrderRefuseConfigDao orderRefuseConfigDao;
 	
-
+	@Autowired
+	
+	private OrderOperationProcessor orderOperationProcessor;
+	
 	@Autowired
 	private UserService userService;
 	
@@ -2403,11 +2406,11 @@ public class OrderServiceImpl implements OrderService {
         PageRequest pagenation = new PageRequest(param.getPageNum(),param.getPageSize());
         List<String> types = new ArrayList<String>();
         switch (param.getOrderType()) {
-        case 1:
+        case 1://微仓
             types.add("wei_wh");
             types.add("wei_self");
             break;
-        case 2:
+        case 2://预售
             types.add("booking");
             break;
         default:
@@ -2416,14 +2419,16 @@ public class OrderServiceImpl implements OrderService {
             break;
         }
         Page<Order> orders ;
-        if(param.getOrderStatus() == OrderStatusEnum.STATUS_FINISHED.getId()&&!StringUtils.isEmpty(param.getFinishedTime())){
-            //有问题　　　查询是要按天查询的　　必须要使用索引
-           long finishedTime = DateUtils.str2Date(param.getFinishedTime()).getTime();
-           orders = orderDao.findBySellerIdAndStatusAndFinishedTimeAndTypeIn(param.getStoreId(),param.getOrderStatus(),(int)(finishedTime/1000),types,pagenation);
-        }else {
-            orders  =orderDao.findBySellerIdAndStatusAndTypeIn(param.getStoreId(),param.getOrderStatus(),types,pagenation);
+        if(param.getOrderType() == 2){
+            orders = orderDao.findBySellerIdAndStatusAndTypeIn(param.getStoreId(),OrderStatusEnum.STATUS_REVIEWED.getId(),types,pagenation);
+        }else{
+            if(param.getOrderStatus() == OrderStatusEnum.STATUS_FINISHED.getId()&&!StringUtils.isEmpty(param.getFinishedTime())){
+               long finishedTime = DateUtils.str2Date(param.getFinishedTime()).getTime();
+               orders = orderDao.findBySellerIdAndStatusAndFinishedTimeAndTypeIn(param.getStoreId(),param.getOrderStatus(),(int)(finishedTime/1000),types,pagenation);
+            }else {
+                orders  =orderDao.findBySellerIdAndStatusAndTypeIn(param.getStoreId(),param.getOrderStatus(),types,pagenation);
+            }
         }
-     
         OrderListInfoDto orderListInfoDto = new OrderListInfoDto();
         List<OrderInfoDto> orderInfoDtos = new ArrayList<OrderInfoDto>();
         
@@ -2494,55 +2499,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    @Transactional
     public OResponseDto<String> finishPackagingOrder(String taoOrderSn,String userName,int senderId) {
-        Order order = orderDao.findByTaoOrderSn(taoOrderSn);
-        if (order == null || order.getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()) {
-            return new OResponseDto<String>(500, "错误的订单号");
-           }
-     
-        LkWhDelivery lkDelivery = lkWhDeliveryDao.findByDId(senderId);
-        if(lkDelivery ==null){
-            return new OResponseDto<String>(500, "错误的快递员");
-        }
-      
-        List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
-        for (OrderGoods good : goods) {
-            lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(good.getSpecId(), good.getStoreId(),new Date(), good.getQuantity(),
-                    good.getQuantity());
-        }
-            LkWhDeliveryOrder lkWhDeliveryOrder =  new LkWhDeliveryOrder();
-            lkWhDeliveryOrder.setOrderId(order.getOrderId());
-            lkWhDeliveryOrder.setOrderNo(order.getOrderSnMain());
-            lkWhDeliveryOrder.setdId(senderId);
-            lkWhDeliveryOrder.setRemark("仓库发货");
-            lkWhDeliveryOrderDao.save(lkWhDeliveryOrder);
-         
-        
-            
-            String receiveNo = new String(""+(int)(Math.random()*10000));
-            orderDao.updateOrderStatusAndreceiveNo(order.getOrderId(), OrderStatusEnum.STATUS_14.getId(),receiveNo);
-            
-            OrderAction orderAction = new OrderAction();
-            orderAction.setActionTime(new Date());
-            orderAction.setAction(OrderStatusEnum.STATUS_14.getId());
-            orderAction.setActor(userName);
-            orderAction.setOrderSnMain(order.getOrderSnMain());
-            orderAction.setTaoOrderSn(taoOrderSn);
-            orderAction.setOrderId(order.getOrderId());
-            orderAction.setNotes("配送员"+lkDelivery.getdName()+",手机号"+lkDelivery.getdMobile());
-            orderActionDao.save(orderAction);
-            
-            OrderExtm orderExm = orderExtmDao.findByOrderId(order.getOrderId());
-            if(orderExm!=null && !StringUtils.isEmpty(orderExm.getPhoneMob())){
-                try {
-                    String[] mobiles = {orderExm.getPhoneMob()};
-                    SingletonSmsClient.getClient().sendSMS(mobiles, String.format(ShortMessage.FINISH_PACKAGE_MESSAGE_MODEL, order.getTaoOrderSn(),
-                            lkDelivery.getdName(),orderExm.getPhoneMob()));
-                } catch (RemoteException e) {
-                }
-            }
-            return new OResponseDto<String>(200, "成功");
+        return orderOperationProcessor.finishPackagingOrder(taoOrderSn, userName, senderId);
     }
 
     @Override
@@ -2619,56 +2577,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OResponseDto<String> confirmRevieveOrder(String taoOrderSn, String gps,String userName) {
-        Order order = orderDao.findByTaoOrderSn(taoOrderSn);
-        if (order.getStatus() != OrderStatusEnum.STATUS_14.getId()) {
-             return new OResponseDto<String>(500, "错误的订单号");
-         }
-        
-      
-        
-        orderDao.updateStatusAndFinishedTime(OrderStatusEnum.STATUS_FINISHED.getId(), DateUtils.getTime(), order.getOrderId());
-      
-        OrderAction orderAction = new OrderAction();
-        orderAction.setActionTime(new Date());
-        orderAction.setAction(OrderStatusEnum.STATUS_FINISHED.getId());
-        orderAction.setActor(userName);
-        orderAction.setOrderSnMain(order.getOrderSnMain());
-        orderAction.setTaoOrderSn(taoOrderSn);
-        orderAction.setOrderId(order.getOrderId());
-        orderAction.setNotes("仓库回单"+gps);
-        orderActionDao.save(orderAction);
-        //发送短信
-        OrderExtm orderExm = orderExtmDao.findByOrderId(order.getOrderId());
-        if(orderExm!=null && !StringUtils.isEmpty(orderExm.getPhoneMob())){
-            try {
-                String[] mobiles = {orderExm.getPhoneMob()};
-                SingletonSmsClient.getClient().sendSMS(mobiles, String.format(ShortMessage.FINISH_ORDER_MESSAGE_MODEL, 
-                        order.getTaoOrderSn()));
-            } catch (RemoteException e) {
-            }
-        }
-        
-         return new OResponseDto<String>(200, "确认成功");
+         return orderOperationProcessor.confirmRevieveOrder(taoOrderSn, gps, userName);
     }
 
     @Override
     public OResponseDto<String> confirmBookOrder(String taoOrderSn,String userName) {
-        Order order = orderDao.findByTaoOrderSn(taoOrderSn);
-                if (order == null || order.getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()) {
-                    return new OResponseDto<String>(500, "错误的订单号");
-                   }
-                  
-                    orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_ALLOCATED.getId());
-                    OrderAction orderAction = new OrderAction();
-                    orderAction.setActionTime(new Date());
-                    orderAction.setAction(OrderStatusEnum.STATUS_ALLOCATED.getId());
-                    orderAction.setActor(userName);
-                    orderAction.setOrderSnMain(order.getOrderSnMain());
-                    orderAction.setTaoOrderSn(taoOrderSn);
-                    orderAction.setOrderId(order.getOrderId());
-                    orderAction.setNotes("配货");
-                    orderActionDao.save(orderAction);
-                    return new OResponseDto<String>(200, "成功");
+      return orderOperationProcessor.confirmBookOrder(taoOrderSn, userName);
     }
 
 	/**
