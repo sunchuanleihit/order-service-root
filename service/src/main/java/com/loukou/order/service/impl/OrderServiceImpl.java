@@ -518,6 +518,7 @@ public class OrderServiceImpl implements OrderService {
 		}
 		List<Order> orderList = orderDao.findByOrderSnMain(orderSnMain);
 		if (CollectionUtils.isEmpty(orderList)) {
+			resp.setMessage("订单为空");
 			return resp;
 		}
 		
@@ -1298,29 +1299,31 @@ public class OrderServiceImpl implements OrderService {
 		}
 		if ( express != null && StringUtils.isNotBlank(express.getExpressName())) {
 			sb.append("(").append(express.getExpressName()).append(")");
-			resultDto.setShippingName(sb.toString());
+//			resultDto.setShippingName(sb.toString());
 		}
 
+		resultDto.setShippingName(sb.toString());
+		
 		if (order.getPayType() == OrderPayTypeEnum.TYPE_ARRIVAL.getId()) {
 			resultDto.setPayType("货到付款");
 		} else if (order.getPayType() == OrderPayTypeEnum.TYPE_ONLINE.getId()) {
 			resultDto.setPayType("在线支付");
 		}
 		List<ShippingListDto> shippingList = new ArrayList<ShippingListDto>();
-		List<OrderAction> orderActionList = orderActionDao.findByOrderSnMain(order.getOrderSnMain());
+		List<OrderAction> orderActionList = orderActionDao.findByOrderSnMainDesc(order.getOrderSnMain());
 		if(!CollectionUtils.isEmpty(orderActionList)) {
 			for (OrderAction orderAction : orderActionList) {
 				if (!(orderAction.getAction() == OrderActionTypeEnum.TYPE_33.getId()
 						|| orderAction.getAction() == OrderActionTypeEnum.TYPE_CHOOSE_PAY.getId() 
 						|| orderAction.getAction() == OrderActionTypeEnum.TYPE_INSPECTED.getId())) {
 					ShippingListDto shippingListDto = new ShippingListDto();
-					if(StringUtils.equals(orderAction.getTaoOrderSn(), taoOrderSn)) {
+//					if(StringUtils.equals(orderAction.getTaoOrderSn(), taoOrderSn)) {
 						shippingListDto.setCreateTime(orderAction.getTimestamp()
 								.toString());
 						shippingListDto.setDescription(orderAction.getNotes());
 						shippingListDto.setTaoOrderSn(taoOrderSn);
 						shippingList.add(shippingListDto);
-					}
+//					}
 				}
 			}
 		}
