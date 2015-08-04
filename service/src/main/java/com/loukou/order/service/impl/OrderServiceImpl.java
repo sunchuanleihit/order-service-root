@@ -2447,8 +2447,11 @@ public class OrderServiceImpl implements OrderService {
                    
            }else if(order.getStatus() == OrderStatusEnum.STATUS_REFUSED.getId()){
                OrderRefuse orderRefuse =  orderRefuseDao.findByTaoOrderSn(order.getTaoOrderSn());
-               orderInfoDto.setRejectReason(orderRefuse.getRefuseReason());
-               orderInfoDto.setRejectTime(DateUtils.date2DateStr(orderRefuse.getRefuseTime()));
+               if(orderRefuse != null){
+                   orderInfoDto.setRejectReason(orderRefuse.getRefuseReason());
+                   orderInfoDto.setRejectTime(DateUtils.date2DateStr(orderRefuse.getRefuseTime()));
+               }
+               
            }else if(order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()){
                orderInfoDto.setFinishTime(DateUtils.date2DateStr2(new Date((long)(order.getFinishedTime())*1000)));
            }
