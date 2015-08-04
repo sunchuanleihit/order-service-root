@@ -11,7 +11,7 @@
 	
 	<context-param>
 		<param-name>contextConfigLocation</param-name>
-		<param-value>classpath*:order-service-appcontext.xml</param-value>
+		<param-value>classpath*:appcontext.xml</param-value>
 	</context-param>
 
 	<!-- 载入Log4j配置文件位置 -->

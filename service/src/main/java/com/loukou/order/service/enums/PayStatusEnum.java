@@ -17,6 +17,15 @@ public enum PayStatusEnum {
 		this.status = status;
 	}
 	
+	public static PayStatusEnum parseStatus(int id) {
+		for (PayStatusEnum e : PayStatusEnum.values()) {
+			if (e.id == id) {
+				return e;
+			}
+		}
+		return STATUS_UNPAY;
+	}
+	
 	public int getId() {
 		return id;
 	}
