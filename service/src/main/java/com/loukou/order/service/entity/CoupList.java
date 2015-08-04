@@ -24,10 +24,10 @@ public class CoupList {
 	private int userId;
 
 	@Column(name = "begintime")
-	private String begintime;// 开始时间
+	private Date begintime;// 开始时间
 
 	@Column(name = "endtime")
-	private String endtime;// 结束时间
+	private Date endtime;// 结束时间
 
 	@Column(name = "commoncode")
 	private String commoncode = "";
@@ -83,19 +83,19 @@ public class CoupList {
 		this.userId = userId;
 	}
 
-	public String getBegintime() {
+	public Date getBegintime() {
 		return begintime;
 	}
 
-	public void setBegintime(String begintime) {
+	public void setBegintime(Date begintime) {
 		this.begintime = begintime;
 	}
 
-	public String getEndtime() {
+	public Date getEndtime() {
 		return endtime;
 	}
 
-	public void setEndtime(String endtime) {
+	public void setEndtime(Date endtime) {
 		this.endtime = endtime;
 	}
 
