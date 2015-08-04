@@ -4,6 +4,7 @@ import java.rmi.RemoteException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -2405,10 +2406,16 @@ public class OrderServiceImpl implements OrderService {
         }else {
             orders  =orderDao.findBySellerIdAndStatusAndTypeIn(param.getStoreId(),param.getOrderStatus(),types,pagenation);
         }
-       
+     
         OrderListInfoDto orderListInfoDto = new OrderListInfoDto();
         List<OrderInfoDto> orderInfoDtos = new ArrayList<OrderInfoDto>();
         
+        if(CollectionUtils.isEmpty(orders.getContent())){
+            orderListInfoDto.setOrders(orderInfoDtos);
+            orderListInfoDto.setStoreId(param.getStoreId());
+            orderListInfoDto.setTotalNum(orders.getTotalElements());
+            return new OResponseDto<OrderListInfoDto>(200,orderListInfoDto);
+        }
         for(Order order :orders.getContent()){
             OrderInfoDto orderInfoDto = new OrderInfoDto();
             orderInfoDto.setCreateTime(SDF.format(new Date((long)(order.getAddTime())*1000)));
@@ -2433,16 +2440,19 @@ public class OrderServiceImpl implements OrderService {
                
            }else if(order.getStatus() ==OrderStatusEnum.STATUS_CANCELED.getId()){
                List<OrderAction> orderActions =  orderActionDao.findByTaoOrderSnAndAction(order.getTaoOrderSn(),OrderStatusEnum.STATUS_CANCELED.getId());
-               OrderAction orderAction =orderActions.get(0);
-               orderInfoDto.setCancelTime(DateUtils.date2DateStr2(orderAction.getActionTime()));
-               //添加退货状态
-               List<OrderReturn> returns =  orderRDao.findByOrderSnMain(order.getOrderSnMain());
-               //good_status只要不是４　就是待退货
-               if(returns.get(0).getGoodsStatus()!=4){
-                   orderInfoDto.setGoodsReturnStatus(1);
-               }else{
-                   orderInfoDto.setGoodsReturnStatus(2);
+               if(!CollectionUtils.isEmpty(orderActions)){
+                   OrderAction orderAction =orderActions.get(0);
+                   orderInfoDto.setCancelTime(DateUtils.date2DateStr2(orderAction.getActionTime()));
+                   //添加退货状态
+                   List<OrderReturn> returns =  orderRDao.findByOrderSnMain(order.getOrderSnMain());
+                   //good_status只要不是４　就是待退货
+                   if(returns.get(0).getGoodsStatus()!=4){
+                       orderInfoDto.setGoodsReturnStatus(1);
+                   }else{
+                       orderInfoDto.setGoodsReturnStatus(2);
+                   }
                }
+            
            }else if(order.getStatus() == OrderStatusEnum.STATUS_14.getId()) {
                    
            }else if(order.getStatus() == OrderStatusEnum.STATUS_REFUSED.getId()){
