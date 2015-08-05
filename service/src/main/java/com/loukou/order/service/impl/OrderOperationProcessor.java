@@ -6,9 +6,9 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.alibaba.dubbo.config.annotation.Service;
 import com.loukou.order.service.constants.ShortMessage;
 import com.loukou.order.service.dao.LkWhDeliveryDao;
 import com.loukou.order.service.dao.LkWhDeliveryOrderDao;
@@ -16,6 +16,7 @@ import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
 import com.loukou.order.service.dao.OrderExtmDao;
 import com.loukou.order.service.dao.OrderGoodsDao;
+import com.loukou.order.service.dao.OrderRefuseDao;
 import com.loukou.order.service.dao.WeiCangGoodsStoreDao;
 import com.loukou.order.service.entity.LkWhDelivery;
 import com.loukou.order.service.entity.LkWhDeliveryOrder;
@@ -23,6 +24,7 @@ import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderExtm;
 import com.loukou.order.service.entity.OrderGoods;
+import com.loukou.order.service.entity.OrderRefuse;
 import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.util.DateUtils;
@@ -51,6 +53,9 @@ public class OrderOperationProcessor {
 
     @Autowired
     private LkWhDeliveryOrderDao lkWhDeliveryOrderDao;
+
+    @Autowired
+    private OrderRefuseDao orderRefuseDao;
 
     public OResponseDto<String> confirmBookOrder(String taoOrderSn, String userName) {
         Order order = orderDao.findByTaoOrderSn(taoOrderSn);
@@ -111,8 +116,38 @@ public class OrderOperationProcessor {
         return new OResponseDto<String>(200, "成功");
     }
 
-    
-    
+    @Transactional
+    public OResponseDto<String> refuseOrder(String taoOrderSn,String userName,int refuseId,String refuseReason) {
+        Order order = orderDao.findByTaoOrderSn(taoOrderSn);
+        
+        if(order==null || order.getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()){
+            return new OResponseDto<String>(500, "失败");
+        }
+        orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_REFUSED.getId());
+        
+        OrderRefuse orderRefuse = new OrderRefuse();
+        //拒绝原因是其他 refuseId=0
+        if(refuseId ==0){
+            orderRefuse.setRefuseId(0);
+            orderRefuse.setRefuseReason(refuseReason);
+            orderRefuse.setTaoOrderSn(taoOrderSn);
+        }else{
+            orderRefuse.setRefuseId(1);
+            orderRefuse.setRefuseReason(refuseReason);
+            orderRefuse.setTaoOrderSn(taoOrderSn);
+        }
+        orderRefuseDao.save(orderRefuse);
+        
+        createAction(order, OrderStatusEnum.STATUS_REFUSED.getId(), userName, "拒收");
+        
+        sendMessage(order, String.format(ShortMessage.REFUSE_MESSAGE_MODEL, 
+                order.getTaoOrderSn()));
+           
+        //退款暂时不考虑 直接设置拒收状态 客服处理
+        
+        return new OResponseDto<String>(200, "成功");
+    }
+
     private OrderAction createAction(Order order, int orderActionID, String actor, String notes) {
         // order_action 只插入一条记录
         OrderAction orderAction = new OrderAction();

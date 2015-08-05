@@ -287,8 +287,10 @@ public class OrderServiceImpl implements OrderService {
 	private OrderRefuseConfigDao orderRefuseConfigDao;
 	
 	@Autowired
-	
 	private OrderOperationProcessor orderOperationProcessor;
+	
+	@Autowired
+	private OrderInfoService OrderInfoService;
 	
 	@Autowired
 	private UserService userService;
@@ -2338,67 +2340,7 @@ public class OrderServiceImpl implements OrderService {
 	}
     @Override
     public OResponseDto<OrderInfoDto> getOrderGoodsInfo(String orderNo) {
-        Order order = orderDao.findByTaoOrderSn(orderNo);
-        if(order ==null){
-              return new OResponseDto<OrderInfoDto>(500,new OrderInfoDto());
-        }
-        OResponseDto<OrderInfoDto> oResultDto = new OResponseDto<OrderInfoDto>();
-        OrderInfoDto orderInfoDto = new OrderInfoDto();
-        List<SpecDto> specList = new ArrayList<SpecDto>();
-        List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
-        for(OrderGoods good :goods){
-            SpecDto spec = new SpecDto();
-            spec.setGoodsInfo(new GoodsInfoDto(good.getGoodsId(), good.getGoodsName(), good.getGoodsImage()));
-            spec.setSpecId(good.getSpecId());
-            spec.setBuyNum(good.getQuantity());
-            specList.add(spec);
-        }
-        //实际上一个主单只有一个收货人
-        List<OrderExtm> orderExtmList = orderExtmDao.findByOrderSnMain(order.getOrderSnMain());
-        OrderExtm orderExtm = orderExtmList.get(0);
-        
-        //封装收货人等信息
-        ExtmMsgDto extmMsgDto = new ExtmMsgDto();
-        extmMsgDto.setAddress(orderExtm.getAddress());
-        extmMsgDto.setConsignee(orderExtm.getConsignee());
-        extmMsgDto.setPhoneMob(orderExtm.getPhoneMob());
-        
-        DeliveryInfo deliveryInfo =  new DeliveryInfo();
-        deliveryInfo.setAddress(orderExtm.getRegionName()+orderExtm.getAddress());
-        deliveryInfo.setConsignee(orderExtm.getConsignee());
-        deliveryInfo.setTel(orderExtm.getPhoneMob());
-        
-        orderInfoDto.setCreateTime(SDF.format(new Date((long)(order.getAddTime())*1000)));
-        orderInfoDto.setGoodsAmount(order.getOrderAmount());
-        orderInfoDto.setTaoOrderSn(order.getTaoOrderSn());
-        orderInfoDto.setOrderStatus(order.getStatus());
-        orderInfoDto.setShippingFee(order.getShippingFee());
-        
-       
-        orderInfoDto.setSpecList(specList);
-        orderInfoDto.setDeliveryInfo(deliveryInfo);
-        if(order.getStatus() ==OrderStatusEnum.STATUS_REFUSED.getId()){
-            OrderRefuse orderRefuse =  orderRefuseDao.findByTaoOrderSn(order.getTaoOrderSn());
-           orderInfoDto.setRejectReason(orderRefuse.getRefuseReason());
-           orderInfoDto.setRejectTime(DateUtils.date2DateStr(orderRefuse.getRefuseTime()));
-        }else   if(order.getStatus() ==OrderStatusEnum.STATUS_CANCELED.getId()){
-            List<OrderAction> orderActions =  orderActionDao.findByTaoOrderSnAndAction(order.getTaoOrderSn(),OrderStatusEnum.STATUS_CANCELED.getId());
-            OrderAction orderAction =orderActions.get(0);
-            orderInfoDto.setCancelTime(DateUtils.date2DateStr2(orderAction.getActionTime()));
-            //添加退货状态
-            List<OrderReturn> returns =  orderRDao.findByOrderSnMain(order.getOrderSnMain());
-            //good_status只要不是４　就是待退货
-            if(returns.get(0).getGoodsStatus()!=4){
-                orderInfoDto.setGoodsReturnStatus(1);
-            }else{
-                orderInfoDto.setGoodsReturnStatus(2);
-            }
-        }else if(order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()){
-            orderInfoDto.setFinishTime(SDF.format(new Date((long)(order.getFinishedTime())*1000)));
-        }
-        oResultDto.setCode(200);
-        oResultDto.setResult(orderInfoDto);
-        return oResultDto;
+       return OrderInfoService.getOrderGoodsInfo(orderNo);
     }
 
     @Override
@@ -2505,74 +2447,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OResponseDto<String> refuseOrder(String taoOrderSn,String userName,int refuseId,String refuseReason) {
-        Order order = orderDao.findByTaoOrderSn(taoOrderSn);
-        
-        if(order==null || order.getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()){
-            return new OResponseDto<String>(500, "失败");
-        }
-        orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_REFUSED.getId());
-        
-        OrderAction orderAction =  new OrderAction();
-        orderAction.setAction(OrderStatusEnum.STATUS_REFUSED.getId());
-        orderAction.setOrderSnMain(order.getOrderSnMain());
-        orderAction.setTaoOrderSn(taoOrderSn);
-        orderAction.setOrderId(order.getOrderId());
-        orderAction.setActor(userName);
-        orderAction.setActionTime(new Date());
-        orderAction.setNotes("拒收");
-        orderActionDao.save(orderAction);
-        
-        OrderRefuse orderRefuse = new OrderRefuse();
-        //拒绝原因是其他 refuseId=0
-        if(refuseId ==0){
-            orderRefuse.setRefuseId(0);
-            orderRefuse.setRefuseReason(refuseReason);
-            orderRefuse.setTaoOrderSn(taoOrderSn);
-        }else{
-          
-            orderRefuse.setRefuseId(1);
-            orderRefuse.setRefuseReason(refuseReason);
-            orderRefuse.setTaoOrderSn(taoOrderSn);
-        }
-        orderRefuseDao.save(orderRefuse);
-        
-        
-        OrderExtm orderExm = orderExtmDao.findByOrderId(order.getOrderId());
-        if(orderExm!=null && !StringUtils.isEmpty(orderExm.getPhoneMob())){
-            try {
-                String[] mobiles = {orderExm.getPhoneMob()};
-                SingletonSmsClient.getClient().sendSMS(mobiles, String.format(ShortMessage.REFUSE_MESSAGE_MODEL, 
-                        order.getTaoOrderSn()));
-            } catch (RemoteException e) {
-            }
-        }
-           
-        //退款暂时不考虑 直接设置拒收状态
-//        OrderReturn orderReturn =  new OrderReturn();
-//        orderReturn.setOrderId(order.getOrderId());
-//        orderReturn.setOrderSnMain(order.getOrderSnMain());
-//        orderReturn.setBuyerId(order.getBuyerId());
-//        orderReturn.setSellerId(order.getSellerId());
-//        orderReturn.setReturnAmount(order.getGoodsAmount()+orderReturn.getShippingFee());
-//        orderReturn.setShippingFee(order.getShippingFee());
-//        orderReturn.setActor(userName);
-//        orderReturn.setAddTime(SDF.format(new Date()));
-//        orderReturn.setOrderType(0);
-//        orderReturn.setGoodsStatus(3);
-//        orderReturn.setRepayWay(0);//TODO 怎么返回? 1原路返回 0虚拟账户
-//        orderRDao.save(orderReturn);
-//        
-//       List<OrderGoods> orderGoodsList =  orderGoodsDao.findByOrderId(order.getOrderId());
-//       for(OrderGoods orderGoods :orderGoodsList){
-//           OrderGoodsR orderGoodsR =  new OrderGoodsR();
-//           orderGoodsR.setOrderIdR(orderReturn.getOrderIdR());
-//           orderGoodsR.setOrderId(order.getOrderId());
-//           orderGoodsR.setRecId(orderGoods.getRecId());
-//           orderGoodsRDao.save(orderGoodsR);
-//       }
-    
-        
-        return new OResponseDto<String>(200, "成功");
+        return orderOperationProcessor.refuseOrder(taoOrderSn, userName, refuseId, refuseReason);
     }
 
     @Override

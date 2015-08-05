@@ -1,5 +1,6 @@
 package com.loukou.order.service.impl;
 
+import org.joda.time.DateTime;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -11,6 +12,7 @@ import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderInfoDto;
 import com.loukou.order.service.resp.dto.OrderListInfoDto;
 import com.loukou.order.service.resp.dto.RefuseReasonListDto;
+import com.loukou.order.service.util.DateUtils;
 
 public class OrderServiceOperationImpTest extends AbstractTestObject {
 
@@ -61,5 +63,13 @@ public class OrderServiceOperationImpTest extends AbstractTestObject {
         param.setStoreId(18017);
         OResponseDto<OrderListInfoDto> list  = orderService.getOrderListInfo(param);
         System.out.println(list.getResult().getTotalNum());
+    }
+    @Test
+    public void testDate(){
+        String t = "2015-08-27";
+       System.out.println(DateUtils.str2Date(t).getTime()/1000) ;
+       DateTime datetime  = DateTime.parse(t);
+       datetime.plusDays(1);
+       
     }
 }
