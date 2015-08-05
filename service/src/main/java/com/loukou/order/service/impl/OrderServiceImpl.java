@@ -1318,13 +1318,15 @@ public class OrderServiceImpl implements OrderService {
 						|| orderAction.getAction() == OrderActionTypeEnum.TYPE_CHOOSE_PAY.getId() 
 						|| orderAction.getAction() == OrderActionTypeEnum.TYPE_INSPECTED.getId())) {
 					ShippingListDto shippingListDto = new ShippingListDto();
-//					if(StringUtils.equals(orderAction.getTaoOrderSn(), taoOrderSn)) {
-						shippingListDto.setCreateTime(orderAction.getTimestamp()
-								.toString());
-						shippingListDto.setDescription(orderAction.getNotes());
-						shippingListDto.setTaoOrderSn(taoOrderSn);
-						shippingList.add(shippingListDto);
-//					}
+					if(orderAction.getTaoOrderSn() != null || StringUtils.isNotBlank(orderAction.getTaoOrderSn())) {
+						if(StringUtils.equals(orderAction.getTaoOrderSn(), taoOrderSn)) {
+							shippingListDto.setCreateTime(orderAction.getTimestamp()
+									.toString());
+							shippingListDto.setDescription(orderAction.getNotes());
+							shippingListDto.setTaoOrderSn(taoOrderSn);
+							shippingList.add(shippingListDto);
+						}
+					}
 				}
 			}
 		}
@@ -1332,7 +1334,7 @@ public class OrderServiceImpl implements OrderService {
 		resultDto.setShippingList(shippingList);
 		resp.setResult(resultDto);
 		resp.setCode(200);
-		resp.setInnerCode(0);//内部调用需要
+		resp.setInnerCode(0);//内部调用需要 FIXME
 		return resp;
 	}
 
