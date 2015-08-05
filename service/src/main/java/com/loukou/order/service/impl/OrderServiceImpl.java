@@ -470,7 +470,12 @@ public class OrderServiceImpl implements OrderService {
 		baseDto.setShippingFee(order.getShippingFee());// 订单运费
 		baseDto.setPackageStatus(ReturnStatusEnum.parseType(order.getStatus()).getComment());// 包裹的状态
 		baseDto.setShipping(getShippingMsg(order));
-		baseDto.setArrivalCode(order.getShippingNo());
+		if(order.getShippingNo() == null) {
+			baseDto.setArrivalCode("");
+		} else {
+			baseDto.setArrivalCode(order.getShippingNo());
+		}
+		
 		baseDto.setDiscount(order.getDiscount());
 		baseDto.setIsOrder(BaseDtoIsOrderType.NO);
 		String owerphone = "";
