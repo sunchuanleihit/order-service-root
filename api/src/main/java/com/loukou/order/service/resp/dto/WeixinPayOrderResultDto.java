@@ -15,6 +15,7 @@ public class WeixinPayOrderResultDto implements Serializable {
 	private String nonceStr = "";// 随机串，防重发、
 	private String timestamp = "";// 时间戳，防重发、
 	private String sign = ""; // 商家根据微信开放平台文档对数据做的签名
+	private double needPay = 0.0; //需要支付的金额
 	public String getAppId() {
 		return appId;
 	}
@@ -56,5 +57,11 @@ public class WeixinPayOrderResultDto implements Serializable {
 	}
 	public void setPackageX(String packageX) {
 		this.packageX = packageX;
+	}
+	public double getNeedPay() {
+		return needPay;
+	}
+	public void setNeedPay(double needPay) {
+		this.needPay = needPay;
 	}
 }
