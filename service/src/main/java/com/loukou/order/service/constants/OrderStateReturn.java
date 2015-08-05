@@ -1,6 +1,6 @@
 package com.loukou.order.service.constants;
 
-public class OrderReturnStatus {
+public class OrderStateReturn {
 
 	public static String UN_PAY = "未付款";
 	
