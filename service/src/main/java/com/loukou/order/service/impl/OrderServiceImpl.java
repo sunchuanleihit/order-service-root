@@ -1344,14 +1344,14 @@ public class OrderServiceImpl implements OrderService {
 					
 					if(orderAction.getTaoOrderSn() != null || StringUtils.isNotBlank(orderAction.getTaoOrderSn())) {
 						if(StringUtils.equals(orderAction.getTaoOrderSn(), taoOrderSn)) {
-							shippingListDto.setCreateTime(orderAction.getTimestamp()
+							shippingListDto.setCreatTime(orderAction.getTimestamp()
 									.toString());
 							shippingListDto.setDescription(orderAction.getNotes());
 							shippingListDto.setTaoOrderSn(taoOrderSn);
 							shippingList.add(shippingListDto);
 						}
 					} else {
-						shippingListDto.setCreateTime(DateUtils.date2DateStr2(orderAction.getTimestamp()));
+						shippingListDto.setCreatTime(DateUtils.date2DateStr2(orderAction.getTimestamp()));
 						shippingListDto.setDescription(orderAction.getNotes());
 						shippingListDto.setTaoOrderSn(taoOrderSn);
 						shippingList.add(shippingListDto);
