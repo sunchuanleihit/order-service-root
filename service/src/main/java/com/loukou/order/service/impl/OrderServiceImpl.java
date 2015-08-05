@@ -2338,6 +2338,10 @@ public class OrderServiceImpl implements OrderService {
 
 		return resp;
 	}
+	
+	/**
+	 * 订单详情
+	 */
     @Override
     public OResponseDto<OrderInfoDto> getOrderGoodsInfo(String orderNo) {
        return OrderInfoService.getOrderGoodsInfo(orderNo);
@@ -2398,8 +2402,11 @@ public class OrderServiceImpl implements OrderService {
             }
             orderInfoDto.setSpecList(specList);
             //指定送达时间
-            orderInfoDto.setNeedShippingTime(DateUtils.date2DateStr(order.getNeedShiptime())+order.getNeedShiptimeSlot());
-            
+            orderInfoDto.setNeedShippingTime(DateUtils.date2DateStr(order.getNeedShiptime())+" "+order.getNeedShiptimeSlot());
+           //是否时预售商品
+            if(order.getType() !=OrderTypeEnums.TYPE_BOOKING.getType()){
+                orderInfoDto.setIsBooking(0);
+            }
            if(order.getStatus() == OrderStatusEnum.STATUS_REVIEWED.getId()){
                
            }else if(order.getStatus() ==OrderStatusEnum.STATUS_CANCELED.getId()){
@@ -2418,7 +2425,21 @@ public class OrderServiceImpl implements OrderService {
                }
             
            }else if(order.getStatus() == OrderStatusEnum.STATUS_14.getId()) {
-                   
+               List<OrderExtm> orderExtmList = orderExtmDao.findByOrderSnMain(order.getOrderSnMain());
+               ExtmMsgDto extmMsgDto = new ExtmMsgDto();
+               DeliveryInfo deliveryInfo = new DeliveryInfo();
+               if (!CollectionUtils.isEmpty(orderExtmList)) {
+                   OrderExtm orderExtm = orderExtmList.get(0);
+                   // 封装收货人等信息
+                   extmMsgDto.setAddress(orderExtm.getAddress());
+                   extmMsgDto.setConsignee(orderExtm.getConsignee());
+                   extmMsgDto.setPhoneMob(orderExtm.getPhoneMob());
+
+                   deliveryInfo.setAddress(orderExtm.getRegionName() + orderExtm.getAddress());
+                   deliveryInfo.setConsignee(orderExtm.getConsignee());
+                   deliveryInfo.setTel(orderExtm.getPhoneMob());
+               }
+               orderInfoDto.setDeliveryInfo(deliveryInfo);
            }else if(order.getStatus() == OrderStatusEnum.STATUS_REFUSED.getId()){
                OrderRefuse orderRefuse =  orderRefuseDao.findByTaoOrderSn(order.getTaoOrderSn());
                if(orderRefuse != null){
@@ -2440,21 +2461,30 @@ public class OrderServiceImpl implements OrderService {
         return new OResponseDto<OrderListInfoDto>(200,orderListInfoDto);
     }
 
+    /**
+     * 打包完成
+     */
     @Override
     public OResponseDto<String> finishPackagingOrder(String taoOrderSn,String userName,int senderId) {
         return orderOperationProcessor.finishPackagingOrder(taoOrderSn, userName, senderId);
     }
-
+    /**
+     * 拒单
+     */
     @Override
     public OResponseDto<String> refuseOrder(String taoOrderSn,String userName,int refuseId,String refuseReason) {
         return orderOperationProcessor.refuseOrder(taoOrderSn, userName, refuseId, refuseReason);
     }
-
+    /**
+     * 回单
+     */
     @Override
     public OResponseDto<String> confirmRevieveOrder(String taoOrderSn, String gps,String userName) {
          return orderOperationProcessor.confirmRevieveOrder(taoOrderSn, gps, userName);
     }
-
+    /**
+     * 预售到货
+     */
     @Override
     public OResponseDto<String> confirmBookOrder(String taoOrderSn,String userName) {
       return orderOperationProcessor.confirmBookOrder(taoOrderSn, userName);

@@ -1,7 +1,6 @@
 package com.loukou.order.service.resp.dto;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.List;
 
 public class OrderInfoDto  implements Serializable{
@@ -13,6 +12,7 @@ public class OrderInfoDto  implements Serializable{
     private Double goodsAmount; // 商品总金额
     private Double shippingFee; // 运费
     private String shippingNo; // 预售单物流单号
+    private int isBooking; //是否时预售  0表示非预售　1表示预售
     private String createTime; // 下单时间
     private String needShippingTime; //需要送达时间
     private String rejectTime; // 拒绝时间
@@ -119,13 +119,11 @@ public class OrderInfoDto  implements Serializable{
     public void setNeedShippingTime(String needShippingTime) {
         this.needShippingTime = needShippingTime;
     }
-    @Override
-    public String toString() {
-        return "OrderInfoDto [taoOrderSn=" + taoOrderSn + ", goodsAmount=" + goodsAmount + ", shippingFee="
-                + shippingFee + ", shippingNo=" + shippingNo + ", createTime=" + createTime + ", rejectTime="
-                + rejectTime + ", rejectReason=" + rejectReason + ", cancelTime=" + cancelTime + ", finishTime="
-                + finishTime + ", orderStatus=" + orderStatus + ", goodsReturnStatus=" + goodsReturnStatus
-                + ", moneyReturnStatus=" + moneyReturnStatus + ", deliveryInfo=" + deliveryInfo + ", specList="
-                + specList + "]";
+    public int getIsBooking() {
+        return isBooking;
     }
+    public void setIsBooking(int isBooking) {
+        this.isBooking = isBooking;
+    }
+  
 }

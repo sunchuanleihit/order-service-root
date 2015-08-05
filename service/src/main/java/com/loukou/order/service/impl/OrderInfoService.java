@@ -25,6 +25,7 @@ import com.loukou.order.service.entity.OrderGoods;
 import com.loukou.order.service.entity.OrderRefuse;
 import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.enums.OrderStatusEnum;
+import com.loukou.order.service.enums.OrderTypeEnums;
 import com.loukou.order.service.enums.ReturnGoodsStatus;
 import com.loukou.order.service.req.dto.OrderListParamDto;
 import com.loukou.order.service.resp.dto.DeliveryInfo;
@@ -77,6 +78,9 @@ public class OrderInfoService {
             spec.setSellPrice(good.getPricePurchase());
             specList.add(spec);
         }
+        if(order.getType() !=OrderTypeEnums.TYPE_BOOKING.getType()){
+            orderInfoDto.setIsBooking(0);
+        }
         // 实际上一个主单只有一个收货人
         List<OrderExtm> orderExtmList = orderExtmDao.findByOrderSnMain(order.getOrderSnMain());
         ExtmMsgDto extmMsgDto = new ExtmMsgDto();
@@ -101,11 +105,14 @@ public class OrderInfoService {
         orderInfoDto.setSpecList(specList);
         orderInfoDto.setDeliveryInfo(deliveryInfo);
 
+        
         // 各个状态需要加一些特殊字段
         if (order.getStatus() == OrderStatusEnum.STATUS_REFUSED.getId()) {
             OrderRefuse orderRefuse = orderRefuseDao.findByTaoOrderSn(order.getTaoOrderSn());
-            orderInfoDto.setRejectReason(orderRefuse.getRefuseReason());
-            orderInfoDto.setRejectTime(DateUtils.date2DateStr(orderRefuse.getRefuseTime()));
+            if(orderRefuse !=null){
+                orderInfoDto.setRejectReason(orderRefuse.getRefuseReason());
+                orderInfoDto.setRejectTime(DateUtils.date2DateStr(orderRefuse.getRefuseTime()));
+            }
         } else if (order.getStatus() == OrderStatusEnum.STATUS_CANCELED.getId()) {
             List<OrderAction> orderActions = orderActionDao.findByTaoOrderSnAndAction(order.getTaoOrderSn(),
                     OrderStatusEnum.STATUS_CANCELED.getId());
@@ -127,99 +134,5 @@ public class OrderInfoService {
         return oResultDto;
     }
 
-    public OResponseDto<OrderListInfoDto> getOrderListInfo(OrderListParamDto param) {
-        PageRequest pagenation = new PageRequest(param.getPageNum(), param.getPageSize());
-        List<String> types = new ArrayList<String>();
-        switch (param.getOrderType()) {
-        case 1:// 微仓
-            types.add("wei_wh");
-            types.add("wei_self");
-            break;
-        case 2:// 预售
-            types.add("booking");
-            break;
-        default:
-            types.add("wei_wh");
-            types.add("wei_self");
-            break;
-        }
-        Page<Order> orders;
-        if (param.getOrderStatus() == OrderStatusEnum.STATUS_FINISHED.getId()
-                && !StringUtils.isEmpty(param.getFinishedTime())) {
-            long finishedTime = DateUtils.str2Date(param.getFinishedTime()).getTime();
-            orders = orderDao.findBySellerIdAndStatusAndFinishedTimeAndTypeIn(param.getStoreId(),
-                    param.getOrderStatus(), (int) (finishedTime / 1000), types, pagenation);
-        } else {
-            orders = orderDao.findBySellerIdAndStatusAndTypeIn(param.getStoreId(), param.getOrderStatus(), types,
-                    pagenation);
-        }
-        OrderListInfoDto orderListInfoDto = new OrderListInfoDto();
-        List<OrderInfoDto> orderInfoDtos = new ArrayList<OrderInfoDto>();
-
-        if (CollectionUtils.isEmpty(orders.getContent())) {
-            orderListInfoDto.setOrders(orderInfoDtos);
-            orderListInfoDto.setStoreId(param.getStoreId());
-            orderListInfoDto.setTotalNum(orders.getTotalElements());
-            return new OResponseDto<OrderListInfoDto>(200, orderListInfoDto);
-        }
-        for (Order order : orders.getContent()) {
-            OrderInfoDto orderInfoDto = new OrderInfoDto();
-            orderInfoDto.setCreateTime(SDF.format(new Date((long) (order.getAddTime()) * 1000)));
-            orderInfoDto.setGoodsAmount(order.getOrderAmount());
-            orderInfoDto.setTaoOrderSn(order.getTaoOrderSn());
-            orderInfoDto.setOrderStatus(order.getStatus());
-
-            List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
-            List<SpecDto> specList = new ArrayList<SpecDto>();
-            for (OrderGoods good : goods) {
-                SpecDto spec = new SpecDto();
-                spec.setGoodsInfo(new GoodsInfoDto(good.getGoodsId(), good.getGoodsName(), good.getGoodsImage()));
-                spec.setSpecId(good.getSpecId());
-                spec.setBuyNum(good.getQuantity());
-                specList.add(spec);
-            }
-            orderInfoDto.setSpecList(specList);
-            // 指定送达时间
-            orderInfoDto.setNeedShippingTime(DateUtils.date2DateStr(order.getNeedShiptime())
-                    + order.getNeedShiptimeSlot());
-
-            if (order.getStatus() == OrderStatusEnum.STATUS_REVIEWED.getId()) {
-
-            } else if (order.getStatus() == OrderStatusEnum.STATUS_CANCELED.getId()) {
-                List<OrderAction> orderActions = orderActionDao.findByTaoOrderSnAndAction(order.getTaoOrderSn(),
-                        OrderStatusEnum.STATUS_CANCELED.getId());
-                if (!CollectionUtils.isEmpty(orderActions)) {
-                    OrderAction orderAction = orderActions.get(0);
-                    orderInfoDto.setCancelTime(DateUtils.date2DateStr2(orderAction.getActionTime()));
-                    // 添加退货状态
-                    List<OrderReturn> returns = orderRDao.findByOrderSnMain(order.getOrderSnMain());
-                    // good_status只要不是４　就是待退货
-                    if (returns.get(0).getGoodsStatus() != 4) {
-                        orderInfoDto.setGoodsReturnStatus(1);
-                    } else {
-                        orderInfoDto.setGoodsReturnStatus(2);
-                    }
-                }
-
-            } else if (order.getStatus() == OrderStatusEnum.STATUS_14.getId()) {
-
-            } else if (order.getStatus() == OrderStatusEnum.STATUS_REFUSED.getId()) {
-                OrderRefuse orderRefuse = orderRefuseDao.findByTaoOrderSn(order.getTaoOrderSn());
-                if (orderRefuse != null) {
-                    orderInfoDto.setRejectReason(orderRefuse.getRefuseReason());
-                    orderInfoDto.setRejectTime(DateUtils.date2DateStr(orderRefuse.getRefuseTime()));
-                }
-
-            } else if (order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
-                orderInfoDto.setFinishTime(DateUtils.date2DateStr2(new Date((long) (order.getFinishedTime()) * 1000)));
-            }
-
-            orderInfoDtos.add(orderInfoDto);
-        }
-        orderListInfoDto.setOrders(orderInfoDtos);
-        orderListInfoDto.setStoreId(param.getStoreId());
-        orderListInfoDto.setTotalNum(orders.getTotalElements());
-
-        return new OResponseDto<OrderListInfoDto>(200, orderListInfoDto);
-    }
+  
 }

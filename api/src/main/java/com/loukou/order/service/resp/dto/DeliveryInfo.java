@@ -8,18 +8,10 @@ public class DeliveryInfo implements Serializable {
      * 
      */
     private static final long serialVersionUID = -4756721764266897267L;
-    private Date time; // 配送时间
-    private String address; // 配送地址　　区域＋地址
-    private String consignee; // 收货人
-    private String tel;
+    private String address =""; // 配送地址　　区域＋地址
+    private String consignee =""; // 收货人
+    private String tel ="";
 
-    public Date getTime() {
-        return time;
-    }
-
-    public void setTime(Date time) {
-        this.time = time;
-    }
 
     public String getAddress() {
         return address;
@@ -45,9 +37,4 @@ public class DeliveryInfo implements Serializable {
         this.tel = tel;
     }
 
-    @Override
-    public String toString() {
-        return "DeliveryInfo [time=" + time + ", address=" + address + ", consignee=" + consignee + ", tel=" + tel
-                + "]";
-    }
 }
