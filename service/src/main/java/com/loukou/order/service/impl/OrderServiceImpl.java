@@ -128,6 +128,7 @@ import com.serverstarted.goods.service.api.GoodsService;
 import com.serverstarted.goods.service.api.GoodsSpecService;
 import com.serverstarted.goods.service.resp.dto.GoodsRespDto;
 import com.serverstarted.goods.service.resp.dto.GoodsSpecRespDto;
+import com.serverstarted.goods.service.resp.dto.GoodsStockInfoRespDto;
 import com.serverstarted.store.service.api.StoreService;
 import com.serverstarted.store.service.resp.dto.StoreRespDto;
 import com.serverstarted.user.api.UserService;
@@ -1054,7 +1055,22 @@ public class OrderServiceImpl implements OrderService {
 			List<OrderGoods> orderGoodsList = Lists.newArrayList();
 			double priceDiscount = 0.0; // 商品折扣后的价格
 			for (CartGoodsRespDto g : pl.getGoodsList()) {
-				// FIXME 为什么记录订单商品的时候，还要转成标准规格的商品？
+				// 为了兼容老系统，如果是打包商品(整箱购) 订单商品要转成标准规格的商品
+				GoodsStockInfoRespDto info = goodsSpecService.getGoodsStockInfo(g.getGoodsId(), g.getSpecId());
+				if (info.getStockSpecId() != g.getSpecId()) {
+					// 整箱购商品，用标准规格的商品来记录
+					int stockBase = info.getStockBase();
+					
+					GoodsSpecRespDto goodsSpec = goodsSpecService.get(info.getStockSpecId());
+					g.setSpecId(goodsSpec.getSpecId());
+					g.setSpecName(goodsSpec.getSpecOne());
+					g.setPrice(DoubleUtils.div(g.getPrice(), stockBase, 8));
+					g.setAmount(g.getAmount() * stockBase);
+					g.setTaosku(goodsSpec.getTaosku());
+					g.setBn(goodsSpec.getBn());
+				}
+				
+				
 				priceDiscount = g.getPrice();
 				if (discount > 0) {
 					// 单个商品折扣, priceDiscount = price -
