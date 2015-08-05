@@ -2,7 +2,7 @@ package com.loukou.order.service.constants;
 
 public class OrderReturnStatus {
 
-	public static String UN_PAY = "未支付";
+	public static String UN_PAY = "未付款";
 	
 	public static String TO_RECIEVE = "待收货";
 	

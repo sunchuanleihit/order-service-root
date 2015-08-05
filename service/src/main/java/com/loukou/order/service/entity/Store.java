@@ -11,55 +11,54 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "tcz_store")
 public class Store {
-	
+
 	@Id
 	@GeneratedValue
 	@Column(name = "store_id")
 	private int storeId;
 
 	@Column(name = "store_name")
-	private String storeName="";
-	
+	private String storeName = "";
+
 	@Column(name = "store_taotype")
 	private int storeTaotype = 0;
 
 	@Column(name = "owner_name")
-	private String ownerName="";
-	
+	private String ownerName = "";
+
 	@Column(name = "owner_card")
-	private String ownerCard="";
-	
+	private String ownerCard = "";
+
 	@Column(name = "owner_tel")
-	private String ownerTel="";
-	
+	private String ownerTel = "";
+
 	@Column(name = "owner_mob")
-	private String ownerMob="";
-	
+	private String ownerMob = "";
+
 	@Column(name = "sell_site")
 	private String sellSite = "";
-	
+
 	@Column(name = "store_type")
-	private String storeType="";
-	
+	private String storeType = "";
+
 	@Column(name = "last_update")
-	private int lastUpdate = (int)(new Date().getTime()/1000);
-	
+	private int lastUpdate = (int) (new Date().getTime() / 1000);
+
 	@Column(name = "state")
 	private int status = 0;
-	
+
 	@Column(name = "close_reason")
 	private String closeReason = "";
-	
+
 	@Column(name = "freight")
 	private int freight = 0;
-	
+
 	@Column(name = "store_logo")
 	private String storeLogo = "";
-	
+
 	@Column(name = "tel_business")
 	private String telBusiness = "";
-	
-	
+
 	public int getStoreId() {
 		return storeId;
 	}
@@ -67,7 +66,7 @@ public class Store {
 	public void setStoreId(int storeId) {
 		this.storeId = storeId;
 	}
-	
+
 	public String getStoreName() {
 		return storeName;
 	}
@@ -115,6 +114,7 @@ public class Store {
 	public void setLastUpdate(int lastUpdate) {
 		this.lastUpdate = lastUpdate;
 	}
+
 	public String getStoreType() {
 		return storeType;
 	}
@@ -178,5 +178,5 @@ public class Store {
 	public void setOwnerTel(String ownerTel) {
 		this.ownerTel = ownerTel;
 	}
-	
+
 }

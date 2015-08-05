@@ -19,50 +19,50 @@ public class OrderAction {
 	 * 0.下单 3.审单 5.取货 14.发货 15.回单 20.选择支付方式
 	 */
 	@Column(name = "action")
-	private int action;
+	private int action = 0;
 	
 	/*
 	 * 主单号
 	 * 如141107091685349
 	 */
 	@Column(name = "order_sn_main")
-	private String orderSnMain;
+	private String orderSnMain = "";
 
 	/*
 	 * 包裹单号
 	 */
 	@Column(name = "tao_order_sn")
-	private String taoOrderSn;
+	private String taoOrderSn = "";
 
 	/*
 	 * 子订单号
 	 */
 	@Column(name = "order_id")
-	private Integer orderId;
+	private Integer orderId = 0;
 	
 	/*
 	 * 操作人
 	 */
 	@Column(name = "actor")
-	private String actor;
+	private String actor = "";
 
 	/*
 	 * 操作时间
 	 */
 	@Column(name = "action_time")
-	private Date actionTime;
+	private Date actionTime = new Date();
 
 	/*
 	 * 操作说明
 	 */
 	@Column(name = "notes")
-	private String notes;
+	private String notes = "";
 
 	/*
 	 * 记录插入时间
 	 */
 	@Column(name = "timestamp")
-	private Date timestamp;
+	private Date timestamp = new Date();
 
 	public int getId() {
 		return id;

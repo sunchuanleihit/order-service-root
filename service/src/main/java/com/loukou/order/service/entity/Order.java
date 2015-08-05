@@ -23,28 +23,28 @@ public class Order {
 	 * 如1431056886
 	 */
 	@Column(name = "order_sn")
-	private String orderSn;
+	private String orderSn = "";
 	
 	/*
 	 * 主单号
 	 * 如141107091685349
 	 */
 	@Column(name = "order_sn_main")
-	private String orderSnMain;
+	private String orderSnMain = "";
 	
 	/*
 	 * 包裹单号
 	 * 如141107091685349-2-1 
 	 */
 	@Column(name = "tao_order_sn")
-	private String taoOrderSn;
+	private String taoOrderSn = "";
 	
 	/*
 	 * material=普通商品 service=服务 3-话费充值
 	 * 对cvs都是普通商品
 	 */
 	@Column(name = "type")
-	private String type;
+	private String type = "";
 	
 	/*
 	 * 没用，留空字符串，not null
@@ -58,45 +58,45 @@ public class Order {
 	 * 通过goods表关联到store_id
 	 */
 	@Column(name = "seller_id")
-	private int sellerId;
+	private int sellerId = 0;
 	
 	/*
 	 * 商家名
 	 */
 	@Column(name = "seller_name")
-	private String sellerName;
+	private String sellerName = "";
 	
 	/*
 	 * 对应member表user_id
 	 */
 	@Column(name = "buyer_id")
-	private int buyerId;
+	private int buyerId = 0;
 	
 	/*
 	 * 对应member表real_name
 	 */
 	@Column(name = "buyer_name")
-	private String buyerName;
+	private String buyerName = "";
 	
 	/*
 	 * 订单状态
 	 * 对cvs线下订单直接回单=15
 	 */
 	@Column(name = "status")
-	private int status;
+	private int status = 0;
 	
 	/*
 	 * 下单时间
 	 */
 	@Column(name = "add_time")
-	private Integer addTime;
+	private Integer addTime = 0;
 
 	/*
 	 * 1货到付款2在线支付3建行员工支付
 	 * 对cvs来说固定1
 	 */
 	@Column(name = "pay_type")
-	private int payType;
+	private int payType = 0;
 
 	/*
 	 * 支付方式，payment表中payment_id
@@ -104,28 +104,28 @@ public class Order {
 	 * 对cvs来说固定现金支付=1
 	 */
 	@Column(name = "pay_id")
-	private int payId;
+	private int payId = 0;
 	
 	/*
 	 * 支付方式名称，对应pay_id
 	 * payment表中payment_name
 	 */
 	@Column(name = "pay_name")
-	private String payName;
+	private String payName = "";
 	
 	/*
 	 * 支付状态，0未付款1已付款2部分付款
 	 * 对cvs来说固定1
 	 */
 	@Column(name = "pay_status")
-	private int payStatus;
+	private int payStatus = 0;
 
 	/*
 	 * 付款时间
 	 * 对cvs来说是下单时间
 	 */
 	@Column(name = "pay_time")
-	private Integer payTime;
+	private Integer payTime = 0;
 
 	/*
 	 * 对cvs来说留空字符串，not null
@@ -145,14 +145,14 @@ public class Order {
 	 * 对cvs来说留空，null
 	 */
 	@Column(name = "invoice_no")
-	private String invoiceNo;
+	private String invoiceNo = "";
 
 	/*
 	 * 0未开票1已开票2已取票
 	 * 对cvs来说固定0
 	 */
 	@Column(name = "invoice_status")
-	private int invoiceStatus;
+	private int invoiceStatus = 0;
 
 	/*
 	 * 开票时间
@@ -173,82 +173,82 @@ public class Order {
 	 * 对特价商品是特价后价格
 	 */
 	@Column(name = "goods_amount")
-	private double goodsAmount;
+	private double goodsAmount = 0.0;
 
 	/*
 	 * 折扣价格
 	 * 当前包括优惠券+满减
 	 */
 	@Column(name = "discount")
-	private double discount;
+	private double discount = 0.0;
 
 	/*
 	 * 订单金额（商品金额-折扣金额），即应付金额
 	 */
 	@Column(name = "order_amount")
-	private double orderAmount;
+	private double orderAmount = 0.0;
 
 	/*
 	 * 已经支付的金额
 	 * 对cvs来说等于orderAmount
 	 */
 	@Column(name = "order_payed")
-	private double orderPayed;
+	private double orderPayed = 0.0;
 
 	/*
 	 * 0不要开票，1需要开票，2发送开票提醒 3.需要开增票
 	 * 对cvs来说固定=0
 	 */
 	@Column(name = "need_invoice")
-	private int needInvoice;
+	private int needInvoice = 0;
 	
 	/*
 	 * 发票类型，'1普票 2增票'
 	 * 
 	 */
 	@Column(name = "invoice_type")
-	private int invoiceType = 1;
+	private int invoiceType = 0;
 
 	/*
 	 * 发票抬头
 	 * 对cvs来说留空null
 	 */
 	@Column(name = "invoice_header")
-	private String invoiceHeader;
+	private String invoiceHeader = "";
 
 	/*
 	 * 期望配送时间
 	 * 对cvs留空null
 	 */
 	@Column(name = "need_shiptime")
-	private Date needShiptime;
+	private Date needShiptime = new Date();
 
 	/*
 	 * 期望送货时间段
 	 * 对cvs留空null
 	 */
 	@Column(name = "need_shiptime_slot")
-	private String needShiptimeSlot;
+	private String needShiptimeSlot = "";
 
 	/*
 	 * 评价状态
 	 * 对cvs来说=0
 	 */
 	@Column(name = "evaluation_status")
-	private int evaluationStatus;
+	private int evaluationStatus = 0;
 
 	/*
 	 * 评价时间
 	 * 对cvs留空=0
 	 */
 	@Column(name = "evaluation_time")
-	private int evaluationTime;
+	private int evaluationTime = 0;
 
 	/*
 	 * 对cvs=0
 	 */
 	@Column(name = "anonymous")
-	private int anonymous;
+	private int anonymous = 0;
 
 	/*
 	 * 商家留言
@@ -261,28 +261,28 @@ public class Order {
 	 * 对cvs=0
 	 */
 	@Column(name = "pay_alter")
-	private int payAlter;
+	private int payAlter = 0;
 
 	/*
 	 * 订单内容传输：0未传输1已传输
 	 * 对cvs插入时=0
 	 */
 	@Column(name = "mt_flg")
-	private int mtFlg;
+	private int mtFlg = 0;
 
 	/*
 	 * 0 未加入对账单 1 已加入对账单
 	 * 对cvs=0
 	 */
 	@Column(name = "statement_status")
-	private int statementStatus;
+	private int statementStatus = 0;
 
 	/*
 	 * 订单来源
 	 * 对cvs=50
 	 */
 	@Column(name = "source")
-	private int source;
+	private int source = 0;
 	
 	@Column(name = "sell_site")
 	private String sellSite = "";
@@ -292,96 +292,96 @@ public class Order {
 	 * 对cvs=1？
 	 */
 	@Column(name = "shipping_id")
-	private int shippingId;
+	private int shippingId = 0;
 
 	/*
 	 * 物流费
 	 * 对cvs=0
 	 */
 	@Column(name = "shipping_fee")
-	private double shippingFee;
+	private double shippingFee = 0.0;
 
 	/*
 	 * 使用优惠券号
 	 * 对cvs留空字符串
 	 */
 	@Column(name = "use_coupon_no")
-	private String useCouponNo;
+	private String useCouponNo = "";
 
 	/*
 	 * 优惠券金额
 	 * 对cvs暂时为0
 	 */
 	@Column(name = "use_coupon_value")
-	private double useCouponValue;
+	private double useCouponValue = 0.0;
 
 	/*
 	 * 自动生成的时间戳
 	 * 留空null
 	 */
 	@Column(name = "timestamp")
-	private Date timestamp;
+	private Date timestamp = new Date();
 
 	/*
 	 * 对cvs留空null
 	 */
 	@Column(name = "shipping_company")
-	private String shippingCompany;
+	private String shippingCompany = "";
 
 	/*
 	 * 对cvs留空null
 	 */
 	@Column(name = "shipping_no")
-	private String shippingNo;
+	private String shippingNo = "";
 
 	/*
 	 * 是否发送过确认收货短信 0 否 1是
 	 * 对cvs=0
 	 */
 	@Column(name = "send_receipt_msg")
-	private int sendReceiptMsg;
+	private int sendReceiptMsg = 0;
 
 	/*
 	 * 是否发送过发货提供短信 0-否 1-是
 	 * 对cvs=0
 	 */
 	@Column(name = "send_deliver_msg")
-	private int sendDeliverMsg;
+	private int sendDeliverMsg = 0;
 
 	/*
 	 * 手机端标识
 	 * 对cvs留空null
 	 */
 	@Column(name = "imei")
-	private String imei;
+	private String imei = "";
 
 	/*
 	 * 商家留言备注
 	 * 对cvs留空null
 	 */
 	@Column(name = "seller_memo")
-	private String sellerMemo;
+	private String sellerMemo = "";
 
 	/*
 	 * 合作网站订单号
 	 * 对cvs留空null
 	 */
 	@Column(name = "api_order_sn")
-	private String apiOrderSn;
+	private String apiOrderSn = "";
 
 	/*
 	 * 0-都未打印,1-面单已打印,2-订单已打印,3-面单订单都已打印
 	 * 对cvs=0?
 	 */
 	@Column(name = "printed")
-	private int printed;
+	private int printed = 0;
 
 	/*
 	 * 用户自行删除，0未删除,1已删除
 	 * 对cvs=0
 	 */
 	@Column(name = "is_del")
-	private int isDel;
+	private int isDel = 0;
 
 	public int getOrderId() {
 		return orderId;

@@ -16,121 +16,121 @@ public class OrderReturn {
 	private int orderIdR;
 
 	@Column(name = "order_id")
-	private Integer orderId;
+	private Integer orderId = 0;
 
 	/*
 	 * 主单号 如141107091685349
 	 */
 	@Column(name = "order_sn_main")
-	private String orderSnMain;
+	private String orderSnMain = "";
 
 	/*
 	 * 对应member表user_id
 	 */
 	@Column(name = "buyer_id")
-	private Integer buyerId;
+	private Integer buyerId = 0;
 
 	/*
 	 * 商家id，淘常州自营会细分 通过goods_spec关联到good_id 通过goods表关联到store_id
 	 */
 	@Column(name = "seller_id")
-	private Integer sellerId;
+	private Integer sellerId = 0;
 
 	/**
 	 * 退款金额(包含运费)
 	 */
 	@Column(name = "return_amount")
-	private Double returnAmount;
+	private Double returnAmount = 0.0;
 
 	/*
 	 * 物流费 对cvs=0
 	 */
 	@Column(name = "shipping_fee")
-	private Double shippingFee;
+	private Double shippingFee = 0.0;
 
 	/*
 	 * 操作人
 	 */
 	@Column(name = "actor")
-	private String actor;
+	private String actor = "";
 
 	/*
 	 * 下单时间
 	 */
 	@Column(name = "add_time")
-	private String addTime;
+	private String addTime = "";//FIXME
 
 	/*
 	 * 0商品订单1服务订单2jiazheng
 	 */
 	@Column(name = "goods_type")
-	private Integer goodsType;
+	private Integer goodsType = 0;
 
 	/*
 	 * 0退货订单1拒收订单2多付款退款 3退运费 4.客户赔偿 5其他退款,6客户自己取消订单退款 7:特殊退款
 	 */
 	@Column(name = "order_type")
-	private Integer orderType;
+	private Integer orderType = 0;
 
 	/*
 	 * 0正常1取消
 	 */
 	@Column(name = "order_status")
-	private Integer orderStatus;
+	private Integer orderStatus = 0;
 
 	/*
 	 * 0未取货1已指派2损耗3待退商家4已退商
 	 */
 	@Column(name = "goods_status")
-	private Integer goodsStatus;
+	private Integer goodsStatus = 0;
 
 	/*
 	 * 是否退款0未退款1已退款
 	 */
 	@Column(name = "refund_status")
-	private Integer refundStatus;
+	private Integer refundStatus = 0;
 
 	/*
 	 * 对账状态0未对账1已对账
 	 */
 	@Column(name = "statement_status")
-	private Integer statementStatus;
+	private Integer statementStatus = 0;
 
 	/*
 	 * 备注
 	 */
 	@Column(name = "postscript")
-	private String postscript;
+	private String postscript = "";
 
 	/*
 	 * 退款时间
 	 */
 	@Column(name = "repay_time")
-	private String repayTime;
+	private String repayTime = "";//FIXME
 
 	/*
 	 * 0未打印 1已打印
 	 */
 	@Column(name = "printed")
-	private Integer printed;
+	private Integer printed = 0;
 
 	/*
 	 * 消费码主键
 	 */
 	@Column(name = "con_id")
-	private Integer conId;
+	private Integer conId = 0;
 
 	/*
 	 * 1:超单 2:客户取消订单 3:退运费 4:客户赔偿 5:其它
 	 */
 	@Column(name = "reason")
-	private Integer reason;
+	private Integer reason = 0;
 
 	/*
 	 * 0虚拟账户1原路返回
 	 */
 	@Column(name = "repay_way")
-	private Integer repayWay;
+	private Integer repayWay = 0;
 
 	public int getOrderIdR() {
 		return orderIdR;

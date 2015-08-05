@@ -21,19 +21,19 @@ public class OrderGoods {
 	 * 订单号，order表order_id字段
 	 */
 	@Column(name = "order_id")
-	private int orderId;
+	private int orderId = 0;
 	
 	/*
 	 * 产品号，goods表goods_id字段
 	 */
 	@Column(name = "goods_id")
-	private int goodsId;
+	private int goodsId = 0;
 	
 	/*
 	 * 产品名，goods表goods_name字段
 	 */
 	@Column(name = "goods_name")
-	private String goodsName;
+	private String goodsName = "";
 	
 	/*
 	 * 商品号，goods_spec表spec_id字段
@@ -46,77 +46,77 @@ public class OrderGoods {
 	 * 
 	 */
 	@Column(name = "store_id")
-	private int storeId;
+	private int storeId = 0;
 	
 	/*
 	 * goods_spec表spec_value_1+spec_value_2
 	 */
 	@Column(name = "specification")
-	private String specification;
+	private String specification = "";
 	
 	/*
 	 * 商家结算价，即原价
 	 */
 	@Column(name = "price")
-	private double price;
+	private double price = 0.0;
 	
 	/*
 	 * 用户应付价格
 	 */
 	@Column(name = "price_purchase")
-	private double pricePurchase;
+	private double pricePurchase = 0.0;
 	
 	/*
 	 * 分摊优惠券后价格
 	 */
 	@Column(name = "price_discount")
-	private double priceDiscount;
+	private double priceDiscount = 0.0;
 	
 	/*
 	 * 购买数量
 	 */
 	@Column(name = "quantity")
-	private int quantity;
+	private int quantity = 0;
 	
 	/*
 	 * 0初态1提货2已对账
 	 * 对cvs=0？
 	 */
 	@Column(name = "goods_status")
-	private int goodsStatus;
+	private int goodsStatus = 0;
 
 	/*
 	 * 赠送积分
 	 * 对cvs=0
 	 */
 	@Column(name = "points")
-	private int points;
+	private int points = 0;
 
 	/*
 	 * 1正常商品2特价商品3积分换购4组合购买 5快餐 6批发 7赠品 8超值选购 9满减 11量贩团 12:12580会员价商品
 	 * 对cvs暂时关注1+2
 	 */
 	@Column(name = "pro_type")
-	private int proType;
+	private int proType = 0;
 	
 	/*
 	 * 收取佣金
 	 * 对cvs=0
 	 */
 	@Column(name = "commission")
-	private double commission;
+	private double commission = 0.0;
 	
 	/*
 	 * 对cvs来说固定1
 	 */
 	@Column(name = "is_valid")
-	private int isValid;
+	private int isValid = 0;
 
 	/*
 	 * 对cvs=0
 	 */
 	@Column(name = "evaluation")
-	private int evaluation;
+	private int evaluation = 0;
 
 	/*
 	 * 对cvs来说留空字符串，not null
@@ -128,14 +128,14 @@ public class OrderGoods {
 	 * 对cvs=0
 	 */
 	@Column(name = "credit_value")
-	private int creditValue;
+	private int creditValue = 0;
 
 	/*
 	 * 商品图片
 	 * 来自goods_image表
 	 */
 	@Column(name = "goods_image")
-	private String goodsImage;
+	private String goodsImage = "";
 
 	/*
 	 * 组合购买的组合ID 或套餐ID
@@ -143,39 +143,39 @@ public class OrderGoods {
 	 * 对cvs=0
 	 */
 	@Column(name = "package_id")
-	private int packageId;
+	private int packageId = 0;
 
 	/*
 	 * 来自goods_spec
 	 */
 	@Column(name = "taosku")
-	private String taosku;
+	private String taosku = "";
 	
 	/*
 	 * 条形码
 	 * 来自goods_spec
 	 */
 	@Column(name = "bn")
-	private String bn;
+	private String bn = "";
 
 	/*
 	 * 核验出库，网站上由出库人录入
 	 * 对cvs=quantity
 	 */
 	@Column(name = "outtaostock")
-	private int outtaostock;
+	private int outtaostock = 0;
 
 	/*
 	 * 自动生成时间，传null
 	 */
 	@Column(name = "timestamp")
-	private Date timestamp;
+	private Date timestamp = new Date();
 
 	/*
 	 * 对cvs=0
 	 */
 	@Column(name = "del_flag")
-	private int delFlag;
+	private int delFlag = 0;
 
 	public int getRecId() {
 		return recId;

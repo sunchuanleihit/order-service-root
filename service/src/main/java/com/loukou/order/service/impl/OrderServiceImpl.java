@@ -271,6 +271,7 @@ public class OrderServiceImpl implements OrderService {
 		OrderListRespDto resp = new OrderListRespDto(200, "");
 		if (userId <= 0 || flag <= 0 || pageNum < 1) {
 			resp.setCode(400);
+			resp.setMessage("参数错误");
 			return resp;
 		}
 		
@@ -308,6 +309,7 @@ public class OrderServiceImpl implements OrderService {
 			}
 		}
 		if (orderList.getTotalElements() == 0) {
+			resp.setMessage("订单列表为空");
 			return resp;
 		}
 
@@ -338,6 +340,7 @@ public class OrderServiceImpl implements OrderService {
 			orderListMap.put(order.getTaoOrderSn(), orderListDto);
 		}
 		if(orderListMap.isEmpty()) {
+			resp.setMessage("订单商品为空");
 			return resp;
 		} else {
 			orderListResult.addAll(orderListMap.values());
@@ -511,11 +514,12 @@ public class OrderServiceImpl implements OrderService {
 		OrderListRespDto resp = new OrderListRespDto(200, "");
 		if (userId <= 0 || flag <= 0 || StringUtils.isEmpty(orderSnMain)) {
 			resp.setCode(400);
-			resp.setMessage("参数不正确");
+			resp.setMessage("参数有误");
 			return resp;
 		}
 		List<Order> orderList = orderDao.findByOrderSnMain(orderSnMain);
 		if (CollectionUtils.isEmpty(orderList)) {
+			resp.setMessage("订单为空");
 			return resp;
 		}
 		
@@ -566,7 +570,9 @@ public class OrderServiceImpl implements OrderService {
 			}
 			orderListDto.setExtmMsg(extmMsgDto);
 			//物流信息
-			if(order.getStatus() > OrderStatusEnum.STATUS_REVIEWED.getId()) {
+			if(order.getStatus() > OrderStatusEnum.STATUS_REVIEWED.getId()
+					|| (order.getStatus() == OrderStatusEnum.STATUS_NEW.getId() 
+						&& order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId())) {
 				getLogistics(order, orderListDto);
 			}
 			
@@ -610,8 +616,9 @@ public class OrderServiceImpl implements OrderService {
 			List<ShippingListDto> shippingList = shippingDto.getResult().getShippingList();
 			if(!CollectionUtils.isEmpty(shippingList)) {
 				if(StringUtils.isBlank(shippingList.get(0).getDescription())) {
-					if(order.getStatus() == OrderStatusEnum.STATUS_DELIVERIED.getId()
-							|| order.getStatus() == OrderStatusEnum.STATUS_14.getId()) {
+					if(order.getStatus() >= OrderStatusEnum.STATUS_DELIVERIED.getId()
+							&& order.getStatus() <= OrderStatusEnum.STATUS_14.getId()
+							) {
 						shippingMsgDto.setDescription(ShippingMsgDesc.DELIEVER);
 						if(order.getShipTime() == null || order.getShipTime() == 0) {
 							shippingMsgDto.setCreatTime("");
@@ -629,7 +636,7 @@ public class OrderServiceImpl implements OrderService {
 						}
 					}
 				} else {
-					shippingMsgDto.setDescription(shippingDto.getResult().getShippingList().get(0).getDescription());
+					shippingMsgDto.setDescription(shippingList.get(0).getDescription());
 					if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
 						shippingMsgDto.setCreatTime("");
 					} else {
@@ -640,8 +647,8 @@ public class OrderServiceImpl implements OrderService {
 			}
 			
 		} else {
-			if(order.getStatus() == OrderStatusEnum.STATUS_DELIVERIED.getId()
-					|| order.getStatus() == OrderStatusEnum.STATUS_14.getId()) {
+			if(order.getStatus() >= OrderStatusEnum.STATUS_DELIVERIED.getId()
+					&& order.getStatus() <= OrderStatusEnum.STATUS_14.getId()) {
 				shippingMsgDto.setDescription(ShippingMsgDesc.DELIEVER);
 				if(order.getShipTime() == null || order.getShipTime() == 0) {
 					shippingMsgDto.setCreatTime("");
@@ -1238,6 +1245,7 @@ public class OrderServiceImpl implements OrderService {
 		PayOrderMsgDto result = new PayOrderMsgDto();
 		if (userId <= 0 || StringUtils.isEmpty(orderSnMain)) {
 			resp.setCode(400);
+			resp.setMessage("参数有误");
 			return resp;
 		}
 		List<Order> orders = orderDao.findByOrderSnMain(orderSnMain);
@@ -1295,6 +1303,7 @@ public class OrderServiceImpl implements OrderService {
 		ShippingListResultDto resultDto = new ShippingListResultDto();
 		if (StringUtils.isEmpty(taoOrderSn)) {
 			resp.setCode(400);
+			resp.setMessage("参数有误");
 			return resp;
 		}
 		Order order = orderDao.findByTaoOrderSn(taoOrderSn);
@@ -1307,28 +1316,32 @@ public class OrderServiceImpl implements OrderService {
 		}
 		if ( express != null && StringUtils.isNotBlank(express.getExpressName())) {
 			sb.append("(").append(express.getExpressName()).append(")");
-			resultDto.setShippingName(sb.toString());
+//			resultDto.setShippingName(sb.toString());
 		}
 
+		resultDto.setShippingName(sb.toString());
+		
 		if (order.getPayType() == OrderPayTypeEnum.TYPE_ARRIVAL.getId()) {
 			resultDto.setPayType("货到付款");
 		} else if (order.getPayType() == OrderPayTypeEnum.TYPE_ONLINE.getId()) {
 			resultDto.setPayType("在线支付");
 		}
 		List<ShippingListDto> shippingList = new ArrayList<ShippingListDto>();
-		List<OrderAction> orderActionList = orderActionDao.findByOrderSnMain(order.getOrderSnMain());
+		List<OrderAction> orderActionList = orderActionDao.findByOrderSnMainDesc(order.getOrderSnMain());
 		if(!CollectionUtils.isEmpty(orderActionList)) {
 			for (OrderAction orderAction : orderActionList) {
 				if (!(orderAction.getAction() == OrderActionTypeEnum.TYPE_33.getId()
 						|| orderAction.getAction() == OrderActionTypeEnum.TYPE_CHOOSE_PAY.getId() 
 						|| orderAction.getAction() == OrderActionTypeEnum.TYPE_INSPECTED.getId())) {
 					ShippingListDto shippingListDto = new ShippingListDto();
-					if(StringUtils.equals(orderAction.getTaoOrderSn(), taoOrderSn)) {
-						shippingListDto.setCreateTime(orderAction.getTimestamp()
-								.toString());
-						shippingListDto.setDescription(orderAction.getNotes());
-						shippingListDto.setTaoOrderSn(taoOrderSn);
-						shippingList.add(shippingListDto);
+					if(orderAction.getTaoOrderSn() != null || StringUtils.isNotBlank(orderAction.getTaoOrderSn())) {
+						if(StringUtils.equals(orderAction.getTaoOrderSn(), taoOrderSn)) {
+							shippingListDto.setCreateTime(orderAction.getTimestamp()
+									.toString());
+							shippingListDto.setDescription(orderAction.getNotes());
+							shippingListDto.setTaoOrderSn(taoOrderSn);
+							shippingList.add(shippingListDto);
+						}
 					}
 				}
 			}
@@ -1337,7 +1350,7 @@ public class OrderServiceImpl implements OrderService {
 		resultDto.setShippingList(shippingList);
 		resp.setResult(resultDto);
 		resp.setCode(200);
-		resp.setInnerCode(0);//内部调用需要
+		resp.setInnerCode(0);//内部调用需要 FIXME
 		return resp;
 	}
 
@@ -1370,12 +1383,12 @@ public class OrderServiceImpl implements OrderService {
 		
 		if(order != null) {
 			if (StringUtils.equals(order.getType(), OrderTypeEnums.TYPE_BOOKING.getType())) {
-				shippingMsg.append("预售商品").append(order.getNeedShiptime())
+				shippingMsg.append("预售商品").append(DateUtils.date2DateStr(order.getNeedShiptime()))
 						.append(" ").append(order.getNeedShiptimeSlot())
 						.append("、");
 			} else if (StringUtils.equals(order.getType(), OrderTypeEnums.TYPE_WEI_WH.getType())
 					|| StringUtils.equals(order.getType(), OrderTypeEnums.TYPE_WEI_SELF.getType())) {
-				shippingMsg.append("普通商品").append(order.getNeedShiptime())
+				shippingMsg.append("普通商品").append(DateUtils.date2DateStr(order.getNeedShiptime()))
 						.append(" ").append(order.getNeedShiptimeSlot())
 						.append("、");
 			} else if (StringUtils.equals(order.getType(), OrderTypeEnums.TYPE_SELF_SALES.getType())) {
@@ -1420,11 +1433,13 @@ public class OrderServiceImpl implements OrderService {
 		OrderCancelRespDto resp = new OrderCancelRespDto(200, "");
 		if (userId <= 0 || StringUtils.isBlank(orderSnMain)) {
 			resp.setCode(400);
+			resp.setMessage("参数有误");
 			return resp;
 		}
 		List<Order> orders = orderDao.findByOrderSnMainAndPayStatus(
 				orderSnMain, PayStatusEnum.STATUS_UNPAY.getId());
 		if (CollectionUtils.isEmpty(orders)) {
+			resp.setMessage("订单为空");
 			return resp;
 		}
 
@@ -1438,6 +1453,7 @@ public class OrderServiceImpl implements OrderService {
 			if (order.getStatus() == OrderStatusEnum.STATUS_CANCELED.getId()
 					|| order.getStatus() == OrderStatusEnum.STATUS_REVIEWED
 							.getId()) {
+				resp.setMessage("订单已取消或已审核");
 				return resp;
 			}
 
@@ -1566,11 +1582,11 @@ public class OrderServiceImpl implements OrderService {
 
 		if (order.getPayStatus() == PayStatusEnum.STATUS_UNPAY.getId()) {// 0未支付 1已支付
 			resp.setCode(200);
-			resp.setMessage("订单取消成功");
+			resp.setResult("订单取消成功");
 			// return resp;
 		} else {
 			resp.setCode(200);
-			resp.setMessage("订单取消成功,您已支付的金额将在三个工作日内返还到您的账户中！");
+			resp.setResult("订单取消成功,您已支付的金额将在三个工作日内返还到您的账户中！");
 			// return resp;
 		}
 	}
@@ -1604,7 +1620,7 @@ public class OrderServiceImpl implements OrderService {
 					// order.getSellerId());
 //					String updateTime = DateUtils.date2DateStr2(new Date());
 					if (operateType == OpearteTypeEnum.OPEARTE_CHECK_DELIVER.getType()) {// 发货
-						//FIXME 库存小于0
+						
 						lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(
 								orderGoods.getSpecId(), order.getSellerId(),
 								orderGoods.getQuantity(),
@@ -1692,6 +1708,7 @@ public class OrderServiceImpl implements OrderService {
 		ShareRespDto resp = new ShareRespDto(200, "");
 		if (StringUtils.isBlank(orderSnMain)) {
 			resp.setCode(400);
+			resp.setMessage("参数有误");
 			return resp;
 		}
 		StringBuilder md5time = new StringBuilder();
