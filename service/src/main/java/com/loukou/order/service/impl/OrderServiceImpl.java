@@ -2349,7 +2349,8 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public OResponseDto<OrderListInfoDto> getOrderListInfo(OrderListParamDto param) {
-        PageRequest pagenation = new PageRequest(param.getPageNum(),param.getPageSize());
+        //按照正常的页码1,2,3,4,5传入 1,2,3,4,5传出
+        PageRequest pagenation = new PageRequest((Math.max(1,param.getPageNum())-1),param.getPageSize());
         List<String> types = new ArrayList<String>();
         switch (param.getOrderType()) {
         case 1://微仓
@@ -2382,6 +2383,7 @@ public class OrderServiceImpl implements OrderService {
             orderListInfoDto.setOrders(orderInfoDtos);
             orderListInfoDto.setStoreId(param.getStoreId());
             orderListInfoDto.setTotalNum(orders.getTotalElements());
+            orderListInfoDto.setPageNum(param.getPageNum());
             return new OResponseDto<OrderListInfoDto>(200,orderListInfoDto);
         }
         for(Order order :orders.getContent()){
@@ -2456,7 +2458,7 @@ public class OrderServiceImpl implements OrderService {
         orderListInfoDto.setOrders(orderInfoDtos);
         orderListInfoDto.setStoreId(param.getStoreId());
         orderListInfoDto.setTotalNum(orders.getTotalElements());
-     
+        orderListInfoDto.setPageNum(param.getPageNum());
         
         return new OResponseDto<OrderListInfoDto>(200,orderListInfoDto);
     }
