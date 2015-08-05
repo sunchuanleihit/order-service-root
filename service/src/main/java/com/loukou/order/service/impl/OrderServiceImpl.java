@@ -2463,6 +2463,8 @@ public class OrderServiceImpl implements OrderService {
 	/**
 	 * 退货入库
 	 */
+    @Override
+    @Transactional
 	public ReturnStorageRespDto returnStorage(ReturnStorageReqDto returnStorageReqDto){
 		//预售商品退货时，修改订单状态，新建退款单
 		//操作库存，包括库存操作流水（退货状态）
