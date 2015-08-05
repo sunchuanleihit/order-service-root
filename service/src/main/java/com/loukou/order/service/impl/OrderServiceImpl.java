@@ -1,6 +1,7 @@
 package com.loukou.order.service.impl;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
@@ -1135,7 +1136,7 @@ public class OrderServiceImpl implements OrderService {
 
 		// 添加收货地址信息
 		OrderExtm orderExtm = new OrderExtm();
-		BeanUtils.copyProperties(address, orderExtm);
+		BeanUtils.copyProperties(address, orderExtm, "id");
 		orderExtm.setOrderSnMain(orderSnMain);
 		orderExtmDao.save(orderExtm);
 
