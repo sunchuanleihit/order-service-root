@@ -24,11 +24,11 @@ public class OrderServiceImplTest extends AbstractTestObject {
 		SubmitOrderReqDto req = new SubmitOrderReqDto();
 		req.setUserId(1032752);
 		req.setOpenId("414F8167B0CF4C3AA3603C7CF63365DD");
-		req.setStoreId(18047);
+		req.setStoreId(18042);
 		req.setCityId(1);
 		req.setAddressId(128);
 		req.setOs("ios");
-		req.getShippingTimes().getMaterial().add("2015-07-28 09:00:00");
+		req.getShippingTimes().getMaterial().add("2015-08-05 13:32:00");
 		
 		SubmitOrderRespDto resp = orderService.submitOrder(req);
 		System.out.println(object2String(resp));

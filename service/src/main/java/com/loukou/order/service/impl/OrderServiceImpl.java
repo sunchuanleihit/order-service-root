@@ -35,7 +35,7 @@ import com.loukou.order.service.constants.CouponType;
 import com.loukou.order.service.constants.FlagType;
 import com.loukou.order.service.constants.OS;
 import com.loukou.order.service.constants.OrderPayType;
-import com.loukou.order.service.constants.OrderReturnStatus;
+import com.loukou.order.service.constants.OrderStateReturn;
 import com.loukou.order.service.constants.ReturnGoodsType;
 import com.loukou.order.service.constants.ShippingMsgDesc;
 import com.loukou.order.service.dao.AddressDao;
@@ -422,19 +422,21 @@ public class OrderServiceImpl implements OrderService {
 		int status = order.getStatus();
 		String state = "";
 		if(status == OrderStatusEnum.STATUS_CANCELED.getId()) {
-			state = OrderReturnStatus.CANCELED;
+			state = OrderStateReturn.CANCELED;
 		} else if (status == OrderStatusEnum.STATUS_INVALID.getId()) {
-			state = OrderReturnStatus.INVALID;
+			state = OrderStateReturn.INVALID;
 		} else if (status == OrderStatusEnum.STATUS_FINISHED.getId()) {
-			state = OrderReturnStatus.RECEIVED;
+			state = OrderStateReturn.RECEIVED;
 		} else if ((status >= OrderStatusEnum.STATUS_REVIEWED.getId() && 
 				status <= OrderStatusEnum.STATUS_14.getId()) 
 				|| (status == OrderStatusEnum.STATUS_NEW.getId() 
 						&& order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId())) {
-			state = OrderReturnStatus.TO_RECIEVE;
-		} else if (status == OrderStatusEnum.STATUS_NEW.getId() 
-				&& order.getPayStatus() == PayStatusEnum.STATUS_UNPAY.getId()) {
-			state = OrderReturnStatus.UN_PAY;
+			state = OrderStateReturn.TO_RECIEVE;
+		} else if ((status == OrderStatusEnum.STATUS_NEW.getId() 
+				&& order.getPayStatus() == PayStatusEnum.STATUS_UNPAY.getId()
+				) || (status == OrderStatusEnum.STATUS_NEW.getId() && 
+						order.getPayStatus() == PayStatusEnum.STATUS_PART_PAYED.getId()) ) {
+			state = OrderStateReturn.UN_PAY;
 		}
 		return state;
 	}
@@ -1338,6 +1340,7 @@ public class OrderServiceImpl implements OrderService {
 						|| orderAction.getAction() == OrderActionTypeEnum.TYPE_CHOOSE_PAY.getId() 
 						|| orderAction.getAction() == OrderActionTypeEnum.TYPE_INSPECTED.getId())) {
 					ShippingListDto shippingListDto = new ShippingListDto();
+					
 					if(orderAction.getTaoOrderSn() != null || StringUtils.isNotBlank(orderAction.getTaoOrderSn())) {
 						if(StringUtils.equals(orderAction.getTaoOrderSn(), taoOrderSn)) {
 							shippingListDto.setCreateTime(orderAction.getTimestamp()
@@ -1346,6 +1349,12 @@ public class OrderServiceImpl implements OrderService {
 							shippingListDto.setTaoOrderSn(taoOrderSn);
 							shippingList.add(shippingListDto);
 						}
+					} else {
+						shippingListDto.setCreateTime(orderAction.getTimestamp()
+								.toString());
+						shippingListDto.setDescription(orderAction.getNotes());
+						shippingListDto.setTaoOrderSn(taoOrderSn);
+						shippingList.add(shippingListDto);
 					}
 				}
 			}
