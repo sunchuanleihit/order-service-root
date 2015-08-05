@@ -645,7 +645,7 @@ public class OrderServiceImpl implements OrderService {
 					}
 				} else {
 					shippingMsgDto.setDescription(shippingList.get(0).getDescription());
-					if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
+					if(order.getAddTime() == null || order.getAddTime() == 0) {
 						shippingMsgDto.setCreatTime("");
 					} else {
 						String addTime = DateUtils.dateTimeToStr(order.getAddTime());
@@ -1351,8 +1351,7 @@ public class OrderServiceImpl implements OrderService {
 							shippingList.add(shippingListDto);
 						}
 					} else {
-						shippingListDto.setCreateTime(orderAction.getTimestamp()
-								.toString());
+						shippingListDto.setCreateTime(DateUtils.date2DateStr2(orderAction.getTimestamp()));
 						shippingListDto.setDescription(orderAction.getNotes());
 						shippingListDto.setTaoOrderSn(taoOrderSn);
 						shippingList.add(shippingListDto);
