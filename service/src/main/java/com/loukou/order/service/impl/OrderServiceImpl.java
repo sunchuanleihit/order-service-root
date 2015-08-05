@@ -63,7 +63,6 @@ import com.loukou.order.service.dao.OrderGoodsRDao;
 import com.loukou.order.service.dao.OrderLnglatDao;
 import com.loukou.order.service.dao.OrderPayDao;
 import com.loukou.order.service.dao.OrderPayRDao;
-import com.loukou.order.service.dao.OrderRefuseConfigDao;
 import com.loukou.order.service.dao.OrderRefuseDao;
 import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.PaymentDao;
@@ -91,7 +90,6 @@ import com.loukou.order.service.entity.OrderLnglat;
 import com.loukou.order.service.entity.OrderPay;
 import com.loukou.order.service.entity.OrderPayR;
 import com.loukou.order.service.entity.OrderRefuse;
-import com.loukou.order.service.entity.OrderRefuseConfig;
 import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Site;
 import com.loukou.order.service.entity.Store;
@@ -283,8 +281,6 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired
 	private OrderRefuseDao orderRefuseDao;
 	
-	@Autowired
-	private OrderRefuseConfigDao orderRefuseConfigDao;
 	
 	@Autowired
 	private OrderOperationProcessor orderOperationProcessor;
