@@ -15,16 +15,16 @@ public class OrderPayR {
 	private int id;
 
 	@Column(name = "order_id_r")
-	private int orderIdR;// 反向订单号
+	private int orderIdR = 0;// 反向订单号
 
 	@Column(name = "repay_way")
-	private int repayWay;// 0:虚拟账户；1：原路返回
+	private int repayWay = 0;// 0:虚拟账户；1：原路返回
 
 	@Column(name = "payment_id")
-	private int paymentId;// 付款类型
+	private int paymentId = 0;// 付款类型
 
 	@Column(name = "value")
-	private double value;// 退款金额
+	private double value = 0.0;// 退款金额
 
 	public int getId() {
 		return id;

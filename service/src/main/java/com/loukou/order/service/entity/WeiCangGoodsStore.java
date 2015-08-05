@@ -23,28 +23,28 @@ public class WeiCangGoodsStore {
 	private int gsId;
 
 	@Column(name = "spec_id")
-	private int specId;
+	private int specId = 0;
 
 	@Column(name = "goods_id")
-	private int goodsId;
+	private int goodsId = 0;
 
 	@Column(name = "store_id")
-	private int storeId;
+	private int storeId = 0;
 
 	@Column(name = "stock_w")
-	private int storeW;// 警告库存
+	private int storeW = 0;// 警告库存
 
 	@Column(name = "stock_s")
-	private int stockS;// 库存
+	private int stockS = 0;// 库存
 
 	@Column(name = "freezstock")
-	private int freezstock;
+	private int freezstock = 0;
 
 	@Column(name = "status")
 	private int status = 1;// '1上架 0下架',
 
 	@Column(name = "update_time")
-	private Date updateTime;
+	private Date updateTime = new Date();
 
 	public int getGsId() {
 		return gsId;

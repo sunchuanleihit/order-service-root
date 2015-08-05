@@ -85,4 +85,10 @@ public class OrderServiceImplTest extends AbstractTestObject {
 		System.out.println(String.format("refundNum = %d",  resp.getRefundNum()));
 		
 	}
+	
+	@Test 
+	public void getOrderInfoTest2() {
+		OrderListRespDto resp = orderService.getOrderInfo(1032752, "150804120270754", 1, 3430486);
+		resp.getCode();
+	}
 }

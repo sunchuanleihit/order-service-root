@@ -19,46 +19,46 @@ public class OrderPaySign {
 	 * 主单号 如141107091685349
 	 */
 	@Column(name = "order_sn_main")
-	private String orderSnMain;
+	private String orderSnMain = "";
 
 	/*
 	 * 外部订单号 如141107091685349
 	 */
 	@Column(name = "out_order_sn")
-	private String outOrderSn;
+	private String outOrderSn = "";
 
 	/*
 	 * 支付开始时间
 	 */
 	@Column(name = "pay_id")
-	private int payId;
+	private int payId = 0;
 
 	/*
 	 * 支付开始时间
 	 */
 	@Column(name = "ctime")
-	private long cTime;// 支付开始时间
+	private long cTime = 0;// 支付开始时间
 
 	/*
 	 * 支付成功时间
 	 */
 	@Column(name = "ftime")
-	private long fTime;// 支付成功时间
+	private long fTime = 0;// 支付成功时间
 
 	@Column(name = "money")
-	private double money;
+	private double money = 0.0;
 	
 	/*
 	 * 支付状态 enum(fail','succ','ready)
 	 */
 	@Column(name = "status")
-	private String status;
+	private String status = "";
 
 	/*
 	 * 回调数据 serialize 字串
 	 */
 	@Column(name = "return_data")
-	private String returnData;
+	private String returnData = "";
 
 	public int getId() {
 		return id;

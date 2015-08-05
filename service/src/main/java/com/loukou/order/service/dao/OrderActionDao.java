@@ -18,6 +18,7 @@ public interface OrderActionDao extends CrudRepository<OrderAction, Integer>{
 	
 	List<OrderAction> findByActionAndOrderSnMainIn(int action, List<String> orderSnMain);
 
-	List<OrderAction> findByOrderSnMain(String orderSnMain);
+	@Query("SELECT m FROM OrderAction m WHERE orderSnMain=?1 order by timestamp desc")
+	List<OrderAction> findByOrderSnMainDesc(String orderSnMain);
 
 }

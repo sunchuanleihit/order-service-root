@@ -16,28 +16,28 @@ public class Payment {
 	private int paymentId;
 
 	@Column(name = "payment_code")
-	private String paymentCode;
+	private String paymentCode = "";
 
 	@Column(name = "payment_name")
-	private String paymentName;
+	private String paymentName = "";
 
 	@Column(name = "payment_desc")
-	private String paymentDesc;
+	private String paymentDesc = "";
 
 	@Column(name = "config")
-	private String config;
+	private String config = "";
 
 	@Column(name = "is_online")
-	private int isOnline = 1;//
+	private int isOnline = 0;//
 
 	@Column(name = "enabled")
-	private int enabled = 1;//
+	private int enabled = 0;//
 
 	@Column(name = "sort_order")
-	private int sort_order;
+	private int sort_order = 0;
 
 	@Column(name = "payment_id_old")
-	private int paymentIdOld;
+	private int paymentIdOld = 0;
 
 	@Column(name = "bank_act")
 	private int bankAct = 0;// 0不参与银行专享受 1参与

@@ -19,31 +19,31 @@ public class TczcountRecharge {
 	private int userId;
 	
 	@Column(name = "order_sn_main")
-	private String orderSnMain;
+	private String orderSnMain = "";
 
 	@Column(name = "money")
-	private Double money;
+	private Double money = 0.0;
 	
 	@Column(name = "return_money")
-	private Double returnMoney;
+	private Double returnMoney = 0.0;
 
 	@Column(name = "a_id")
-	private Integer a_id;
+	private Integer a_id = 0;
 	
 	@Column(name = "pay_id")
-	private Integer payId;
+	private Integer payId = 0;
 
 	@Column(name = "status")
-	private Integer status;
+	private Integer status = 0;
 	
 	@Column(name = "ctime")
-	private Integer ctime;
+	private Integer ctime = 0;
 
 	@Column(name = "ftime")
-	private Integer ftime;
+	private Integer ftime = 0;
 
 	@Column(name = "invoice_no")
-	private String invoiceNo;
+	private String invoiceNo = "";
 
 	public int getId() {
 		return id;

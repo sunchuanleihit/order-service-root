@@ -20,55 +20,55 @@ public class OrderPay {
 	 * 如141107091685349
 	 */
 	@Column(name = "order_sn_main")
-	private String orderSnMain;
+	private String orderSnMain = "";
 
 	/*
 	 * 子订单号
 	 */
 	@Column(name = "order_id")
-	private int orderId;
+	private int orderId = 0;
 	
 	/*
 	 * 支付类型
 	 */
 	@Column(name = "payment_id")
-	private int paymentId;
+	private int paymentId = 0;
 	
 	/*
 	 * 支付金额
 	 */
 	@Column(name = "money")
-	private double money;
+	private double money = 0.0;
 	
 	/*
 	 * 支付时间
 	 */
 	@Column(name = "pay_time")
-	private long payTime;
+	private long payTime = 0;
 	
 	/*
 	 * enum('succ','failed','cancel','error','invalid','progress','timeout','ready')
 	 */
 	@Column(name = "status")
-	private String status;
+	private String status = "";
 	
 	/*
 	 * 对cvs=null
 	 */
 	@Column(name = "mobil")
-	private String mobil;
+	private String mobil = "";
 
 	/*
 	 * 对cvs=null
 	 */
 	@Column(name = "pwd")
-	private String pwd;
+	private String pwd = "";
 
 	/*
 	 * 对cvs=null
 	 */
 	@Column(name = "ORDERID")
-	private String mobileOrderId;
+	private String mobileOrderId = "";
 
 	public int getId() {
 		return id;
