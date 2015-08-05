@@ -86,12 +86,15 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	Page<Order> findBySellerIdAndStatusAndTypeIn(int sellerId,int status,List<String> types,Pageable page);
 	
 	Page<Order> findBySellerIdAndStatusAndFinishedTimeAndTypeIn(int sellerId,int status,int finishedTime,List<String> types,Pageable page);
+	
 	@Modifying
     @Query("UPDATE Order set status = ?2, receiveNo=?3 where orderId = ?1")
+	@Transactional
     void updateOrderStatusAndreceiveNo(int orderId, int status, String receiveNo);
 	
 	@Modifying
     @Query("UPDATE Order set status = ?1, finishedTime=?2 where orderId = ?3")
+	@Transactional
 	void updateStatusAndFinishedTime(int status,int finishedTime,int orderId);
 	
 }

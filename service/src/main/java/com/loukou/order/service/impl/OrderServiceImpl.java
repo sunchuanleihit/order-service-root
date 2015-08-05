@@ -2366,7 +2366,7 @@ public class OrderServiceImpl implements OrderService {
         }
         Page<Order> orders ;
         if(param.getOrderType() == 2){
-            orders = orderDao.findBySellerIdAndStatusAndTypeIn(param.getStoreId(),OrderStatusEnum.STATUS_REVIEWED.getId(),types,pagenation);
+            orders = orderDao.findBySellerIdAndStatusAndTypeIn(param.getStoreId(),param.getOrderStatus(),types,pagenation);
         }else{
             if(param.getOrderStatus() == OrderStatusEnum.STATUS_FINISHED.getId()&&!StringUtils.isEmpty(param.getFinishedTime())){
                long finishedTime = DateUtils.str2Date(param.getFinishedTime()).getTime();
