@@ -73,6 +73,7 @@ public class WeiXinPay {
 		result.setPartnerId(WxPayConstant.MCHID);
 		result.setPackageX(WxPayConstant.PACKAGESTR);
 		result.setTimestamp(String.valueOf(new Date().getTime() / 1000));
+		result.setNeedPay(needToPay);
 		// 签名
 		// https://pay.weixin.qq.com/wiki/doc/api/app.php?chapter=9_12&index=2
 		Map<String, String> paramMap = new HashMap<String, String>();
