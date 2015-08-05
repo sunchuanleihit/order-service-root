@@ -432,8 +432,10 @@ public class OrderServiceImpl implements OrderService {
 				|| (status == OrderStatusEnum.STATUS_NEW.getId() 
 						&& order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId())) {
 			state = OrderStateReturn.TO_RECIEVE;
-		} else if (status == OrderStatusEnum.STATUS_NEW.getId() 
-				&& order.getPayStatus() == PayStatusEnum.STATUS_UNPAY.getId()) {
+		} else if ((status == OrderStatusEnum.STATUS_NEW.getId() 
+				&& order.getPayStatus() == PayStatusEnum.STATUS_UNPAY.getId()
+				) || (status == OrderStatusEnum.STATUS_NEW.getId() && 
+						order.getPayStatus() == PayStatusEnum.STATUS_PART_PAYED.getId()) ) {
 			state = OrderStateReturn.UN_PAY;
 		}
 		return state;
