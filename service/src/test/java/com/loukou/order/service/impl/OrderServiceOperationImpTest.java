@@ -25,11 +25,6 @@ public class OrderServiceOperationImpTest extends AbstractTestObject {
         System.out.println(t);
     }
 
-    @Test
-    public void getRefuseConfig() {
-        OResponseDto<RefuseReasonListDto> list = orderService.getRefuseReasonList();
-        System.out.println(list.getResult().getReasons().get(0));
-    }
 
     @Test
     public void testRefuseOrder() {

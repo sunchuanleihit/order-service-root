@@ -2677,19 +2677,6 @@ public class OrderServiceImpl implements OrderService {
 		return task;
 	}
 
-    @Override
-    public OResponseDto<RefuseReasonListDto> getRefuseReasonList() {
-        List<RefuseReasonDto> reasonDtos =  new ArrayList<RefuseReasonDto>();
-       Iterable<OrderRefuseConfig> configRefuseReason = orderRefuseConfigDao.findAll(); 
-       List<OrderRefuseConfig> list = Lists.newArrayList(configRefuseReason);
-       for(OrderRefuseConfig config : list){
-           reasonDtos.add(new RefuseReasonDto(config.getId(),config.getReason()));
-       }
-       
-        return new OResponseDto<RefuseReasonListDto>(200, new RefuseReasonListDto(reasonDtos));
-    }
-
-	
 	
 
 	@Override

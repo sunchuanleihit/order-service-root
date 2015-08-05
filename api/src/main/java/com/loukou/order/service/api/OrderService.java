@@ -162,8 +162,6 @@ public interface OrderService {
 	public RespDto<OrderBonusRespDto> getCurrentMonthBonusInfo(int storeId);
 
 	
-	public OResponseDto<RefuseReasonListDto> getRefuseReasonList();
-	
 	public Map<String,List<LkStatusItemDto>> getLkStatusItemMap();
 	
 	public Map<String,Object> getLkConfigureMap();
