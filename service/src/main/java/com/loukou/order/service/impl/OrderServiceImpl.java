@@ -739,8 +739,7 @@ public class OrderServiceImpl implements OrderService {
 				couponListDto.setCouponId(coupList.getId());
 				couponListDto.setCommoncode(coupList.getCommoncode());
 				couponListDto.setCouponName(couponName);
-				couponListDto.setMoney(String.format("%.1f",
-						coupList.getMoney()));
+				couponListDto.setMoney(coupList.getMoney());
 				couponListDto.setCouponMsg(coupRule.getCouponName());
 				couponListDto.setEndtime(DateUtils.date2DateStr2(coupList.getEndtime()));
 				couponListDtos.add(couponListDto);

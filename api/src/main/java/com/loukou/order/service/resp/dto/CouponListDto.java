@@ -10,7 +10,7 @@ public class CouponListDto implements Serializable{
 	private int couponId;
 	private String couponName;
 	private String commoncode;
-	private String money;
+	private double money;
 	private String endtime;
 	private String couponMsg;
 
@@ -39,11 +39,11 @@ public class CouponListDto implements Serializable{
 		this.commoncode = commoncode;
 	}
 
-	public String getMoney() {
+	public double getMoney() {
 		return money;
 	}
 
-	public void setMoney(String money) {
+	public void setMoney(double money) {
 		this.money = money;
 	}
 
