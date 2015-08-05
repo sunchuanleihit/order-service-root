@@ -1340,6 +1340,7 @@ public class OrderServiceImpl implements OrderService {
 						|| orderAction.getAction() == OrderActionTypeEnum.TYPE_CHOOSE_PAY.getId() 
 						|| orderAction.getAction() == OrderActionTypeEnum.TYPE_INSPECTED.getId())) {
 					ShippingListDto shippingListDto = new ShippingListDto();
+					
 					if(orderAction.getTaoOrderSn() != null || StringUtils.isNotBlank(orderAction.getTaoOrderSn())) {
 						if(StringUtils.equals(orderAction.getTaoOrderSn(), taoOrderSn)) {
 							shippingListDto.setCreateTime(orderAction.getTimestamp()
@@ -1348,6 +1349,12 @@ public class OrderServiceImpl implements OrderService {
 							shippingListDto.setTaoOrderSn(taoOrderSn);
 							shippingList.add(shippingListDto);
 						}
+					} else {
+						shippingListDto.setCreateTime(orderAction.getTimestamp()
+								.toString());
+						shippingListDto.setDescription(orderAction.getNotes());
+						shippingListDto.setTaoOrderSn(taoOrderSn);
+						shippingList.add(shippingListDto);
 					}
 				}
 			}
