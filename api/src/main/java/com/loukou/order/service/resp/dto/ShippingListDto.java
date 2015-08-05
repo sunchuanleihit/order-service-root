@@ -9,7 +9,7 @@ public class ShippingListDto implements Serializable {
 	private static final long serialVersionUID = 5641901360425123642L;
 	private String taoOrderSn = "";
 	private String description = "";
-	private String createTime = "";
+	private String creatTime = "";
 
 	public String getTaoOrderSn() {
 		return taoOrderSn;
@@ -27,12 +27,13 @@ public class ShippingListDto implements Serializable {
 		this.description = description;
 	}
 
-	public String getCreateTime() {
-		return createTime;
+	public String getCreatTime() {
+		return creatTime;
 	}
 
-	public void setCreateTime(String createTime) {
-		this.createTime = createTime;
+	public void setCreatTime(String creatTime) {
+		this.creatTime = creatTime;
 	}
+
 
 }
