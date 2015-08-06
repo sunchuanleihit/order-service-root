@@ -16,6 +16,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -2366,8 +2367,9 @@ public class OrderServiceImpl implements OrderService {
             orders = orderDao.findBySellerIdAndStatusAndTypeIn(param.getStoreId(),param.getOrderStatus(),types,pagenation);
         }else{
             if(param.getOrderStatus() == OrderStatusEnum.STATUS_FINISHED.getId()&&!StringUtils.isEmpty(param.getFinishedTime())){
-               long finishedTime = DateUtils.str2Date(param.getFinishedTime()).getTime();
-               orders = orderDao.findBySellerIdAndStatusAndFinishedTimeAndTypeIn(param.getStoreId(),param.getOrderStatus(),(int)(finishedTime/1000),types,pagenation);
+               long startTime = DateUtils.str2Date(param.getFinishedTime()).getTime()/1000;
+               long endTime= startTime+86400;
+               orders = orderDao.findBySellerIdAndStatusAndFinishedTimeBetweenAndTypeIn(param.getStoreId(),param.getOrderStatus(),(int)startTime,(int)endTime,types,pagenation);
             }else {
                 orders  =orderDao.findBySellerIdAndStatusAndTypeIn(param.getStoreId(),param.getOrderStatus(),types,pagenation);
             }

@@ -104,6 +104,7 @@ public class OrderInfoService {
         orderInfoDto.setShippingFee(order.getShippingFee());
         orderInfoDto.setSpecList(specList);
         orderInfoDto.setDeliveryInfo(deliveryInfo);
+        orderInfoDto.setNeedShippingTime(DateUtils.date2DateStr(order.getNeedShiptime())+" "+order.getNeedShiptimeSlot());
 
         
         // 各个状态需要加一些特殊字段
