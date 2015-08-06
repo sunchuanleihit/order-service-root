@@ -84,6 +84,7 @@ public class OrderInfoService {
         }
         if(order.getType().equals("booking")){
             orderInfoDto.setIsBooking(1);
+            orderInfoDto.setShippingNo(order.getShippingNo());
         }else{
             orderInfoDto.setIsBooking(0);
         }
@@ -209,6 +210,7 @@ public class OrderInfoService {
            //是否时预售商品
             if(order.getType().equals("booking")){
                 orderInfoDto.setIsBooking(1);
+                orderInfoDto.setShippingNo(order.getShippingNo());
             }else{
                 orderInfoDto.setIsBooking(0);
             }
@@ -284,13 +286,13 @@ public class OrderInfoService {
             DateTime startDate = DateTime.parse((timeString+" "+timeslots.get(0)),formatter);
             DateTime endDate = DateTime.parse((timeString+" "+timeslots.get(1)),formatter);
             DateTime finishDate = DateTime.parse(SDF.format(new Date((Long.valueOf(finishedTime)*1000))),DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss"));
-            //提早送达
+          
             if(finishDate.isBefore(startDate.getMillis())){
-                return 1;
+                return 1;   //提早送达
             }else if(finishDate.isAfter(endDate.getMillis())){
-                return 2;
+                return 3;  //延迟送达
             }else {
-                return 3;
+                return 2; //及时送达
             }
         }catch(Exception e){
             

@@ -23,7 +23,7 @@ public class OrderInfoDto  implements Serializable{
     private String  goodsReturnStatus; // 待退货　已退货　
     private DeliveryInfo deliveryInfo; // 配送信息
     private List<SpecDto> specList; // 规格信息列表
-    private int deliverResult;//送达结果　　　早，及时，延时
+    private int deliveryResult;//送达结果　　　早，及时，延时
 
     public String getTaoOrderSn() {
         return taoOrderSn;
@@ -119,11 +119,11 @@ public class OrderInfoDto  implements Serializable{
     public void setIsBooking(int isBooking) {
         this.isBooking = isBooking;
     }
-    public int getDeliverResult() {
-        return deliverResult;
+    public int getDeliveryResult() {
+        return deliveryResult;
     }
     public void setDeliverResult(int deliverResult) {
-        this.deliverResult = deliverResult;
+        this.deliveryResult = deliverResult;
     }
   
 }
