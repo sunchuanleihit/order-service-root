@@ -146,7 +146,7 @@ public interface OrderService {
 	/**
 	 *     确认预售订单到货
 	 */
-	public OResponseDto<String> confirmBookOrder(String taoOrderSn,String userName);
+	public OResponseDto<String> confirmBookOrder(String taoOrderSn,String userName,int senderId);
 
 	/** 
 	 * @param 退货入库

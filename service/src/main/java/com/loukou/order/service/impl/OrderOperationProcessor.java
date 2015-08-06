@@ -57,13 +57,22 @@ public class OrderOperationProcessor {
     @Autowired
     private OrderRefuseDao orderRefuseDao;
 
-    public OResponseDto<String> confirmBookOrder(String taoOrderSn, String userName) {
+    public OResponseDto<String> confirmBookOrder(String taoOrderSn, String userName,int senderId) {
         Order order = orderDao.findByTaoOrderSn(taoOrderSn);
         if (order == null || order.getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()) {
             return new OResponseDto<String>(500, "错误的订单号");
         }
-        orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_ALLOCATED.getId());
-        createAction(order, OrderStatusEnum.STATUS_ALLOCATED.getId(), userName, "配货");
+        LkWhDelivery lkDelivery = lkWhDeliveryDao.findByDId(senderId);
+        if (lkDelivery == null) {
+            return new OResponseDto<String>(500, "错误的快递员");
+        }
+        String receiveNo = new String("" + (int) (Math.random() * 10000));
+        orderDao.updateOrderStatusAndreceiveNo(order.getOrderId(), OrderStatusEnum.STATUS_14.getId(), receiveNo);
+
+        createAction(order, OrderStatusEnum.STATUS_14.getId(), userName, "配送员" + lkDelivery.getdName() + ",手机号"
+                + lkDelivery.getdMobile());
+        sendMessage(order, String.format(ShortMessage.FINISH_PACKAGE_MESSAGE_MODEL, order.getTaoOrderSn(),
+                lkDelivery.getdName(), lkDelivery.getdMobile()));
         return new OResponseDto<String>(200, "成功");
     }
 

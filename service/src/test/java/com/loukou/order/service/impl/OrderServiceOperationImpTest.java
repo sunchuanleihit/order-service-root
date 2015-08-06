@@ -39,7 +39,7 @@ public class OrderServiceOperationImpTest extends AbstractTestObject {
 
     @Test
     public void testBookOrder() {
-        orderService.confirmBookOrder("150707163715990", "自成");
+        orderService.confirmBookOrder("150707163715990", "自成",1);
     }
 
     @Test
@@ -60,11 +60,16 @@ public class OrderServiceOperationImpTest extends AbstractTestObject {
         System.out.println(list.getResult().getTotalNum());
     }
     @Test
-    public void testDate(){
+    public void testFinishedDate(){
         String t = "2015-08-27";
-       System.out.println(DateUtils.str2Date(t).getTime()/1000) ;
-       DateTime datetime  = DateTime.parse(t);
-       datetime.plusDays(1);
-       
+        OrderListParamDto param = new OrderListParamDto();
+        param.setOrderStatus(OrderStatusEnum.STATUS_FINISHED.getId());
+        param.setOrderType(1);
+        param.setPageNum(0);
+        param.setPageSize(4);
+        param.setStoreId(18017);
+        param.setFinishedTime("2015-06-17");
+        OResponseDto<OrderListInfoDto> list  = orderService.getOrderListInfo(param);
+       System.out.println(list.getResult().getTotalNum());
     }
 }
