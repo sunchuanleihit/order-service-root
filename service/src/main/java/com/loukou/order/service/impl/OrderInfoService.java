@@ -2,6 +2,7 @@ package com.loukou.order.service.impl;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -78,7 +79,9 @@ public class OrderInfoService {
             spec.setSellPrice(good.getPricePurchase());
             specList.add(spec);
         }
-        if(order.getType() !=OrderTypeEnums.TYPE_BOOKING.getType()){
+        if(order.getType().equals("booking")){
+            orderInfoDto.setIsBooking(1);
+        }else{
             orderInfoDto.setIsBooking(0);
         }
         // 实际上一个主单只有一个收货人
@@ -95,6 +98,7 @@ public class OrderInfoService {
             deliveryInfo.setAddress(orderExtm.getRegionName() + orderExtm.getAddress());
             deliveryInfo.setConsignee(orderExtm.getConsignee());
             deliveryInfo.setTel(orderExtm.getPhoneMob());
+            deliveryInfo.setNeedShippingTime(DateUtils.date2DateStr(order.getNeedShiptime())+" "+order.getNeedShiptimeSlot());
         }
 
         orderInfoDto.setCreateTime(SDF.format(new Date((long) (order.getAddTime()) * 1000)));
@@ -104,7 +108,6 @@ public class OrderInfoService {
         orderInfoDto.setShippingFee(order.getShippingFee());
         orderInfoDto.setSpecList(specList);
         orderInfoDto.setDeliveryInfo(deliveryInfo);
-        orderInfoDto.setNeedShippingTime(DateUtils.date2DateStr(order.getNeedShiptime())+" "+order.getNeedShiptimeSlot());
 
         
         // 各个状态需要加一些特殊字段
@@ -117,16 +120,19 @@ public class OrderInfoService {
         } else if (order.getStatus() == OrderStatusEnum.STATUS_CANCELED.getId()) {
             List<OrderAction> orderActions = orderActionDao.findByTaoOrderSnAndAction(order.getTaoOrderSn(),
                     OrderStatusEnum.STATUS_CANCELED.getId());
-            OrderAction orderAction = orderActions.get(0);
-            orderInfoDto.setCancelTime(DateUtils.date2DateStr2(orderAction.getActionTime()));
-            // 添加退货状态
-            List<OrderReturn> returns = orderRDao.findByOrderSnMain(order.getOrderSnMain());
-            // good_status只要不是４　就是待退货
-            if (returns.get(0).getGoodsStatus() != ReturnGoodsStatus.BACKED.getId()) {
-                orderInfoDto.setGoodsReturnStatus(1);
-            } else {
-                orderInfoDto.setGoodsReturnStatus(2);
+            if(CollectionUtils.isEmpty(orderActions)){
+                OrderAction orderAction = orderActions.get(0);
+                orderInfoDto.setCancelTime(DateUtils.date2DateStr2(orderAction.getActionTime()));
+                // 添加退货状态
+                List<OrderReturn> returns = orderRDao.findByOrderSnMain(order.getOrderSnMain());
+                // good_status只要不是４　就是待退货
+                if (returns.get(0).getGoodsStatus() != ReturnGoodsStatus.BACKED.getId()) {
+                    orderInfoDto.setGoodsReturnStatus(1);
+                } else {
+                    orderInfoDto.setGoodsReturnStatus(2);
+                }
             }
+            
         } else if (order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
             orderInfoDto.setFinishTime(SDF.format(new Date((long) (order.getFinishedTime()) * 1000)));
         }
@@ -196,10 +202,10 @@ public class OrderInfoService {
                 specList.add(spec);
             }
             orderInfoDto.setSpecList(specList);
-            //指定送达时间
-            orderInfoDto.setNeedShippingTime(DateUtils.date2DateStr(order.getNeedShiptime())+" "+order.getNeedShiptimeSlot());
            //是否时预售商品
-            if(order.getType() !=OrderTypeEnums.TYPE_BOOKING.getType()){
+            if(order.getType().equals("booking")){
+                orderInfoDto.setIsBooking(1);
+            }else{
                 orderInfoDto.setIsBooking(0);
             }
            if(order.getStatus() == OrderStatusEnum.STATUS_REVIEWED.getId()){
@@ -220,21 +226,7 @@ public class OrderInfoService {
                }
             
            }else if(order.getStatus() == OrderStatusEnum.STATUS_14.getId()) {
-               List<OrderExtm> orderExtmList = orderExtmDao.findByOrderSnMain(order.getOrderSnMain());
-               ExtmMsgDto extmMsgDto = new ExtmMsgDto();
-               DeliveryInfo deliveryInfo = new DeliveryInfo();
-               if (!CollectionUtils.isEmpty(orderExtmList)) {
-                   OrderExtm orderExtm = orderExtmList.get(0);
-                   // 封装收货人等信息
-                   extmMsgDto.setAddress(orderExtm.getAddress());
-                   extmMsgDto.setConsignee(orderExtm.getConsignee());
-                   extmMsgDto.setPhoneMob(orderExtm.getPhoneMob());
-
-                   deliveryInfo.setAddress(orderExtm.getRegionName() + orderExtm.getAddress());
-                   deliveryInfo.setConsignee(orderExtm.getConsignee());
-                   deliveryInfo.setTel(orderExtm.getPhoneMob());
-               }
-               orderInfoDto.setDeliveryInfo(deliveryInfo);
+             
            }else if(order.getStatus() == OrderStatusEnum.STATUS_REFUSED.getId()){
                OrderRefuse orderRefuse =  orderRefuseDao.findByTaoOrderSn(order.getTaoOrderSn());
                if(orderRefuse != null){
@@ -245,6 +237,22 @@ public class OrderInfoService {
            }else if(order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()){
                orderInfoDto.setFinishTime(DateUtils.date2DateStr2(new Date((long)(order.getFinishedTime())*1000)));
            }
+           
+           
+           List<OrderExtm> orderExtmList = orderExtmDao.findByOrderSnMain(order.getOrderSnMain());
+           DeliveryInfo deliveryInfo = new DeliveryInfo();
+           if (!CollectionUtils.isEmpty(orderExtmList)) {
+               OrderExtm orderExtm = orderExtmList.get(0);
+               // 封装收货人等信息
+
+               deliveryInfo.setAddress(orderExtm.getRegionName() + orderExtm.getAddress());
+               deliveryInfo.setConsignee(orderExtm.getConsignee());
+               deliveryInfo.setTel(orderExtm.getPhoneMob());
+               deliveryInfo.setNeedShippingTime(DateUtils.date2DateStr(order.getNeedShiptime())+" "+order.getNeedShiptimeSlot());
+           }
+           orderInfoDto.setDeliveryInfo(deliveryInfo);
+           
+           
            
            orderInfoDtos.add(orderInfoDto);
         }
