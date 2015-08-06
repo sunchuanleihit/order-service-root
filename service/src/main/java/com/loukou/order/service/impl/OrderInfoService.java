@@ -129,7 +129,7 @@ public class OrderInfoService {
                 orderInfoDto.setCancelTime(DateUtils.date2DateStr2(orderAction.getActionTime()));
                 // 添加退货状态
                 List<OrderReturn> returns = orderRDao.findByOrderSnMain(order.getOrderSnMain());
-                if(CollectionUtils.isEmpty(returns)){
+                if(!CollectionUtils.isEmpty(returns)){
                     // good_status只要不是４　就是待退货
                     if (returns.get(0).getGoodsStatus() != ReturnGoodsStatus.BACKED.getId()) {
                         orderInfoDto.setGoodsReturnStatus(1);
