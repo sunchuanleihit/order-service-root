@@ -7,6 +7,7 @@ import com.loukou.order.AbstractTestObject;
 import com.loukou.order.service.api.OrderService;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
+import com.loukou.order.service.resp.dto.OrderCancelRespDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
@@ -18,6 +19,13 @@ public class OrderServiceImplTest extends AbstractTestObject {
 
 	@Autowired
 	private OrderService orderService;
+	
+	@Test
+	public void cancelOrder() {
+		OrderCancelRespDto resp = orderService.cancelOrder(1032752, "150805171813826");
+		
+		resp.getCode();
+	}
 	
 	@Test
 	public void submitOrder() {
