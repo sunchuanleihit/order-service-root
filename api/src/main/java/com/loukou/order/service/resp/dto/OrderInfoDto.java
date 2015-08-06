@@ -20,10 +20,10 @@ public class OrderInfoDto  implements Serializable{
     private String cancelTime; // 取消时间
     private String finishTime; // 回单时间
     private int orderStatus; // 订单状态
-    private int goodsReturnStatus; // 待退货　已退货　
-    private int moneyReturnStatus; // 退款中　退款成功　退款失败
+    private String  goodsReturnStatus; // 待退货　已退货　
     private DeliveryInfo deliveryInfo; // 配送信息
     private List<SpecDto> specList; // 规格信息列表
+    private int deliverResult;//送达结果　　　早，及时，延时
 
     public String getTaoOrderSn() {
         return taoOrderSn;
@@ -85,17 +85,11 @@ public class OrderInfoDto  implements Serializable{
     public void setOrderStatus(int orderStatus) {
         this.orderStatus = orderStatus;
     }
-    public int getGoodsReturnStatus() {
+    public String getGoodsReturnStatus() {
         return goodsReturnStatus;
     }
-    public void setGoodsReturnStatus(int goodsReturnStatus) {
+    public void setGoodsReturnStatus(String goodsReturnStatus) {
         this.goodsReturnStatus = goodsReturnStatus;
-    }
-    public int getMoneyReturnStatus() {
-        return moneyReturnStatus;
-    }
-    public void setMoneyReturnStatus(int moneyReturnStatus) {
-        this.moneyReturnStatus = moneyReturnStatus;
     }
     public DeliveryInfo getDeliveryInfo() {
         return deliveryInfo;
@@ -124,6 +118,12 @@ public class OrderInfoDto  implements Serializable{
     }
     public void setIsBooking(int isBooking) {
         this.isBooking = isBooking;
+    }
+    public int getDeliverResult() {
+        return deliverResult;
+    }
+    public void setDeliverResult(int deliverResult) {
+        this.deliverResult = deliverResult;
     }
   
 }
