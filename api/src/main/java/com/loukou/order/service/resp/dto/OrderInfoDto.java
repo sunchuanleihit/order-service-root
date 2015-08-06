@@ -20,7 +20,7 @@ public class OrderInfoDto  implements Serializable{
     private String cancelTime; // 取消时间
     private String finishTime; // 回单时间
     private int orderStatus; // 订单状态
-    private String  goodsReturnStatus; // 待退货　已退货　
+    private int  goodsReturnStatus; // 1待退货　2已退货　
     private DeliveryInfo deliveryInfo; // 配送信息
     private List<SpecDto> specList; // 规格信息列表
     private int deliveryResult;//送达结果　　　早，及时，延时
@@ -85,10 +85,10 @@ public class OrderInfoDto  implements Serializable{
     public void setOrderStatus(int orderStatus) {
         this.orderStatus = orderStatus;
     }
-    public String getGoodsReturnStatus() {
+    public int getGoodsReturnStatus() {
         return goodsReturnStatus;
     }
-    public void setGoodsReturnStatus(String goodsReturnStatus) {
+    public void setGoodsReturnStatus(int goodsReturnStatus) {
         this.goodsReturnStatus = goodsReturnStatus;
     }
     public DeliveryInfo getDeliveryInfo() {
