@@ -983,7 +983,7 @@ public class OrderServiceImpl implements OrderService {
 			order.setOrderSnMain(orderSnMain);
 			String taoOrderSn = orderSnMain;
 			if (packageNum > 1) {
-				String.format("%s-%d-%d", orderSnMain, packageNum, i + 1);
+				taoOrderSn = String.format("%s-%d-%d", orderSnMain, packageNum, i + 1);
 			}
 			order.setOrderSn(generateOrderSn());
 			order.setTaoOrderSn(taoOrderSn);
