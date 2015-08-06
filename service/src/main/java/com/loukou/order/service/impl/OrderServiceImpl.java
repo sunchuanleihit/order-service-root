@@ -1442,6 +1442,7 @@ public class OrderServiceImpl implements OrderService {
 	 * 用户app接口
 	 */
 	@Override
+	@Transactional
 	public OrderCancelRespDto cancelOrder(int userId, String orderSnMain) {
 		OrderCancelRespDto resp = new OrderCancelRespDto(200, "");
 		if (userId <= 0 || StringUtils.isBlank(orderSnMain)) {
@@ -1684,7 +1685,12 @@ public class OrderServiceImpl implements OrderService {
 			orderReturn.setRepayTime(addTime);
 		}
 		orderReturn.setPostscript("客户自已取消订单");
-		return orderRDao.save(orderReturn).getOrderIdR();
+		OrderReturn or = orderRDao.save(orderReturn);
+		if(or != null) {
+			return or.getOrderIdR();
+		} else {
+			return 0;
+		}
 	}
 
 	/*
