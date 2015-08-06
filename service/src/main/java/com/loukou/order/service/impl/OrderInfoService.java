@@ -138,7 +138,7 @@ public class OrderInfoService {
             
         } else if (order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
             orderInfoDto.setFinishTime(SDF.format(new Date((long) (order.getFinishedTime()) * 1000)));
-            orderInfoDto.setDeliverResult(isIntime(order.getNeedShiptime(),order.getNeedShiptimeSlot(),order.getFinishedTime()));
+            orderInfoDto.setDeliverResult(calDelivertResult(order.getNeedShiptime(),order.getNeedShiptimeSlot(),order.getFinishedTime()));
         }
         oResultDto.setCode(200);
         oResultDto.setResult(orderInfoDto);
@@ -221,11 +221,13 @@ public class OrderInfoService {
                    orderInfoDto.setCancelTime(DateUtils.date2DateStr2(orderAction.getActionTime()));
                    //添加退货状态
                    List<OrderReturn> returns =  orderRDao.findByOrderSnMain(order.getOrderSnMain());
-                   //good_status只要不是４　就是待退货
-                   if(returns.get(0).getGoodsStatus()!=4){
-                       orderInfoDto.setGoodsReturnStatus("待退货");
-                   }else{
-                       orderInfoDto.setGoodsReturnStatus("已退货");
+                   if(!CollectionUtils.isEmpty(returns)){
+                       //good_status只要不是４　就是待退货
+                       if(returns.get(0).getGoodsStatus()!=4){
+                           orderInfoDto.setGoodsReturnStatus("待退货");
+                       }else{
+                           orderInfoDto.setGoodsReturnStatus("已退货");
+                       }
                    }
                }
             
@@ -240,7 +242,7 @@ public class OrderInfoService {
                
            }else if(order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()){
                orderInfoDto.setFinishTime(DateUtils.date2DateStr2(new Date((long)(order.getFinishedTime())*1000)));
-               orderInfoDto.setDeliverResult(isIntime(order.getNeedShiptime(),order.getNeedShiptimeSlot(),order.getFinishedTime()));
+               orderInfoDto.setDeliverResult(calDelivertResult(order.getNeedShiptime(),order.getNeedShiptimeSlot(),order.getFinishedTime()));
            }
            
            
@@ -269,7 +271,7 @@ public class OrderInfoService {
         return new OResponseDto<OrderListInfoDto>(200,orderListInfoDto);
     }
   
-    private int isIntime(Date needShipTime,String needShipSlot,int  finishedTime){
+    private int calDelivertResult(Date needShipTime,String needShipSlot,int  finishedTime){
         String timeString  = new SimpleDateFormat("yyyy-MM-dd").format(needShipTime);
         DateTimeFormatter formatter = DateTimeFormat .forPattern("yyyy-MM-dd HH:mm");
         Iterable<String> times = Splitter.on("-").split(needShipSlot);
@@ -281,7 +283,7 @@ public class OrderInfoService {
         try{
             DateTime startDate = DateTime.parse((timeString+" "+timeslots.get(0)),formatter);
             DateTime endDate = DateTime.parse((timeString+" "+timeslots.get(1)),formatter);
-            DateTime finishDate = DateTime.parse(SDF.format(new Date((Long.valueOf(finishedTime)*1000))));
+            DateTime finishDate = DateTime.parse(SDF.format(new Date((Long.valueOf(finishedTime)*1000))),DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss"));
             //提早送达
             if(finishDate.isBefore(startDate.getMillis())){
                 return 1;
