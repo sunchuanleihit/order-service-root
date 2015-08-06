@@ -132,6 +132,11 @@ public class OrderOperationProcessor {
         if(order==null || order.getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()){
             return new OResponseDto<String>(500, "失败");
         }
+        List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
+        for (OrderGoods good : goods) {
+            lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(good.getSpecId(), good.getStoreId(), new Date(),
+                    good.getQuantity(), good.getQuantity());
+        }
         orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_REFUSED.getId());
         
         OrderRefuse orderRefuse = new OrderRefuse();

@@ -129,12 +129,15 @@ public class OrderInfoService {
                 orderInfoDto.setCancelTime(DateUtils.date2DateStr2(orderAction.getActionTime()));
                 // 添加退货状态
                 List<OrderReturn> returns = orderRDao.findByOrderSnMain(order.getOrderSnMain());
-                // good_status只要不是４　就是待退货
-                if (returns.get(0).getGoodsStatus() != ReturnGoodsStatus.BACKED.getId()) {
-                    orderInfoDto.setGoodsReturnStatus("待退货");
-                } else {
-                    orderInfoDto.setGoodsReturnStatus("已退货");
+                if(CollectionUtils.isEmpty(returns)){
+                    // good_status只要不是４　就是待退货
+                    if (returns.get(0).getGoodsStatus() != ReturnGoodsStatus.BACKED.getId()) {
+                        orderInfoDto.setGoodsReturnStatus("待退货");
+                    } else {
+                        orderInfoDto.setGoodsReturnStatus("已退货");
+                    }
                 }
+              
             }
             
         } else if (order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
