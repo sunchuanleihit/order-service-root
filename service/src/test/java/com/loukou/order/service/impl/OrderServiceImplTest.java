@@ -22,7 +22,7 @@ public class OrderServiceImplTest extends AbstractTestObject {
 	
 	@Test
 	public void cancelOrder() {
-		OrderCancelRespDto resp = orderService.cancelOrder(1032752, "150805171813826");
+		OrderCancelRespDto resp = orderService.cancelOrder(1032752, "150807095023438");
 		
 		resp.getCode();
 	}
@@ -96,7 +96,7 @@ public class OrderServiceImplTest extends AbstractTestObject {
 	
 	@Test 
 	public void getOrderInfoTest2() {
-		OrderListRespDto resp = orderService.getOrderInfo(1032752, "150804120270754", 1, 3430486);
+		OrderListRespDto resp = orderService.getOrderInfo(1032752, "150807095023438", 1, 0);
 		resp.getCode();
 	}
 }
