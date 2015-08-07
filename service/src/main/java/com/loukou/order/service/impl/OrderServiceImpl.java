@@ -222,9 +222,6 @@ public class OrderServiceImpl implements OrderService {
 	private SiteDao siteDao;
 
 	@Autowired
-	private CouponSnDao couponSnDao;
-
-	@Autowired
 	private GoodsSpecDao goodsSpecDao;
 
 	@Autowired
@@ -465,6 +462,7 @@ public class OrderServiceImpl implements OrderService {
 					baseExist.setNeedPayPrice(DoubleUtils.add(baseExist.getNeedPayPrice(), 
 							baseDto.getNeedPayPrice()));
 					baseExist.setShippingFee(DoubleUtils.add(baseExist.getShippingFee(), baseDto.getShippingFee()));
+					baseExist.setDiscount(DoubleUtils.add(baseExist.getDiscount(), baseDto.getDiscount()));
 					baseExist.setTaoOrderSn(baseExist.getOrderSnMain());
 					baseExist.setIsOrder(BaseDtoIsOrderType.YES);
 					baseExist.setShipping(baseExist.getShipping().concat("、").concat(baseDto.getShipping()));
@@ -533,9 +531,9 @@ public class OrderServiceImpl implements OrderService {
 		baseDto.setStatus(order.getStatus());
 		baseDto.setTaoOrderSn(order.getTaoOrderSn());
 		baseDto.setIsshouhuo(getReciveStatus(order));// 确认收货的判断
-		baseDto.setTotalPrice(DoubleUtils.add(order.getGoodsAmount(), order.getShippingFee()));
-		double needToPay = DoubleUtils.sub(baseDto.getTotalPrice(), order.getOrderPayed());
-		needToPay = DoubleUtils.sub(needToPay, order.getDiscount());
+		double totalPrice = DoubleUtils.add(order.getGoodsAmount(), order.getShippingFee());
+		baseDto.setTotalPrice(totalPrice);
+		double needToPay = DoubleUtils.sub(totalPrice, order.getOrderPayed());
 		baseDto.setNeedPayPrice(needToPay);// 还需支付金额
 		
 		baseDto.setState(createState(order));
@@ -1625,7 +1623,12 @@ public class OrderServiceImpl implements OrderService {
 					if (returnAmountCoupon > 0) {// 优惠券状态改成未使用
 						
 						if(useCouponNo != null && !StringUtils.equals(useCouponNo, "0")) {
-							couponSnDao.refundCouponSn(useCouponNo, userId);
+							int couponId = coupListDao.refundCouponList(useCouponNo, userId);
+							if(couponId <= 0) {
+								resp.setCode(400);
+								resp.setMessage("返回优惠券失败");
+								return resp;
+							}
 						}
 					}
 				}

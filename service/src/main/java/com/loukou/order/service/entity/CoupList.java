@@ -48,7 +48,7 @@ public class CoupList {
 	private String openid;
 
 	@Column(name = "createtime")
-	private String createtime;// 领取时间
+	private Date createtime;// 领取时间
 
 	@Column(name = "usedtime")
 	private Date usedtime;// 使用时间yyyy-MM-dd HH:mm:ss
@@ -150,11 +150,11 @@ public class CoupList {
 		this.openid = openid;
 	}
 
-	public String getCreatetime() {
+	public Date getCreatetime() {
 		return createtime;
 	}
 
-	public void setCreatetime(String createtime) {
+	public void setCreatetime(Date createtime) {
 		this.createtime = createtime;
 	}
 
