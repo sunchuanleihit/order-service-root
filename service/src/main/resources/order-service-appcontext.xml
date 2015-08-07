@@ -16,7 +16,7 @@
 	  <constructor-arg index="1" value="8283" />
 	  <constructor-arg index="2" value="lk0000" />
 	  <constructor-arg index="3" value="development" />
-	  <constructor-arg index="4" value="database,solr,dubbo" />
+	  <constructor-arg index="4" value="database,solr,dubbo,userapp" />
 	</bean>
 	
 	
