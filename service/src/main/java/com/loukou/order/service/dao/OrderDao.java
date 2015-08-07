@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -25,6 +24,12 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	
 	@Query("SELECT o FROM Order o WHERE status=15 AND sellerId IN (?1) AND finishedTime >= ?2 AND finishedTime < ?3")
 	List<Order> getByStoreIdsAndFinishedTime(List<Integer> storeIds, int start, int end);
+	
+	@Query("SELECT count(o) FROM Order o WHERE status > 2 AND sellerId = ?1 AND addTime >= ?2 AND addTime < ?3")
+	int countValidOrderBetweenAddTime(int storeId, int start, int end);
+	
+
+	List<Order> findByStatusAndAddTimeBetween(int storeId, int start, int end);
 
 
 	Page<Order> findBySellerIdAndPayStatusAndStatusIn(int storeId, int payStatus, List<Integer> statusList, Pageable Pageable);
@@ -62,10 +67,38 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	@Query("UPDATE Order set payStatus = ?3, orderPayed = ?2 where orderId = ?1")
 	Order updateOrderPayedAndStatus(int orderId, double payedMoney, int status);
 
+	Page<Order> findBySellerId(int sellerId,Pageable page);
+
+	@Transactional(value = "transactionManagerMall")
+	@Modifying
+	@Query("UPDATE Order set goodsReturnStatus = ?2 where orderId = ?1")
+	int updateGoodsReturnStatus(int orderId, int status);
+
+	@Query("SELECT COUNT(*) FROM Order d WHERE d.orderSnMain = ?1 and d.status <> ?2")
+	int countOrderByOrderSnMainAndStatusNot(String orderSnMain,int status);
+
 	Page<Order> findByBuyerIdAndIsDelAndPayStatusAndStatusIn(int userId, int isDel, int payStatus,
 			List<Integer> statusList, Pageable pagealbe);
 
 	List<Order> findByOrderSnMainAndPayStatus(String orderSnMain, int payStatus);
 
+	Page<Order> findBySellerIdAndStatusAndTypeIn(int sellerId,int status,List<String> types,Pageable page);
+	
+	Page<Order> findBySellerIdAndStatusAndFinishedTimeBetweenAndTypeIn(int sellerId,int status,int startTime,int endTime,List<String> types,Pageable page);
+	
+	Page<Order> findBysellerIdAndStatusAndPayStatusInAndTypeIn(int storeId, int orderStatus, List<Integer> payed,
+            List<String> types, Pageable pagenation);
+	@Modifying
+    @Query("UPDATE Order set status = ?2, receiveNo=?3 where orderId = ?1")
+	@Transactional
+    void updateOrderStatusAndreceiveNo(int orderId, int status, String receiveNo);
+	
+	@Modifying
+    @Query("UPDATE Order set status = ?1, finishedTime=?2 where orderId = ?3")
+	@Transactional
+	void updateStatusAndFinishedTime(int status,int finishedTime,int orderId);
+
+    
+	
 }
 

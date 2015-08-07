@@ -383,7 +383,20 @@ public class Order {
 	@Column(name = "is_del")
 	private int isDel = 0;
 
-	public int getOrderId() {
+	@Column(name="receive_no")
+	private String receiveNo;
+	
+	
+
+    public String getReceiveNo() {
+        return receiveNo;
+    }
+
+    public void setReceiveNo(String receiveNo) {
+        this.receiveNo = receiveNo;
+    }
+
+    public int getOrderId() {
 		return orderId;
 	}
 
@@ -823,5 +836,4 @@ public class Order {
 	public void setSellSite(String sellSite) {
 		this.sellSite = sellSite;
 	}
-	
 }

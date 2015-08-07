@@ -5,13 +5,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.loukou.order.AbstractTestObject;
 import com.loukou.order.service.api.OrderService;
+import com.loukou.order.service.req.dto.ReturnStorageGoodsReqDto;
+import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.OrderCancelRespDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
-import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
-import com.loukou.order.service.resp.dto.ShareRespDto;
+import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
 import com.loukou.order.service.resp.dto.UserOrderNumRespDto;
 
@@ -19,7 +20,7 @@ public class OrderServiceImplTest extends AbstractTestObject {
 
 	@Autowired
 	private OrderService orderService;
-	
+
 	@Test
 	public void cancelOrder() {
 		OrderCancelRespDto resp = orderService.cancelOrder(1032752, "150807095023438");
@@ -41,19 +42,21 @@ public class OrderServiceImplTest extends AbstractTestObject {
 		SubmitOrderRespDto resp = orderService.submitOrder(req);
 		System.out.println(object2String(resp));
 	}
-	
+
 	@Test
 	public void getCouponList() {
 		int cityId = 1;
 		int userId = 113981;
 		int storeId = 18055;
 		String openId = "test-openId";
-		CouponListRespDto resp = orderService.getCouponList(cityId, userId, storeId, openId);
+		CouponListRespDto resp = orderService.getCouponList(cityId, userId,
+				storeId, openId);
 		System.out.println(object2String(resp));
 	}
-	
+
+
 	@Test
-	public void getOrder(){
+	public void getOrder() {
 		int userId = 48635;
 		String orderSnMain = "120108035625905";
 		orderService.getPayOrderMsg(userId, orderSnMain);
@@ -65,19 +68,41 @@ public class OrderServiceImplTest extends AbstractTestObject {
 		OrderListRespDto resp = orderService.getOrderInfo(1156347, "150629161315204", 1, 3430340);//3430340, 1
 		OrderListResultDto result = resp.getResult();
 	}
-	
+
 	@Test
-	public void getPayOrderMsgTest() {
-		PayOrderResultRespDto resp = orderService.getPayOrderMsg(1156347, "150707164298209");
-		resp.getCode();
+	public void returnStorage() {
+		ReturnStorageReqDto req = new ReturnStorageReqDto();
+		req.setStoreId(1432);
+		req.setTaoOrderSn("nj0131021214077861");
+
+		ReturnStorageGoodsReqDto[] goodsList = new ReturnStorageGoodsReqDto[3];
+
+		ReturnStorageGoodsReqDto goo = new ReturnStorageGoodsReqDto();
+		goo.setSpecId(608017);
+		goo.setConfirmNum(10);
+
+		ReturnStorageGoodsReqDto goo1 = new ReturnStorageGoodsReqDto();
+		goo1.setSpecId(610927);
+		goo1.setConfirmNum(11);
+
+		ReturnStorageGoodsReqDto goo2 = new ReturnStorageGoodsReqDto();
+		goo2.setSpecId(622294);
+		goo2.setConfirmNum(12);
+
+		goodsList[0] = goo;
+		goodsList[1] = goo1;
+		goodsList[2] = goo2;
+		req.setSpecList(goodsList);
+		System.out.println(object2String(req));
+		ReturnStorageRespDto resp = orderService.returnStorage(req);
+		System.out.println(object2String(resp));
 	}
-	
-	@SuppressWarnings("unused")
+
 	@Test
-	public void shareAfterPayTest() {
-		ShareRespDto resp = orderService.shareAfterPay("150707164298209");
+	public void getLkStatusItemMap() {
+		System.out.println(object2String(orderService.getLkStatusItemMap()));
 	}
-	
+
 	@Test
 	public void getOrderList() {
 		OrderListRespDto  resp = orderService.getOrderList(1032752, 1, 1, 10);
