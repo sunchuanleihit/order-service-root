@@ -20,7 +20,7 @@ public class PayServiceImplTest extends AbstractTestObject{
 	public void testPayOrder() {
 		int userId = 60094;
 		int payType = 2;
-		int paymentId = 4;
+		int paymentId = 207;
 		String orderSnMain = "121012145816991";
 		int isTaoxinka = 0;
 		int isVcount = 0;

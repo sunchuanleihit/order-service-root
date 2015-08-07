@@ -23,27 +23,27 @@ public class Site {
 	 * 站点代号
 	 */
 	@Column(name = "site_code")
-	private String siteCode;
+	private String siteCode = "";
 	/**
 	 * 站点名称
 	 */
 	@Column(name = "site_name")
-	private String siteName;
+	private String siteName = "";
 	/**
 	 * 简称-订单前缀用
 	 */
 	@Column(name = "short_code")
-	private String shortCode;
+	private String shortCode = "";
 	/**
 	 * 分站对应的host地址
 	 */
 	@Column(name = "site_host")
-	private String siteHost;
+	private String siteHost = "";
 	/**
 	 * 城市区域第一级ID,如常州是530
 	 */
 	@Column(name = "region_id")
-	private Integer regionId;
+	private Integer regionId = 0;
 	
 	public int getId() {
 		return id;

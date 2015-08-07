@@ -26,12 +26,12 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 	@Query("SELECT c FROM CoupList c WHERE userId = ?1 AND issue=1 AND ischecked=0 AND begintime<=NOW() AND endtime>=NOW()")
 	List<CoupList> getValidCoupLists(int userId);
 	
-	@Query("SELECT c FROM CoupList c WHERE userId = ?1 AND couponId=?2 AND issue=1 AND ischecked=0 AND begintime<=NOW() AND endtime>=NOW()")
+	@Query("SELECT c FROM CoupList c WHERE userId = ?1 AND id=?2 AND issue=1 AND ischecked=0 AND begintime<=NOW() AND endtime>=NOW()")
 	CoupList getValidCoupList(int userId, int couponId);
 
 	@Transactional
 	@Modifying
-	@Query("UPDATE CoupList SET ischecked=1, usedTime=NOW() WHERE userId=?1 AND couponId=?2 AND ischecked=0 AND issue=1")
+	@Query("UPDATE CoupList SET ischecked=1, usedTime=NOW() WHERE userId=?1 AND id=?2 AND ischecked=0 AND issue=1")
 	int useCoupon(int userId, int couponId);
 
 	CoupList getByUserIdAndCommoncode(int userId,String commoncode);

@@ -1,7 +1,5 @@
 package com.loukou.order.service.impl;
 
-import java.util.List;
-
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -11,18 +9,12 @@ import com.loukou.order.service.req.dto.ReturnStorageGoodsReqDto;
 import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
-import com.loukou.order.service.resp.dto.ExtmMsgDto;
-import com.loukou.order.service.resp.dto.GoodsListDto;
-import com.loukou.order.service.resp.dto.OrderListBaseDto;
-import com.loukou.order.service.resp.dto.OrderListDto;
+import com.loukou.order.service.resp.dto.OrderCancelRespDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
-import com.loukou.order.service.resp.dto.PayOrderMsgDto;
-import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
+import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
-import com.loukou.order.service.resp.dto.ShareRespDto;
-import com.loukou.order.service.resp.dto.ShareResultDto;
-import com.loukou.order.service.resp.dto.ShippingMsgDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
+import com.loukou.order.service.resp.dto.UserOrderNumRespDto;
 
 public class OrderServiceImplTest extends AbstractTestObject {
 
@@ -30,16 +22,23 @@ public class OrderServiceImplTest extends AbstractTestObject {
 	private OrderService orderService;
 
 	@Test
+	public void cancelOrder() {
+		OrderCancelRespDto resp = orderService.cancelOrder(1032752, "150805171813826");
+		
+		resp.getCode();
+	}
+	
+	@Test
 	public void submitOrder() {
 		SubmitOrderReqDto req = new SubmitOrderReqDto();
 		req.setUserId(1032752);
 		req.setOpenId("414F8167B0CF4C3AA3603C7CF63365DD");
-		req.setStoreId(18047);
+		req.setStoreId(18042);
 		req.setCityId(1);
 		req.setAddressId(128);
 		req.setOs("ios");
-		req.getShippingTimes().getMaterial().add("2015-07-28 09:00:00");
-
+		req.getShippingTimes().getMaterial().add("2015-08-05 13:32:00");
+		
 		SubmitOrderRespDto resp = orderService.submitOrder(req);
 		System.out.println(object2String(resp));
 	}
@@ -55,10 +54,6 @@ public class OrderServiceImplTest extends AbstractTestObject {
 		System.out.println(object2String(resp));
 	}
 
-	@Test
-	public void getOrderList() {
-		orderService.getOrderList(1032752, 1, 0, 10);
-	}
 
 	@Test
 	public void getOrder() {
@@ -66,12 +61,12 @@ public class OrderServiceImplTest extends AbstractTestObject {
 		String orderSnMain = "120108035625905";
 		orderService.getPayOrderMsg(userId, orderSnMain);
 	}
-
+	
+	@SuppressWarnings("unused")
 	@Test
-	public void testGetOrderInfo() {
-		// ResponseDto<OrderListResultDto> result =
-		// orderService.getOrderInfo("120108035625905");
-		// System.out.println(result);
+	public void getOrderInfoTest() {
+		OrderListRespDto resp = orderService.getOrderInfo(1156347, "150629161315204", 1, 3430340);//3430340, 1
+		OrderListResultDto result = resp.getResult();
 	}
 
 	@Test
@@ -109,7 +104,24 @@ public class OrderServiceImplTest extends AbstractTestObject {
 	}
 
 	@Test
-	public void getLkConfigureMap() {
-		System.out.println(object2String(orderService.getLkConfigureMap()));
+	public void getOrderList() {
+		OrderListRespDto  resp = orderService.getOrderList(1032752, 1, 1, 10);
+		System.out.println(resp.getCode());
+		
+	}
+	
+	@Test
+	public void getOrderNumTest() {
+		UserOrderNumRespDto resp = orderService.getOrderNum(1032752);
+		System.out.println(String.format("delieverNum = %d",  resp.getDeliveryNum()));
+		System.out.println(String.format("payNum = %d",  resp.getPayNum()));
+		System.out.println(String.format("refundNum = %d",  resp.getRefundNum()));
+		
+	}
+	
+	@Test 
+	public void getOrderInfoTest2() {
+		OrderListRespDto resp = orderService.getOrderInfo(1032752, "150804120270754", 1, 3430486);
+		resp.getCode();
 	}
 }

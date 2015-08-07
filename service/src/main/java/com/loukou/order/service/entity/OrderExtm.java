@@ -19,47 +19,47 @@ public class OrderExtm {
 	 * 子订单号
 	 */
 	@Column(name = "order_id")
-	private Integer orderId;
+	private Integer orderId = 0;
 
 	/*
 	 * 主单号
 	 * 如141107091685349
 	 */
 	@Column(name = "order_sn_main")
-	private String orderSnMain;
+	private String orderSnMain = "";
 
 	/*
 	 * 称呼
 	 */
 	@Column(name = "consignee")
-	private String consignee;
+	private String consignee = "";
 	
 	@Column(name = "region_id")
-	private Integer regionId;
+	private Integer regionId = 0;
 	
 	/*
 	 * 对cvs=null
 	 */
 	@Column(name = "region_id_old")
-	private Integer regionIdOld;
+	private Integer regionIdOld = 0;
 	
 	@Column(name = "region_name")
-	private String regionName;
+	private String regionName = "";
 	
 	@Column(name = "address")
-	private String address;
+	private String address = "";
 
 	@Column(name = "zipcode")
-	private String zipcode;
+	private String zipcode = "";
 
 	@Column(name = "phone_tel")
-	private String phoneTel;
+	private String phoneTel = "";
 
 	@Column(name = "phone_mob")
-	private String phoneMob;
+	private String phoneMob = "";
 
 	@Column(name = "timestamp")
-	private Date timestamp;
+	private Date timestamp = new Date();
 
 	/*
 	 * 1删除 0未删除

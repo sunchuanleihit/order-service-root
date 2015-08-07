@@ -14,7 +14,7 @@ public interface GoodsSpecDao extends PagingAndSortingRepository<GoodsSpec, Inte
 
 	List<GoodsSpec> findBySpecIdIn(List<Integer> specIds);
 	
-	@Transactional(value="transactionManagerMall")
+	@Transactional
 	@Modifying
 	@Query("UPDATE GoodsSpec SET freezstock=freezstock+?2 WHERE specId = ?1")
 	int freezeStock(int specId, int stockNum);
@@ -32,12 +32,12 @@ public interface GoodsSpecDao extends PagingAndSortingRepository<GoodsSpec, Inte
 
 	GoodsSpec findBySpecId(int specId);
 
-	@Transactional(value="transactionManagerMall")
+	@Transactional
 	@Modifying
-	@Query("UPDATE GoodsSpec SET freezstock=freezstock-?3, taostock=taostock-?2 WHERE specId = ?1")
+	@Query("UPDATE GoodsSpec SET freezstock=freezstock+?3, taostock=taostock-?2 WHERE specId = ?1")
 	int updateBySpecId(int specId, int taostock, int freezestock);
 
-	@Transactional(value="transactionManagerMall")
+	@Transactional
 	@Modifying
 	@Query("UPDATE GoodsSpec SET freezstock=freezstock-?2 WHERE specId = ?1")
 	void updateBySpecId(int specId, int quantity);
