@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -87,6 +88,8 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	
 	Page<Order> findBySellerIdAndStatusAndFinishedTimeBetweenAndTypeIn(int sellerId,int status,int startTime,int endTime,List<String> types,Pageable page);
 	
+	Page<Order> findBysellerIdAndStatusAndPayStatusInAndTypeIn(int storeId, int orderStatus, List<Integer> payed,
+            List<String> types, Pageable pagenation);
 	@Modifying
     @Query("UPDATE Order set status = ?2, receiveNo=?3 where orderId = ?1")
 	@Transactional
@@ -96,6 +99,8 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
     @Query("UPDATE Order set status = ?1, finishedTime=?2 where orderId = ?3")
 	@Transactional
 	void updateStatusAndFinishedTime(int status,int finishedTime,int orderId);
+
+    
 	
 }
 
