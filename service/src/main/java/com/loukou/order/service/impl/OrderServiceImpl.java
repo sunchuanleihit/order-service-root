@@ -398,6 +398,7 @@ public class OrderServiceImpl implements OrderService {
 					baseExist.setShippingFee(DoubleUtils.add(baseExist.getShippingFee(), baseDto.getShippingFee()));
 					baseExist.setTaoOrderSn(baseExist.getOrderSnMain());
 					baseExist.setIsOrder(BaseDtoIsOrderType.YES);
+					baseExist.setShipping(baseExist.getShipping().concat("、").concat(baseDto.getShipping()));
 					existDto.setBase(baseExist);
 					//merge goodslist
 					List<GoodsListDto> existGoodsDto = existDto.getGoodsList();
@@ -1394,6 +1395,9 @@ public class OrderServiceImpl implements OrderService {
 		StringBuilder shippingMsg = new StringBuilder();
 		
 		if(order != null) {
+			if(order.getStatus() < OrderStatusEnum.STATUS_DELIVERIED.getId()) {
+				orderDao.findByOrderSnMain(order.getOrderSnMain());
+			}
 			if (StringUtils.equals(order.getType(), OrderTypeEnums.TYPE_BOOKING.getType())) {
 				shippingMsg.append("预售商品").append(DateUtils.date2DateStr(order.getNeedShiptime()))
 						.append(" ").append(order.getNeedShiptimeSlot())
