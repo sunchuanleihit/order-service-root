@@ -1395,9 +1395,6 @@ public class OrderServiceImpl implements OrderService {
 		StringBuilder shippingMsg = new StringBuilder();
 		
 		if(order != null) {
-			if(order.getStatus() < OrderStatusEnum.STATUS_DELIVERIED.getId()) {
-				orderDao.findByOrderSnMain(order.getOrderSnMain());
-			}
 			if (StringUtils.equals(order.getType(), OrderTypeEnums.TYPE_BOOKING.getType())) {
 				shippingMsg.append("预售商品").append(DateUtils.date2DateStr(order.getNeedShiptime()))
 						.append(" ").append(order.getNeedShiptimeSlot())
