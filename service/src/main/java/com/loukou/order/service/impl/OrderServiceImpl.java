@@ -1,6 +1,7 @@
 package com.loukou.order.service.impl;
 
 import java.util.ArrayList;
+
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
@@ -466,6 +467,7 @@ public class OrderServiceImpl implements OrderService {
 					baseExist.setShippingFee(DoubleUtils.add(baseExist.getShippingFee(), baseDto.getShippingFee()));
 					baseExist.setTaoOrderSn(baseExist.getOrderSnMain());
 					baseExist.setIsOrder(BaseDtoIsOrderType.YES);
+					baseExist.setShipping(baseExist.getShipping().concat("、").concat(baseDto.getShipping()));
 					existDto.setBase(baseExist);
 					//merge goodslist
 					List<GoodsListDto> existGoodsDto = existDto.getGoodsList();
@@ -1704,9 +1706,9 @@ public class OrderServiceImpl implements OrderService {
 						
 						lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(
 								orderGoods.getSpecId(), order.getSellerId(),
+								new Date(),
 								orderGoods.getQuantity(),
-								orderGoods.getQuantity(),
-								new Date());
+								orderGoods.getQuantity());
 					} else {
 						
 						lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(
