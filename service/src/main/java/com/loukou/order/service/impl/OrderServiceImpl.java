@@ -1,7 +1,6 @@
 package com.loukou.order.service.impl;
 
 import java.util.ArrayList;
-
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
@@ -97,6 +96,7 @@ import com.loukou.order.service.enums.AsyncTaskActionEnum;
 import com.loukou.order.service.enums.AsyncTaskStatusEnum;
 import com.loukou.order.service.enums.OpearteTypeEnum;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
+import com.loukou.order.service.enums.OrderPayStatusEnum;
 import com.loukou.order.service.enums.OrderPayTypeEnum;
 import com.loukou.order.service.enums.OrderReturnGoodsStatusEnum;
 import com.loukou.order.service.enums.OrderReturnGoodsType;
@@ -1513,15 +1513,12 @@ public class OrderServiceImpl implements OrderService {
 	public OrderCancelRespDto cancelOrder(int userId, String orderSnMain) {
 		OrderCancelRespDto resp = new OrderCancelRespDto(200, "");
 		if (userId <= 0 || StringUtils.isBlank(orderSnMain)) {
-			resp.setCode(400);
-			resp.setMessage("参数有误");
-			return resp;
+			return new OrderCancelRespDto(400, "非法请求");
 		}
-		List<Order> orders = orderDao.findByOrderSnMainAndPayStatus(
-				orderSnMain, PayStatusEnum.STATUS_UNPAY.getId());
+		List<Order> orders = orderDao.findByOrderSnMain(
+				orderSnMain);
 		if (CollectionUtils.isEmpty(orders)) {
-			resp.setMessage("订单为空");
-			return resp;
+			return new OrderCancelRespDto(400, "订单号无效");
 		}
 
 		double returnAmountVcount = 0;
@@ -1529,19 +1526,23 @@ public class OrderServiceImpl implements OrderService {
 		double returnAmountCoupon = 0;
 		double returnAmount = 0;
 		double orderPayed = 0;
-
+		
+		boolean isAllPayed = true;
 		for (Order order : orders) {
 			if (order.getStatus() == OrderStatusEnum.STATUS_CANCELED.getId()
 					|| order.getStatus() == OrderStatusEnum.STATUS_REVIEWED
 							.getId()) {
-				resp.setMessage("订单已取消或已审核");
-				return resp;
+				return new OrderCancelRespDto(400, "订单不可取消");
 			}
 
+			isAllPayed &= (order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId());
 			if (order.getOrderPayed() > 0) {
 				orderPayed = DoubleUtils.add(orderPayed, order.getOrderPayed());
 				
 			}
+		}
+		if (isAllPayed) {
+			return new OrderCancelRespDto(400, "已付款订单不可取消,请联系客服");
 		}
 
 		if (orderPayed > 0) {
