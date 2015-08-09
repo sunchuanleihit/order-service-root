@@ -135,7 +135,7 @@ public abstract class BasePayContext {
 	
 
 	/**
-	 * 完成照顾反应的共同逻辑
+	 * 完成支付的共同逻辑
 	 * @param paymentEnum 支付方式
 	 * @param totalFee 支付金额
 	 * @return
