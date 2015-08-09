@@ -14,7 +14,7 @@
   </parent>
 
   <properties>
-    <dubbo-ext.version>0.2.0-SNAPSHOT</dubbo-ext.version>
+    <dubbo-ext.version>0.2.0</dubbo-ext.version>
   </properties>
 
   <build>
