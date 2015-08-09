@@ -16,15 +16,14 @@
 	  <constructor-arg index="1" value="8283" />
 	  <constructor-arg index="2" value="lk0000" />
 	  <constructor-arg index="3" value="development" />
-	  <constructor-arg index="4" value="database,solr,dubbo" />
+	  <constructor-arg index="4" value="database,solr,dubbo,userapp" />
 	</bean>
 	
-	<!-- 搜索 -->
-	<bean id="goodsSearchService" class="com.loukou.search.service.impl.GoodsSearchServiceImpl" />
 	
 	<context:annotation-config />
 	<context:component-scan base-package="com.loukou.order" />
-
+	
+<bean id="goodsSearchService" class="com.loukou.search.service.impl.GoodsSearchServiceImpl" />
 	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
 		init-method="init" destroy-method="close">
 		<property name="url"
@@ -66,12 +65,12 @@
 		<property name="packagesToScan" value="com.loukou.order.service.entity" />
 	</bean>
 
-	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+	<bean id="transactionManagerMall" class="org.springframework.orm.jpa.JpaTransactionManager">
 		<property name="entityManagerFactory" ref="entityManagerFactory" />
 	</bean>
 
 	<jpa:repositories base-package="com.loukou.order.service.dao"
 		entity-manager-factory-ref="entityManagerFactory"
-		transaction-manager-ref="transactionManager" />
-	<tx:annotation-driven transaction-manager="transactionManager" />
+		transaction-manager-ref="transactionManagerMall" />
+	<tx:annotation-driven transaction-manager="transactionManagerMall" />
 </beans>

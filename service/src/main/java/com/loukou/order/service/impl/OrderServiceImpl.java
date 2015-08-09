@@ -1,12 +1,14 @@
 package com.loukou.order.service.impl;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 import java.util.TreeMap;
@@ -39,20 +41,30 @@ import com.loukou.order.service.constants.OrderStateReturn;
 import com.loukou.order.service.constants.ReturnGoodsType;
 import com.loukou.order.service.constants.ShippingMsgDesc;
 import com.loukou.order.service.dao.AddressDao;
+import com.loukou.order.service.dao.AsyncTaskDao;
 import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.CoupTypeDao;
 import com.loukou.order.service.dao.CouponSnDao;
 import com.loukou.order.service.dao.ExpressDao;
 import com.loukou.order.service.dao.GoodsSpecDao;
+import com.loukou.order.service.dao.LKWhStockInDao;
+import com.loukou.order.service.dao.LKWhStockInGoodsDao;
+import com.loukou.order.service.dao.LkConfigureDao;
+import com.loukou.order.service.dao.LkStatusDao;
+import com.loukou.order.service.dao.LkStatusItemDao;
+import com.loukou.order.service.dao.LkWhDeliveryDao;
+import com.loukou.order.service.dao.LkWhDeliveryOrderDao;
 import com.loukou.order.service.dao.MemberDao;
 import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
 import com.loukou.order.service.dao.OrderExtmDao;
 import com.loukou.order.service.dao.OrderGoodsDao;
+import com.loukou.order.service.dao.OrderGoodsRDao;
 import com.loukou.order.service.dao.OrderLnglatDao;
 import com.loukou.order.service.dao.OrderPayDao;
 import com.loukou.order.service.dao.OrderPayRDao;
+import com.loukou.order.service.dao.OrderRefuseDao;
 import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.SiteDao;
@@ -60,9 +72,15 @@ import com.loukou.order.service.dao.StoreDao;
 import com.loukou.order.service.dao.TczcountRechargeDao;
 import com.loukou.order.service.dao.WeiCangGoodsStoreDao;
 import com.loukou.order.service.entity.Address;
+import com.loukou.order.service.entity.AsyncTask;
 import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.Express;
+import com.loukou.order.service.entity.LKWhStockIn;
+import com.loukou.order.service.entity.LKWhStockInGoods;
+import com.loukou.order.service.entity.LkConfigure;
+import com.loukou.order.service.entity.LkStatus;
+import com.loukou.order.service.entity.LkStatusItem;
 import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderExtm;
@@ -73,9 +91,14 @@ import com.loukou.order.service.entity.OrderPayR;
 import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Site;
 import com.loukou.order.service.entity.Store;
+import com.loukou.order.service.entity.WeiCangGoodsStore;
+import com.loukou.order.service.enums.AsyncTaskActionEnum;
+import com.loukou.order.service.enums.AsyncTaskStatusEnum;
 import com.loukou.order.service.enums.OpearteTypeEnum;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
+import com.loukou.order.service.enums.OrderPayStatusEnum;
 import com.loukou.order.service.enums.OrderPayTypeEnum;
+import com.loukou.order.service.enums.OrderReturnGoodsStatusEnum;
 import com.loukou.order.service.enums.OrderReturnGoodsType;
 import com.loukou.order.service.enums.OrderSourceEnum;
 import com.loukou.order.service.enums.OrderStatusEnum;
@@ -85,6 +108,10 @@ import com.loukou.order.service.enums.PaymentEnum;
 import com.loukou.order.service.enums.ReturnGoodsStatus;
 import com.loukou.order.service.enums.ReturnOrderStatus;
 import com.loukou.order.service.enums.ReturnStatusEnum;
+import com.loukou.order.service.enums.WeiCangGoodsStoreStatusEnum;
+import com.loukou.order.service.req.dto.OrderListParamDto;
+import com.loukou.order.service.req.dto.ReturnStorageGoodsReqDto;
+import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.req.dto.SpecShippingTime;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListDto;
@@ -92,15 +119,21 @@ import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.CouponListResultDto;
 import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
+import com.loukou.order.service.resp.dto.LkStatusItemDto;
+import com.loukou.order.service.resp.dto.OResponseDto;
+import com.loukou.order.service.resp.dto.OrderBonusRespDto;
 import com.loukou.order.service.resp.dto.OrderCancelRespDto;
+import com.loukou.order.service.resp.dto.OrderInfoDto;
 import com.loukou.order.service.resp.dto.OrderListBaseDto;
 import com.loukou.order.service.resp.dto.OrderListDto;
+import com.loukou.order.service.resp.dto.OrderListInfoDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgRespDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
+import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
 import com.loukou.order.service.resp.dto.ShareDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShareResultDto;
@@ -110,6 +143,7 @@ import com.loukou.order.service.resp.dto.ShippingMsgDto;
 import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderResultDto;
+import com.loukou.order.service.resp.dto.basic.RespDto;
 import com.loukou.order.service.resp.dto.UserOrderNumRespDto;
 import com.loukou.order.service.util.DateUtils;
 import com.loukou.order.service.util.DoubleUtils;
@@ -188,9 +222,6 @@ public class OrderServiceImpl implements OrderService {
 	private SiteDao siteDao;
 
 	@Autowired
-	private CouponSnDao couponSnDao;
-
-	@Autowired
 	private GoodsSpecDao goodsSpecDao;
 
 	@Autowired
@@ -207,7 +238,7 @@ public class OrderServiceImpl implements OrderService {
 
 	@Autowired
 	private PaymentDao paymentDao;
-
+	
 	@Autowired
 	private AddressDao addressDao;
 
@@ -228,9 +259,36 @@ public class OrderServiceImpl implements OrderService {
 	
 	@Autowired 
 	private GoodsSearchService goodsSearchService;
+	@Autowired
+	private OrderGoodsRDao orderGoodsRDao;
+	@Autowired
+	private LkWhDeliveryOrderDao lkWhDeliveryOrderDao;
+	
+	@Autowired
+	private LkWhDeliveryDao lkWhDeliveryDao;
+	
 
 	@Autowired
+	private OrderRefuseDao orderRefuseDao;
+	
+	
+	@Autowired
+	private OrderOperationProcessor orderOperationProcessor;
+	
+	@Autowired
+	private OrderInfoService OrderInfoService;
+	
+	@Autowired
 	private UserService userService;
+	
+	@Autowired
+	private LkStatusDao lkStatusDao;
+	
+	@Autowired
+	private LkStatusItemDao lkStatusItemDao;
+	
+	@Autowired
+	private LkConfigureDao lkConfigureDao;
 	
 	@Override
 	public UserOrderNumRespDto getOrderNum(int userId) {
@@ -264,6 +322,14 @@ public class OrderServiceImpl implements OrderService {
 		return resp;
 	}
 
+	@Autowired
+	private AsyncTaskDao asyncTaskDao;
+	
+	@Autowired
+	private LKWhStockInDao whStockInDao;
+	
+	@Autowired
+	private LKWhStockInGoodsDao whStockInGoodsDao;
 	
 	@Override
 	public OrderListRespDto getOrderList(int userId, int flag,
@@ -396,8 +462,10 @@ public class OrderServiceImpl implements OrderService {
 					baseExist.setNeedPayPrice(DoubleUtils.add(baseExist.getNeedPayPrice(), 
 							baseDto.getNeedPayPrice()));
 					baseExist.setShippingFee(DoubleUtils.add(baseExist.getShippingFee(), baseDto.getShippingFee()));
+					baseExist.setDiscount(DoubleUtils.add(baseExist.getDiscount(), baseDto.getDiscount()));
 					baseExist.setTaoOrderSn(baseExist.getOrderSnMain());
 					baseExist.setIsOrder(BaseDtoIsOrderType.YES);
+					baseExist.setShipping(baseExist.getShipping().concat("、").concat(baseDto.getShipping()));
 					existDto.setBase(baseExist);
 					//merge goodslist
 					List<GoodsListDto> existGoodsDto = existDto.getGoodsList();
@@ -463,9 +531,9 @@ public class OrderServiceImpl implements OrderService {
 		baseDto.setStatus(order.getStatus());
 		baseDto.setTaoOrderSn(order.getTaoOrderSn());
 		baseDto.setIsshouhuo(getReciveStatus(order));// 确认收货的判断
-		baseDto.setTotalPrice(DoubleUtils.add(order.getGoodsAmount(), order.getShippingFee()));
-		double needToPay = DoubleUtils.sub(baseDto.getTotalPrice(), order.getOrderPayed());
-		needToPay = DoubleUtils.sub(needToPay, order.getDiscount());
+		double totalPrice = DoubleUtils.add(order.getGoodsAmount(), order.getShippingFee());
+		baseDto.setTotalPrice(totalPrice);
+		double needToPay = DoubleUtils.sub(totalPrice, order.getOrderPayed());
 		baseDto.setNeedPayPrice(needToPay);// 还需支付金额
 		
 		baseDto.setState(createState(order));
@@ -917,7 +985,7 @@ public class OrderServiceImpl implements OrderService {
 
 		Site site = siteDao.findOne(req.getCityId());
 
-		// 优惠券, 目前只有全场券
+		// 优惠券, 目前只有全场券和品类券
 		double needPay = DoubleUtils.add(cartRespDto.getTotalPrice(),
 				cartRespDto.getShippingFeeTotal()); // 还需付多少钱
 		int couponId = req.getCouponId();
@@ -982,7 +1050,7 @@ public class OrderServiceImpl implements OrderService {
 			order.setOrderSnMain(orderSnMain);
 			String taoOrderSn = orderSnMain;
 			if (packageNum > 1) {
-				String.format("%s-%d-%d", orderSnMain, packageNum, i + 1);
+				taoOrderSn = String.format("%s-%d-%d", orderSnMain, packageNum, i + 1);
 			}
 			order.setOrderSn(generateOrderSn());
 			order.setTaoOrderSn(taoOrderSn);
@@ -998,9 +1066,11 @@ public class OrderServiceImpl implements OrderService {
 				int specId = pl.getGoodsList().get(0).getSpecId();
 				needShippingTime = bookingShippingTimeMap.get(specId);
 			}
-			String[] strs = needShippingTime.split(" ");
-			order.setNeedShiptime(DateUtils.str2Date(strs[0].trim()));
-			order.setNeedShiptimeSlot(strs[1].trim());
+			if (needShippingTime != null) {
+				String[] strs = needShippingTime.split(" ");
+				order.setNeedShiptime(DateUtils.str2Date(strs[0].trim()));
+				order.setNeedShiptimeSlot(strs[1].trim());
+			}
 
 			int storeId = req.getStoreId();
 			StoreRespDto store = null;
@@ -1137,7 +1207,7 @@ public class OrderServiceImpl implements OrderService {
 
 		// 添加收货地址信息
 		OrderExtm orderExtm = new OrderExtm();
-		BeanUtils.copyProperties(address, orderExtm);
+		BeanUtils.copyProperties(address, orderExtm, "id");
 		orderExtm.setOrderSnMain(orderSnMain);
 		orderExtmDao.save(orderExtm);
 
@@ -1441,18 +1511,16 @@ public class OrderServiceImpl implements OrderService {
 	 * 用户app接口
 	 */
 	@Override
+	@Transactional
 	public OrderCancelRespDto cancelOrder(int userId, String orderSnMain) {
 		OrderCancelRespDto resp = new OrderCancelRespDto(200, "");
 		if (userId <= 0 || StringUtils.isBlank(orderSnMain)) {
-			resp.setCode(400);
-			resp.setMessage("参数有误");
-			return resp;
+			return new OrderCancelRespDto(400, "非法请求");
 		}
-		List<Order> orders = orderDao.findByOrderSnMainAndPayStatus(
-				orderSnMain, PayStatusEnum.STATUS_UNPAY.getId());
+		List<Order> orders = orderDao.findByOrderSnMain(
+				orderSnMain);
 		if (CollectionUtils.isEmpty(orders)) {
-			resp.setMessage("订单为空");
-			return resp;
+			return new OrderCancelRespDto(400, "订单号无效");
 		}
 
 		double returnAmountVcount = 0;
@@ -1460,19 +1528,23 @@ public class OrderServiceImpl implements OrderService {
 		double returnAmountCoupon = 0;
 		double returnAmount = 0;
 		double orderPayed = 0;
-
+		
+		boolean isAllPayed = true;
 		for (Order order : orders) {
 			if (order.getStatus() == OrderStatusEnum.STATUS_CANCELED.getId()
 					|| order.getStatus() == OrderStatusEnum.STATUS_REVIEWED
 							.getId()) {
-				resp.setMessage("订单已取消或已审核");
-				return resp;
+				return new OrderCancelRespDto(400, "订单不可取消");
 			}
 
+			isAllPayed &= (order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId());
 			if (order.getOrderPayed() > 0) {
 				orderPayed = DoubleUtils.add(orderPayed, order.getOrderPayed());
 				
 			}
+		}
+		if (isAllPayed) {
+			return new OrderCancelRespDto(400, "已付款订单不可取消,请联系客服");
 		}
 
 		if (orderPayed > 0) {
@@ -1554,7 +1626,12 @@ public class OrderServiceImpl implements OrderService {
 					if (returnAmountCoupon > 0) {// 优惠券状态改成未使用
 						
 						if(useCouponNo != null && !StringUtils.equals(useCouponNo, "0")) {
-							couponSnDao.refundCouponSn(useCouponNo, userId);
+							int couponId = coupListDao.refundCouponList(useCouponNo, userId);
+							if(couponId <= 0) {
+								resp.setCode(400);
+								resp.setMessage("返回优惠券失败");
+								return resp;
+							}
 						}
 					}
 				}
@@ -1635,9 +1712,9 @@ public class OrderServiceImpl implements OrderService {
 						
 						lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(
 								orderGoods.getSpecId(), order.getSellerId(),
+								new Date(),
 								orderGoods.getQuantity(),
-								orderGoods.getQuantity(),
-								new Date());
+								orderGoods.getQuantity());
 					} else {
 						
 						lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(
@@ -1683,7 +1760,12 @@ public class OrderServiceImpl implements OrderService {
 			orderReturn.setRepayTime(addTime);
 		}
 		orderReturn.setPostscript("客户自已取消订单");
-		return orderRDao.save(orderReturn).getOrderIdR();
+		OrderReturn or = orderRDao.save(orderReturn);
+		if(or != null) {
+			return or.getOrderIdR();
+		} else {
+			return 0;
+		}
 	}
 
 	/*
@@ -1760,6 +1842,7 @@ public class OrderServiceImpl implements OrderService {
 		return resp;
 	}
 
+
 	@Override
 	public PayBeforeRespDto getPayInfoBeforeOrder(int userId, String openId,
 			int cityId, int storeId, int couponId) {
@@ -1809,5 +1892,351 @@ public class OrderServiceImpl implements OrderService {
 
 		return resp;
 	}
+	
+	/**
+	 * 订单详情
+	 */
+    @Override
+    public OResponseDto<OrderInfoDto> getOrderGoodsInfo(String orderNo) {
+       return OrderInfoService.getOrderGoodsInfo(orderNo);
+    }
 
+    /**
+     * 订单列表
+     */
+    @Override
+    public OResponseDto<OrderListInfoDto> getOrderListInfo(OrderListParamDto param) {
+        return OrderInfoService.getOrderListInfo(param);
+    }
+
+    /**
+     * 打包完成
+     */
+    @Override
+    public OResponseDto<String> finishPackagingOrder(String taoOrderSn,String userName,int senderId) {
+        return orderOperationProcessor.finishPackagingOrder(taoOrderSn, userName, senderId);
+    }
+    /**
+     * 拒单
+     */
+    @Override
+    public OResponseDto<String> refuseOrder(String taoOrderSn,String userName,int refuseId,String refuseReason) {
+        return orderOperationProcessor.refuseOrder(taoOrderSn, userName, refuseId, refuseReason);
+    }
+    /**
+     * 回单
+     */
+    @Override
+    public OResponseDto<String> confirmRevieveOrder(String taoOrderSn, String gps,String userName) {
+         return orderOperationProcessor.confirmRevieveOrder(taoOrderSn, gps, userName);
+    }
+    /**
+     * 预售到货
+     */
+    @Override
+    public OResponseDto<String> confirmBookOrder(String taoOrderSn,String userName,int senderId) {
+      return orderOperationProcessor.confirmBookOrder(taoOrderSn, userName,senderId);
+    }
+
+	/**
+	 * 退货入库
+	 */
+    @Override
+    @Transactional
+	public ReturnStorageRespDto returnStorage(ReturnStorageReqDto returnStorageReqDto){
+		//预售商品退货时，修改订单状态，新建退款单
+		//操作库存，包括库存操作流水（退货状态）
+		//触发退款（退款状态）
+		
+		Order order = orderDao.findByTaoOrderSn(returnStorageReqDto.getTaoOrderSn());
+		if(order==null){
+			return new ReturnStorageRespDto(402,"订单不存在");
+		}
+		
+		if(order.getSellerId()!=returnStorageReqDto.getStoreId()){
+			return new ReturnStorageRespDto(403,"订单与微仓不一致");
+		}
+
+		List<OrderReturn> orderReturnList = getGoodsReturnList(order.getOrderId(),order.getTaoOrderSn(),returnStorageReqDto.getStoreId());
+		if(orderReturnList.size()==0){
+			return new ReturnStorageRespDto(404,"退货单不存在");
+		}
+		
+		if(isGoodsReturned(orderReturnList)){
+			return new ReturnStorageRespDto();
+		}
+		
+		//修改订单退货状态
+		updateOrderReturnGoodsStatus(orderReturnList,OrderReturnGoodsStatusEnum.STATUS_RETURNED);
+		
+		//创建操作日志
+		createAction(order,OrderActionTypeEnum.TYPE_RETURN_STORAGE,"","退货入库");
+		
+		//生成退货库存记录，增加库存
+		LKWhStockIn whStockIn = createLKWhStockIn(order);
+		
+		List<LKWhStockInGoods> stockInGoodsList = createLKWhStockInGoodsList(whStockIn,returnStorageReqDto);
+
+		//增加库存
+		updateGoodsStock(whStockIn,stockInGoodsList);
+		
+		return new ReturnStorageRespDto();
+	}
+	
+	private List<OrderReturn> getGoodsReturnList(int orderId,String orderSnMain,int storeId){
+		List<OrderReturn> orderReturnList = orderRDao.findByOrderId(orderId);
+		
+		if(orderReturnList.size() == 0){
+			orderReturnList = orderRDao.findByOrderSnMainAndSellerId(orderSnMain, storeId);
+		}
+		
+		return orderReturnList;
+	}
+	
+	private boolean isGoodsReturned(List<OrderReturn> orderReturnList){
+		for (OrderReturn orderReturn : orderReturnList) {
+			if(orderReturn.getGoodsStatus()!=OrderReturnGoodsStatusEnum.STATUS_RETURNED.getId()){
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * 修改退货状态
+	 * @param orderId 订单id
+	 * @param returnStatus 退货状态
+	 * @return
+	 */
+	private int updateOrderReturnGoodsStatus(List<OrderReturn> orderReturnList,OrderReturnGoodsStatusEnum goodsStatus){
+		List<Integer> orderIdRList = new ArrayList<Integer>();
+		for (OrderReturn orderReturn : orderReturnList) {
+			orderIdRList.add(orderReturn.getOrderIdR());
+		}
+
+		if(orderIdRList.size()==0){
+			return 0;
+		}
+		
+		return orderRDao.updateGoodsStatusByOrderIdRList(orderIdRList,goodsStatus.getId());
+	}
+		
+	private LKWhStockIn createLKWhStockIn(Order order){
+		LKWhStockIn whStockIn = new LKWhStockIn();
+		whStockIn.setStoreId(order.getSellerId());
+		//order_id_r
+		whStockIn.setType(2);
+		whStockIn.setCreateTime(new Date());
+		whStockInDao.save(whStockIn);
+		
+		return whStockIn;
+	}
+	
+	private List<LKWhStockInGoods> createLKWhStockInGoodsList(LKWhStockIn whStockIn ,ReturnStorageReqDto returnStorageReqDto){
+		List<LKWhStockInGoods> stockInGoodsList = new ArrayList<LKWhStockInGoods>();
+		
+		for (ReturnStorageGoodsReqDto returnStorageGoods : returnStorageReqDto.getSpecList()) {
+			LKWhStockInGoods stockInGoods = new LKWhStockInGoods();
+			stockInGoods.setSpecId(returnStorageGoods.getSpecId());
+			stockInGoods.setStock(returnStorageGoods.getConfirmNum());
+			stockInGoods.setInId(whStockIn.getInId());
+			whStockInGoodsDao.save(stockInGoods);
+			stockInGoodsList.add(stockInGoods);
+		}
+		
+		return stockInGoodsList;
+	}
+	
+	/**
+	 * 增加库存
+	 * @param order
+	 * @param goodsList
+	 */
+	private void updateGoodsStock(LKWhStockIn whStockIn,List<LKWhStockInGoods> stockInGoodsList){
+		if(whStockIn==null || stockInGoodsList==null){
+			return ;
+		}
+		
+		for (LKWhStockInGoods stockInGoods : stockInGoodsList) {
+			int tempCount = lkWhGoodsStoreDao.updateBySpecIdAndStoreId(stockInGoods.getSpecId(),
+					whStockIn.getStoreId(),-stockInGoods.getStock(),0);
+			
+			if(tempCount==0){
+				createWeiCangGoodsStore(whStockIn,stockInGoods);
+			}
+		}
+		
+		return;
+	}
+	
+	private WeiCangGoodsStore createWeiCangGoodsStore(LKWhStockIn whStockIn,LKWhStockInGoods stockInGoods){
+		WeiCangGoodsStore weiCangGoodsStore = new WeiCangGoodsStore();
+		weiCangGoodsStore.setStockS(stockInGoods.getStock());
+		weiCangGoodsStore.setSpecId(stockInGoods.getSpecId());
+		weiCangGoodsStore.setGoodsId(stockInGoods.getGoodsId());
+		weiCangGoodsStore.setStatus(WeiCangGoodsStoreStatusEnum.STATUS_ONSHELVES.getId());
+		weiCangGoodsStore.setStoreId(whStockIn.getStoreId());
+		weiCangGoodsStore.setUpdateTime(new Date());
+		
+		return lkWhGoodsStoreDao.save(weiCangGoodsStore);
+	}
+	
+	/**
+	 * 创建操作日志
+	 * @param order
+	 * @param action
+	 * @param actor
+	 * @param notes
+	 */
+	private OrderAction createAction(Order order,OrderActionTypeEnum action,String actor,String notes){
+		//order_action 只插入一条记录
+		OrderAction orderAction = new OrderAction();
+		orderAction.setAction(action.getId());
+		orderAction.setOrderSnMain(order.getOrderSnMain());
+		orderAction.setTaoOrderSn(order.getTaoOrderSn());
+		orderAction.setOrderId(order.getOrderId());
+		orderAction.setActor(actor);
+		orderAction.setActionTime(new Date());
+		orderAction.setNotes(notes);
+		orderActionDao.save(orderAction);
+		
+		return orderAction;
+	}
+	
+	/**
+	 * 创建异步任务
+	 * @param order
+	 * @param action
+	 */
+	private AsyncTask createAsyncTask(Order order,int actionKey,AsyncTaskActionEnum action){
+		AsyncTask task = new AsyncTask();
+		task.setAction(action.getId());
+		task.setCreateTime(new Date());
+		task.setActionKey(actionKey);
+		task.setOrderId(order.getOrderId());
+		task.setOrderSnMain(order.getOrderSnMain());
+		task.setTaoOrderSn(order.getTaoOrderSn());
+		task.setStatus(AsyncTaskStatusEnum.STATUS_NEW.getId());
+		asyncTaskDao.save(task);
+		
+		return task;
+	}
+
+	
+
+	@Override
+	public RespDto<OrderBonusRespDto> getCurrentMonthBonusInfo(int storeId) {
+		
+		
+		// 获取当月第一天以及下月第一天
+		int currentYear;
+		int currentMonth;
+		int start;
+		int end;
+		
+		Calendar cal=Calendar.getInstance();
+		currentYear = cal.get(Calendar.YEAR);
+		currentMonth = cal.get(Calendar.MONTH) + 1;
+		
+		cal.set(Calendar.DAY_OF_MONTH,1);
+		start = (int) (cal.getTimeInMillis() / 1000);
+		cal.add(Calendar.MONTH,1);
+		end = (int) (cal.getTimeInMillis() / 1000);
+		// 计算本月总体订单数
+		int orderNum = orderDao.countValidOrderBetweenAddTime(storeId, start, end);
+		// 计算已回订单金额和运费
+		double feedback = 0;
+		double feedbackDelivery = 0;
+		List<Order> orderList = orderDao.findByStatusAndAddTimeBetween(15, start, end);
+		for (Order order : orderList) {
+			feedback = DoubleUtils.add(feedback, order.getOrderAmount());
+			feedbackDelivery = DoubleUtils.add(feedbackDelivery,order.getShippingFee());
+		}
+		
+		OrderBonusRespDto bonusDto = new OrderBonusRespDto();
+		bonusDto.setOrderNum(orderNum);
+		bonusDto.setFeedback(feedback);
+		bonusDto.setFeedbackDelivery(feedbackDelivery);
+		bonusDto.setTimeStr(String.format("%d年%d月", currentYear, currentMonth ));
+		
+		return new RespDto(200, "ok", bonusDto);
+	}
+	
+	private Map<Integer,LkStatus> getLkStatusMap(){
+		Iterable<LkStatus> lkStatusList = lkStatusDao.findAll();
+		Map<Integer,LkStatus> statusMap=new HashMap<Integer,LkStatus>();
+		for (LkStatus lkStatus : lkStatusList) {
+			statusMap.put(lkStatus.getId(), lkStatus) ;
+		}
+		
+		return statusMap;
+	}
+	
+	public Map<String,List<LkStatusItemDto>> getLkStatusItemMap(){
+		Map<String,List<LkStatusItemDto>> result = new HashMap<String,List<LkStatusItemDto>>();
+		Iterable<LkStatusItem> lkStatusItemList = lkStatusItemDao.findAll();
+		Map<Integer,LkStatus> statusMap = getLkStatusMap();
+		
+		for (LkStatusItem lkStatusItem : lkStatusItemList) {
+			LkStatus lkStatus = statusMap.get(lkStatusItem.getStatusId());
+			if(lkStatus == null){
+				continue;
+			}
+			
+			List<LkStatusItemDto> statusItemList = result.get(lkStatus.getStatusName());
+			if(statusItemList==null){
+				statusItemList = new ArrayList<LkStatusItemDto>();
+			}
+			
+			statusItemList.add(new LkStatusItemDto(lkStatusItem.getStatusValue(),lkStatusItem.getStatusTitle()));
+			result.put(lkStatus.getStatusName(), statusItemList);
+		}
+		
+		return result;
+	}
+	
+	public Map<String,Object> getLkConfigureMap(){
+		Iterable<LkConfigure> lkConfigureList = lkConfigureDao.findAll();
+		Map<String,Map<String,Object>> listConfigMap = new HashMap<String, Map<String,Object>>();
+		
+		Map<String,Object> resultConfig = new HashMap<String, Object>();
+		
+		for (LkConfigure lkConfigure : lkConfigureList) {
+			Object value = getValue(lkConfigure);
+			
+			if(org.springframework.util.StringUtils.isEmpty(lkConfigure.getConfigureName())){
+				resultConfig.put(lkConfigure.getItemName(), value);
+				continue;
+			}
+			
+			Map<String,Object> configMap = listConfigMap.get(lkConfigure.getConfigureName());
+			
+			if(configMap==null){
+				configMap = new HashMap<String,Object>();
+			}
+			
+			configMap.put(lkConfigure.getItemName(),value);
+			
+			listConfigMap.put(lkConfigure.getConfigureName(), configMap);
+		}
+		
+		for (Entry<String, Map<String, Object>> entry : listConfigMap.entrySet()) {
+			resultConfig.put(entry.getKey(), entry.getValue());
+		}
+		
+		return resultConfig;
+	}
+	
+	private Object getValue(LkConfigure configure){
+		String value = configure.getItemValue();
+		switch(configure.getItemType()){
+			case "int":
+				return Integer.parseInt(value);
+			case "double":
+				return Double.parseDouble(value);
+		}
+		
+		return value;
+	}
 }

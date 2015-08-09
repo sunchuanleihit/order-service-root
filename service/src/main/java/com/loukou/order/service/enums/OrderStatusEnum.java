@@ -23,7 +23,9 @@ public enum OrderStatusEnum {
 	
 	STATUS_14(14),// 已发货
 	
-	STATUS_FINISHED(15); // 回单
+	STATUS_FINISHED(15), // 回单
+	
+	STATUS_REFUSED(16); //拒单
 	
 	private int id;
 	

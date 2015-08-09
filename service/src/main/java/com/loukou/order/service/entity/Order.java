@@ -221,14 +221,14 @@ public class Order {
 	 * 对cvs留空null
 	 */
 	@Column(name = "need_shiptime")
-	private Date needShiptime = new Date();
+	private Date needShiptime = null;
 
 	/*
 	 * 期望送货时间段
 	 * 对cvs留空null
 	 */
 	@Column(name = "need_shiptime_slot")
-	private String needShiptimeSlot = "";
+	private String needShiptimeSlot = null;
 
 	/*
 	 * 评价状态
@@ -383,7 +383,20 @@ public class Order {
 	@Column(name = "is_del")
 	private int isDel = 0;
 
-	public int getOrderId() {
+	@Column(name="receive_no")
+	private String receiveNo;
+	
+	
+
+    public String getReceiveNo() {
+        return receiveNo;
+    }
+
+    public void setReceiveNo(String receiveNo) {
+        this.receiveNo = receiveNo;
+    }
+
+    public int getOrderId() {
 		return orderId;
 	}
 
@@ -823,5 +836,4 @@ public class Order {
 	public void setSellSite(String sellSite) {
 		this.sellSite = sellSite;
 	}
-	
 }
