@@ -47,7 +47,7 @@ public class WeiXinPay {
 		if(needToPay > 0.0)
 		{
 			// 调用微信统一支付接口
-			String goodsName = String.format("订单号：%s", context.getOrderSnMain());
+			String goodsName = String.format("%s", context.getOrderSnMain());
 			// !!!! 注意⚠这里外部交易号用的是主单号 跟支付宝不一样 !!!!
 			WxUnifiedOrderRespVO unifiedOrderResp = WxPayProcessor.getProcessor()
 					.pay(context.getOrderSnMain(), goodsName, needToPay);

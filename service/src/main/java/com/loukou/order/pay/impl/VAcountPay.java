@@ -31,6 +31,22 @@ public class VAcountPay {
 		return paid == needToPay || paid > 0;
 	}
 	
+	public boolean makeVaRecharge(int userId, String userName, double amount,
+			String orderSnMain) {
+		VaccountUpdateRespVO resp = VirtualAccountProcessor.getProcessor()
+				.recharge(userId, amount, orderSnMain, userName);
+		if (resp == null
+				|| !StringUtils
+						.equalsIgnoreCase(resp.getCode(), Code.SUCCESS)) {
+			logger.error(String
+					.format("recharge fail userid[%d] amount[%f] ordersnmain[%s] resp[%s]",
+							userId, amount, orderSnMain, (resp == null ? null
+									: resp.toString())));
+			return false;
+		}
+		return true;
+	}
+	
 	/*
 	 * 调用虚拟账户接口进行订单支付
 	 */
