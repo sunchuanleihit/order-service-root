@@ -70,19 +70,19 @@ public class WeiXinPay {
 		}
 		// 构造收银台结构
 		result.setAppId(WxPayConstant.APPID);
-		result.setPartnerId(WxPayConstant.MCHID);
-		result.setPackageX(WxPayConstant.PACKAGESTR);
-		result.setTimestamp(String.valueOf(new Date().getTime() / 1000));
+		result.setPartner(WxPayConstant.MCHID);
+		result.setPackageStr(WxPayConstant.PACKAGESTR);
+		result.setTimeStamp((int)(new Date().getTime() / 1000));
 		result.setNeedPay(needToPay);
 		// 签名
 		// https://pay.weixin.qq.com/wiki/doc/api/app.php?chapter=9_12&index=2
 		Map<String, String> paramMap = new HashMap<String, String>();
 		paramMap.put("appid", result.getAppId());
-		paramMap.put("partnerid", result.getPartnerId());
+		paramMap.put("partnerid", result.getPartner());
 		paramMap.put("prepayid", result.getPrepayId());
-		paramMap.put("package", result.getPackageX());
+		paramMap.put("package", result.getPackageStr());
 		paramMap.put("noncestr", result.getNonceStr());
-		paramMap.put("timestamp", result.getTimestamp());
+		paramMap.put("timestamp", ""+result.getTimeStamp());
 		// 设置签名
 		result.setSign(WxPayUtil.getSign(paramMap));
 		return result;
