@@ -985,7 +985,7 @@ public class OrderServiceImpl implements OrderService {
 
 		Site site = siteDao.findOne(req.getCityId());
 
-		// 优惠券, 目前只有全场券
+		// 优惠券, 目前只有全场券和品类券
 		double needPay = DoubleUtils.add(cartRespDto.getTotalPrice(),
 				cartRespDto.getShippingFeeTotal()); // 还需付多少钱
 		int couponId = req.getCouponId();
@@ -1066,9 +1066,11 @@ public class OrderServiceImpl implements OrderService {
 				int specId = pl.getGoodsList().get(0).getSpecId();
 				needShippingTime = bookingShippingTimeMap.get(specId);
 			}
-			String[] strs = needShippingTime.split(" ");
-			order.setNeedShiptime(DateUtils.str2Date(strs[0].trim()));
-			order.setNeedShiptimeSlot(strs[1].trim());
+			if (needShippingTime != null) {
+				String[] strs = needShippingTime.split(" ");
+				order.setNeedShiptime(DateUtils.str2Date(strs[0].trim()));
+				order.setNeedShiptimeSlot(strs[1].trim());
+			}
 
 			int storeId = req.getStoreId();
 			StoreRespDto store = null;
