@@ -95,7 +95,6 @@ import com.loukou.order.service.enums.AsyncTaskActionEnum;
 import com.loukou.order.service.enums.AsyncTaskStatusEnum;
 import com.loukou.order.service.enums.OpearteTypeEnum;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
-import com.loukou.order.service.enums.OrderPayStatusEnum;
 import com.loukou.order.service.enums.OrderPayTypeEnum;
 import com.loukou.order.service.enums.OrderReturnGoodsStatusEnum;
 import com.loukou.order.service.enums.OrderReturnGoodsType;
@@ -936,12 +935,7 @@ public class OrderServiceImpl implements OrderService {
 		} else {
 			return new SubmitOrderRespDto(400, "目前只支持Android 和iOS 系统");
 		}
-		// shippingtime
-		if (req.getShippingTimes() == null
-				|| (req.getShippingTimes().getBooking().size() == 0 && req
-						.getShippingTimes().getMaterial().size() == 0)) {
-			return new SubmitOrderRespDto(400, "配送时间有误");
-		}
+				
 		// 地址
 		Address address = addressDao.findOne(req.getAddressId());
 		if (!Validate(address)) {
