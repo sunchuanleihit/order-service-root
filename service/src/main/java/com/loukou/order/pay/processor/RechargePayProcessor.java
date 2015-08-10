@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.loukou.order.pay.dal.RechargePayContext;
 import com.loukou.order.pay.impl.AliPay;
+import com.loukou.order.pay.impl.VAcountPay;
 import com.loukou.order.pay.impl.WeiXinPay;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
 import com.loukou.order.service.enums.PaymentEnum;
@@ -18,6 +19,9 @@ public class RechargePayProcessor {
 	private final Logger logger = Logger.getLogger(RechargePayProcessor.class);
 
 	@Autowired
+	private VAcountPay vaPay;
+
+	@Autowired
 	private AliPay aliPay;
 
 	@Autowired
@@ -25,6 +29,7 @@ public class RechargePayProcessor {
 
 	@Autowired
 	private GetDaoProcessor getDaoProcessor;
+
 	/**
 	 * 充值订单的微信支付
 	 * 
@@ -35,7 +40,8 @@ public class RechargePayProcessor {
 	 * @return
 	 */
 	public WeixinPayOrderResultDto payWx(int userId, String orderSnMain) {
-		RechargePayContext context = new RechargePayContext(userId, orderSnMain,getDaoProcessor);
+		RechargePayContext context = new RechargePayContext(userId,
+				orderSnMain, getDaoProcessor);
 		if (context.init()) {
 			context.recordAction(OrderActionTypeEnum.TYPE_CHOOSE_PAY,
 					"选择支付方式在线支付");
@@ -59,7 +65,8 @@ public class RechargePayProcessor {
 	 * @return
 	 */
 	public ALiPayOrderResultDto payAli(int userId, String orderSnMain) {
-		RechargePayContext context = new RechargePayContext(userId, orderSnMain,getDaoProcessor);
+		RechargePayContext context = new RechargePayContext(userId,
+				orderSnMain, getDaoProcessor);
 		if (context.init()) {
 			context.recordAction(OrderActionTypeEnum.TYPE_CHOOSE_PAY,
 					"选择支付方式在线支付");
@@ -74,9 +81,8 @@ public class RechargePayProcessor {
 	}
 
 	/**
-	 * 完成充值订单
-	 * 把支付金额分配到各子单
-	 * 修改支付单paysign状态
+	 * 完成充值订单 把支付金额分配到各子单 修改支付单paysign状态
+	 * 
 	 * @param paymentEnum
 	 * @param totalFee
 	 * @param orderSnMain
@@ -84,14 +90,22 @@ public class RechargePayProcessor {
 	 */
 	public boolean finishRecharge(PaymentEnum paymentEnum, double totalFee,
 			String orderSnMain) {
-		RechargePayContext context = new RechargePayContext(0, orderSnMain,getDaoProcessor);
+		RechargePayContext context = new RechargePayContext(0, orderSnMain,
+				getDaoProcessor);
 		if (!context.init()) {
 			logger.error(String
 					.format("finishRecharge fail to init order_sn_main[%s] total_fee[%f]",
 							orderSnMain, totalFee));
 			return false;
 		}
-		//通过context完成支付单子
+		if (!vaPay.makeVaRecharge(context.getUserId(), context.getUserName(),
+				totalFee, orderSnMain)) {
+			logger.error(String
+					.format("finishRecharge fail to makeVaRecharge order_sn_main[%s] total_fee[%f]",
+							orderSnMain, totalFee));
+			return false;
+		}
+		// 通过context完成支付单子
 		return context.finishPayment(paymentEnum, totalFee);
 	}
 }

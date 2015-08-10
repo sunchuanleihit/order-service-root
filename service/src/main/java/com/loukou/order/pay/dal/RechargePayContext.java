@@ -34,6 +34,7 @@ public class RechargePayContext extends BasePayContext {
 			logger.debug(String.format(
 					"rechargepay done to init order_sn_main[%s] user_id[%d]",
 					getOrderSnMain(), getUserId()));
+			setUserId(rechargeOrder.getUserId());
 			return true;
 		} else {
 			logger.error(String.format(
