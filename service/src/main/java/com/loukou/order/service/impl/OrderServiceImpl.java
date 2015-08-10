@@ -885,7 +885,7 @@ public class OrderServiceImpl implements OrderService {
 		} else if (coupRule.getCouponType() == CouponType.BRAND) {
 			// FIXME 目前没有品牌券，不实现
 		}
-		else if (coupRule.getCouponType() == CouponType.GOODS) {
+		else if (coupRule.getCouponType() == CouponType.CATE) {
 			// 分类券可用的分类可以是一级和二级分类
 			// 如果商品包含其他分类的商品，不能使用分类优惠券
 			List<Integer> cateIds = getOutId(coupRule);
@@ -1103,7 +1103,7 @@ public class OrderServiceImpl implements OrderService {
 				goods = goodsService.getGoods(spec.getGoodsId());
 				storeId = goods.getStoreId();
 			}
-			store = storeService.getByStoreId(req.getStoreId());
+			store = storeService.getByStoreId(storeId);
 			order.setSellerId(storeId);
 			order.setSellerName(store.getStoreName());
 			order.setType(pl.getPackageType());
@@ -1434,8 +1434,7 @@ public class OrderServiceImpl implements OrderService {
 					
 					if(StringUtils.isNotBlank(orderAction.getTaoOrderSn())) {
 						if(StringUtils.equals(orderAction.getTaoOrderSn(), taoOrderSn)) {
-							shippingListDto.setCreatTime(orderAction.getTimestamp()
-									.toString());
+							shippingListDto.setCreatTime(DateUtils.date2DateStr2(orderAction.getTimestamp()));
 							shippingListDto.setDescription(orderAction.getNotes());
 							shippingListDto.setTaoOrderSn(taoOrderSn);
 							shippingList.add(shippingListDto);

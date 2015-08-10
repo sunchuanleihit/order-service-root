@@ -24,7 +24,7 @@ public class VAcountPay {
 			return true;
 		}
 		// 支付
-		double paid = makeVaPay(context.getUserId(), needToPay, 0, context.getOrderSnMain(), true);
+		double paid = makeVaPay(context.getUserId(), needToPay, 0, context.getOrderSnMain());
 		// 把成功支付的金额分配到各子单 
 		context.consume(PaymentEnum.PAY_VACOUNT, paid);
 		// 发生了支付就认为成功
@@ -51,9 +51,19 @@ public class VAcountPay {
 	 * 调用虚拟账户接口进行订单支付
 	 */
 	private double makeVaPay(int userId, double amount, int orderId,
-			String orderSnMain, boolean trySufficient) {
+			String orderSnMain) {
 		double paid = 0;
-		
+		double balance = VirtualAccountProcessor.getProcessor()
+				.getVirtualBalanceByUserId(userId);
+		if(balance <= 0){
+			logger.info(String.format(
+					"makeVaPay amount balance zero order[%s] user[%d] amount[%f]",
+					orderSnMain, userId, amount));
+			return 0;
+		}
+		if(balance < amount){
+			amount = balance;
+		}
 		VaccountUpdateRespVO resp = VirtualAccountProcessor.getProcessor()
 				.consume(userId, amount, orderId, orderSnMain);
 		if (resp != null) {
@@ -62,22 +72,7 @@ public class VAcountPay {
 				logger.info(String.format(
 						"makeVaPay done order[%s] user[%d] amount[%f]",
 						orderSnMain, userId, amount));
-			} else if (StringUtils.endsWithIgnoreCase(resp.getCode(),
-					Code.INSUFFICIENT) && trySufficient) {
-				double balance = VirtualAccountProcessor.getProcessor()
-						.getVirtualBalanceByUserId(userId);
-				logger.info(String
-						.format("makeVaPay insufficient order[%s] user[%d] amount[%f] available[%f]",
-								orderSnMain, userId, amount, balance));
-				if (balance > 0) {
-					return makeVaPay(userId, balance, orderId, orderSnMain,
-							false);
-				} else {
-					logger.info(String.format(
-							"makeVaPay amount balance zero order[%s] user[%d] amount[%f]",
-							orderSnMain, userId, amount));
-				}
-			}
+			} 
 		} else {
 			logger.info(String.format(
 					"makeVaPay failed to pay order[%s] user[%d] amount[%f]",
