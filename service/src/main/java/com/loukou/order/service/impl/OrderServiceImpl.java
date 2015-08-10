@@ -876,7 +876,7 @@ public class OrderServiceImpl implements OrderService {
 		} else if (coupRule.getCouponType() == CouponType.BRAND) {
 			// FIXME 目前没有品牌券，不实现
 		}
-		else if (coupRule.getCouponType() == CouponType.GOODS) {
+		else if (coupRule.getCouponType() == CouponType.CATE) {
 			// 分类券可用的分类可以是一级和二级分类
 			// 如果商品包含其他分类的商品，不能使用分类优惠券
 			List<Integer> cateIds = getOutId(coupRule);
