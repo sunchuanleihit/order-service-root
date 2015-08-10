@@ -149,4 +149,8 @@ public class OrderModel {
 			return false;
 		}
 	}
+	
+	public List<OrderPay> getPays() {
+		return pays;
+	}
 }

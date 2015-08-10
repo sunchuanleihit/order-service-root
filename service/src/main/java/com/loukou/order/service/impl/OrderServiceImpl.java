@@ -1091,7 +1091,7 @@ public class OrderServiceImpl implements OrderService {
 				goods = goodsService.getGoods(spec.getGoodsId());
 				storeId = goods.getStoreId();
 			}
-			store = storeService.getByStoreId(req.getStoreId());
+			store = storeService.getByStoreId(storeId);
 			order.setSellerId(storeId);
 			order.setSellerName(store.getStoreName());
 			order.setType(pl.getPackageType());
