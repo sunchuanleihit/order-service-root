@@ -103,6 +103,7 @@ public abstract class BasePayContext {
 		int retry = 10;
 		while (retry > 0
 				&& orderPaySignDao.findByOutOrderSn(outTradeNo) != null) {
+			outTradeNo = generateTradeNo();
 			retry--;
 		}
 		if (retry == 0) {
