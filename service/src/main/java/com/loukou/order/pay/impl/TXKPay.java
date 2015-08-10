@@ -24,7 +24,7 @@ public class TXKPay {
 		}
 		// 支付
 		double paid = makeTXKPay(context.getUserId(), context.getUserName(),
-				needToPay, 0, context.getOrderSnMain(), true);
+				needToPay, 0, context.getOrderSnMain());
 		// 把成功支付的金额分配到各子单
 		context.consume(PaymentEnum.PAY_TXK, paid);
 		// 发生了支付就认为成功
@@ -35,9 +35,19 @@ public class TXKPay {
 	 * 调用掏心卡接口进行订单支付
 	 */
 	private double makeTXKPay(int userId, String userName, double amount,
-			int orderId, String orderSnMain, boolean trySufficient) {
+			int orderId, String orderSnMain) {
 		double paid = 0;
-
+		double balance = VirtualAccountProcessor.getProcessor()
+				.getVirtualBalanceByUserId(userId);
+		if(balance <= 0){
+			logger.info(String.format(
+					"makeVaPay amount balance zero order[%s] user[%d] amount[%f]",
+					orderSnMain, userId, amount));
+			return 0;
+		}
+		if(balance < amount){
+			amount = balance;
+		}
 		TxkCardPayRespVO resp = AccountTxkProcessor.getProcessor().consume(
 				orderSnMain, amount, userId, userName);
 		if (resp != null) {
@@ -46,21 +56,7 @@ public class TXKPay {
 				logger.info(String.format(
 						"makeTXKPay done order[%s] user[%d] amount[%f]",
 						orderSnMain, userId, amount));
-			} else if (trySufficient) {
-				double balance = VirtualAccountProcessor.getProcessor()
-						.getVirtualBalanceByUserId(userId);
-				logger.info(String
-						.format("makeTXKPay insufficient order[%s] user[%d] amount[%f] available[%f]",
-								orderSnMain, userId, amount, balance));
-				if (balance > 0) {
-					return makeTXKPay(userId, userName, balance, orderId,
-							orderSnMain, false);
-				} else {
-					logger.info(String
-							.format("makeTXKPay amount balance zero order[%s] user[%d] amount[%f]",
-									orderSnMain, userId, amount));
-				}
-			}
+			} 
 		} else {
 			logger.info(String.format(
 					"makeTXKPay failed to pay order[%s] user[%d] amount[%f]",

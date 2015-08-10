@@ -77,7 +77,7 @@ public class OrderPayContext extends BasePayContext {
 	 */
 	//TODO:事务
 	public double consume(PaymentEnum payment, double available) {
-		if (allModels != null) {
+		if (allModels != null && available > 0) {
 			for (OrderModel oneModel : allModels) {
 				available = oneModel.consume(payment, available);
 				if (available < 0) {
@@ -85,6 +85,9 @@ public class OrderPayContext extends BasePayContext {
 							"consume faile to pay order_sn_main[%s] payment_id[%d]",
 							getOrderSnMain(), payment.getId()));
 					return -1;
+				}
+				else if(available == 0){
+					break;
 				}
 			}
 		}
