@@ -45,7 +45,6 @@ import com.loukou.order.service.dao.AsyncTaskDao;
 import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.CoupTypeDao;
-import com.loukou.order.service.dao.CouponSnDao;
 import com.loukou.order.service.dao.ExpressDao;
 import com.loukou.order.service.dao.GoodsSpecDao;
 import com.loukou.order.service.dao.LKWhStockInDao;
@@ -96,7 +95,6 @@ import com.loukou.order.service.enums.AsyncTaskActionEnum;
 import com.loukou.order.service.enums.AsyncTaskStatusEnum;
 import com.loukou.order.service.enums.OpearteTypeEnum;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
-import com.loukou.order.service.enums.OrderPayStatusEnum;
 import com.loukou.order.service.enums.OrderPayTypeEnum;
 import com.loukou.order.service.enums.OrderReturnGoodsStatusEnum;
 import com.loukou.order.service.enums.OrderReturnGoodsType;
@@ -143,8 +141,8 @@ import com.loukou.order.service.resp.dto.ShippingMsgDto;
 import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderResultDto;
-import com.loukou.order.service.resp.dto.basic.RespDto;
 import com.loukou.order.service.resp.dto.UserOrderNumRespDto;
+import com.loukou.order.service.resp.dto.basic.RespDto;
 import com.loukou.order.service.util.DateUtils;
 import com.loukou.order.service.util.DoubleUtils;
 import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
@@ -920,13 +918,6 @@ public class OrderServiceImpl implements OrderService {
 			os = 30;
 		} else {
 			return new SubmitOrderRespDto(400, "目前只支持Android 和iOS 系统");
-		}
-		// shippingtime
-		if (req.getShippingTimes() != null) {
-			if (req.getShippingTimes().getBooking().size() == 0 && req
-					.getShippingTimes().getMaterial().size() == 0) {
-				return new SubmitOrderRespDto(400, "配送时间有误");
-			}
 		}
 				
 		// 地址
