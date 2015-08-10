@@ -1422,8 +1422,7 @@ public class OrderServiceImpl implements OrderService {
 					
 					if(StringUtils.isNotBlank(orderAction.getTaoOrderSn())) {
 						if(StringUtils.equals(orderAction.getTaoOrderSn(), taoOrderSn)) {
-							shippingListDto.setCreatTime(orderAction.getTimestamp()
-									.toString());
+							shippingListDto.setCreatTime(DateUtils.date2DateStr2(orderAction.getTimestamp()));
 							shippingListDto.setDescription(orderAction.getNotes());
 							shippingListDto.setTaoOrderSn(taoOrderSn);
 							shippingList.add(shippingListDto);
