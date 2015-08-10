@@ -93,6 +93,7 @@ import com.loukou.order.service.entity.Store;
 import com.loukou.order.service.entity.WeiCangGoodsStore;
 import com.loukou.order.service.enums.AsyncTaskActionEnum;
 import com.loukou.order.service.enums.AsyncTaskStatusEnum;
+import com.loukou.order.service.enums.CoupListReqTypeEnum;
 import com.loukou.order.service.enums.OpearteTypeEnum;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
 import com.loukou.order.service.enums.OrderPayTypeEnum;
@@ -161,6 +162,7 @@ import com.serverstarted.goods.service.api.GoodsSpecService;
 import com.serverstarted.goods.service.resp.dto.GoodsRespDto;
 import com.serverstarted.goods.service.resp.dto.GoodsSpecRespDto;
 import com.serverstarted.goods.service.resp.dto.GoodsStockInfoRespDto;
+import com.serverstarted.goods.service.resp.dto.ResultRespDto;
 import com.serverstarted.store.service.api.StoreService;
 import com.serverstarted.store.service.resp.dto.StoreRespDto;
 import com.serverstarted.user.api.UserService;
@@ -762,7 +764,7 @@ public class OrderServiceImpl implements OrderService {
 	
 	@Override
 	public CouponListRespDto getCouponList(int cityId, int userId, int storeId,
-			String openId) {
+			String openId, int usable) {
 		CouponListRespDto resp = new CouponListRespDto(200, "");
 		if (cityId <= 0 || userId <= 0 || storeId <= 0
 				|| StringUtils.isEmpty(openId)) {
@@ -772,6 +774,13 @@ public class OrderServiceImpl implements OrderService {
 		}
 		// FIXME 查询语句
 		List<CoupList> coupLists = coupListDao.getValidCoupLists(userId);// 以及其他的一些过滤条件
+		if(usable == CoupListReqTypeEnum.ALL.getId()) {
+			List<CoupList> invalidCoupLists = coupListDao.getInvalidCoupLists(userId);// 以及其他的一些过滤条件
+			coupLists.addAll(invalidCoupLists);
+		} 
+//		else if (usable == CoupListReqTypeEnum.USABLE.getId()) {
+//			
+//		}
 		if (coupLists.size() == 0) {
 			resp.setCode(200);
 			return resp;
@@ -792,10 +801,10 @@ public class OrderServiceImpl implements OrderService {
 		// List<CoupType> coupTypes = coupTypeDao.findByIdIn(coupTypeIds);
 		List<CoupList> validCoupList = Lists.newArrayList();
 		CoupList recommendCoupList = null; // 推荐用的券
-		CartRespDto cart = cartService.getCart(userId, openId, cityId, storeId);
+		ResultRespDto<CartRespDto> cart = cartService.getCart(userId, openId, cityId, storeId);
 		for (CoupList coupList : coupLists) {
 			CoupRule coupRule = ruleMap.get(coupList.getCouponId());
-			if (verifyCoup(userId, openId, cityId, storeId, coupList, cart,
+			if (verifyCoup(userId, openId, cityId, storeId, coupList, cart.getResult(),
 					coupRule)) {
 				validCoupList.add(coupList);
 				if (recommendCoupList == null) {
@@ -943,14 +952,15 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		// 购物车
-		CartRespDto cartRespDto = cartService.getCart(req.getUserId(),
+		ResultRespDto<CartRespDto> cartRespDto = cartService.getCart(req.getUserId(),
 				req.getOpenId(), req.getCityId(), req.getStoreId());
-		int packageNum = cartRespDto.getPackageList().size();
+		int packageNum = cartRespDto.getResult().getPackageList().size();
 		if (packageNum == 0) {
 			return new SubmitOrderRespDto(400, "购物车是空的");
 		}
 		// 校验库存
-		for (PackageRespDto p : cartRespDto.getPackageList()) {
+		List<PackageRespDto> packageList = cartRespDto.getResult().getPackageList();
+		for (PackageRespDto p : packageList) {
 			for (CartGoodsRespDto g : p.getGoodsList()) {
 				if (g.getAmount() > g.getStock()) {
 					return new SubmitOrderRespDto(400, "部分商品库存不足");
@@ -969,7 +979,7 @@ public class OrderServiceImpl implements OrderService {
 		for (SpecShippingTime st : bookingShippingTime) {
 			bookingShippingTimeMap.put(st.getSpecId(), st.getTime());
 		}
-		for (PackageRespDto p : cartRespDto.getPackageList()) {
+		for (PackageRespDto p : packageList) {
 			String needShippingTime = null;
 			if (PackageType.MATERIAL.equals(p.getPackageType())) {
 				if (materialShippingTime == null
@@ -991,12 +1001,14 @@ public class OrderServiceImpl implements OrderService {
 		if (user == null) {
 			return new SubmitOrderRespDto(400, "用户不存在");
 		}
+		
+		//
 
 		Site site = siteDao.findOne(req.getCityId());
 
 		// 优惠券, 目前只有全场券和品类券
-		double needPay = DoubleUtils.add(cartRespDto.getTotalPrice(),
-				cartRespDto.getShippingFeeTotal()); // 还需付多少钱
+		double needPay = DoubleUtils.add(cartRespDto.getResult().getTotalPrice(),
+				cartRespDto.getResult().getShippingFeeTotal()); // 还需付多少钱
 		int couponId = req.getCouponId();
 		CoupList coupList = null;
 		if (couponId > 0) {
@@ -1006,7 +1018,7 @@ public class OrderServiceImpl implements OrderService {
 			}
 
 			// 校验优惠券是否可用
-			if (coupList.getMinprice() > cartRespDto.getTotalPrice()) {
+			if (coupList.getMinprice() > cartRespDto.getResult().getTotalPrice()) {
 				return new SubmitOrderRespDto(400, String.format(
 						"使用优惠券最小金额为%.2f. 优惠券不可用", coupList.getMinprice()));
 			}
@@ -1028,7 +1040,7 @@ public class OrderServiceImpl implements OrderService {
 		double usedDsicount = 0.0; // 计算过的折扣
 		for (int i = 0; i < packageNum; i++) {
 
-			PackageRespDto pl = cartRespDto.getPackageList().get(i);
+			PackageRespDto pl = packageList.get(i);
 			double goodsAmount = 0.0; // 该包裹商品总额
 			for (CartGoodsRespDto g : pl.getGoodsList()) {
 				goodsAmount = DoubleUtils.add(goodsAmount,
@@ -1039,14 +1051,14 @@ public class OrderServiceImpl implements OrderService {
 			double discount = 0.0; // 折扣
 			if (coupList != null) {
 				double totalDiscount = coupList.getMoney();
-				if (i == cartRespDto.getPackageList().size() - 1) {
+				if (i == packageNum - 1) {
 					// 最后一个包裹的折扣
 					discount = DoubleUtils.sub(totalDiscount, usedDsicount);
 				} else {
 					// 该包裹折扣 = 该包裹商品总额 * 折扣总金额/所有商品总额
 					discount = DoubleUtils.div(
 							DoubleUtils.mul(goodsAmount, totalDiscount),
-							cartRespDto.getTotalPrice(), 1);
+							cartRespDto.getResult().getTotalPrice(), 1);
 				}
 				// 如果折扣金额大于总额，折扣=总额
 				if (discount > goodsAmount) {
@@ -1064,7 +1076,7 @@ public class OrderServiceImpl implements OrderService {
 			order.setOrderSn(generateOrderSn());
 			order.setTaoOrderSn(taoOrderSn);
 			if (PackageType.MATERIAL.equals(pl.getPackageType())) {
-				order.setShippingFee(cartRespDto.getShippingFeeTotal());
+				order.setShippingFee(cartRespDto.getResult().getShippingFeeTotal());
 			} else {
 				order.setShippingFee(0);
 			}
@@ -1124,7 +1136,7 @@ public class OrderServiceImpl implements OrderService {
 				order.setShippingId(1); // 商家自送
 			}
 			if (PackageType.MATERIAL.equals(pl.getPackageType())) {
-				order.setShippingFee(cartRespDto.getShippingFeeTotal());
+				order.setShippingFee(cartRespDto.getResult().getShippingFeeTotal());
 			} else {
 				order.setShippingFee(0);
 			}
@@ -1201,7 +1213,7 @@ public class OrderServiceImpl implements OrderService {
 				OrderPay orderPay = new OrderPay();
 				orderPay.setOrderId(newOrder.getOrderId());
 				orderPay.setOrderSnMain(newOrder.getOrderSnMain());
-				orderPay.setPaymentId(14); // 优惠券
+				orderPay.setPaymentId(PaymentEnum.PAY_YHQ.getId()); // 优惠券
 				orderPay.setMoney(discount);
 				orderPay.setPayTime(DateUtils.getTime());
 				orderPay.setStatus("succ");
@@ -1866,10 +1878,11 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		// 购物车
-		CartRespDto cart = cartService.getCart(userId, openId, cityId, storeId);
-		double orderTotal = cart.getTotalPrice();
-		double shippingFee = cart.getShippingFeeTotal();
-		if (cart.getPackageList().size() == 0) {
+		ResultRespDto<CartRespDto> cart = cartService.getCart(userId, openId, cityId, storeId);
+		CartRespDto cartResult = cart.getResult();
+		double orderTotal = cartResult.getTotalPrice();
+		double shippingFee = cartResult.getShippingFeeTotal();
+		if (cartResult.getPackageList().size() == 0) {
 			return new PayBeforeRespDto(400, "购物车没有商品");
 		}
 
