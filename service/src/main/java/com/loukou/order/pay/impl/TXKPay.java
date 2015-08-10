@@ -40,9 +40,9 @@ public class TXKPay {
 		double balance = VirtualAccountProcessor.getProcessor()
 				.getVirtualBalanceByUserId(userId);
 		if(balance <= 0){
-			logger.info(String
-					.format("makeTXKPay insufficient order[%s] user[%d] amount[%f] available[%f]",
-							orderSnMain, userId, amount, balance));
+			logger.info(String.format(
+					"makeVaPay amount balance zero order[%s] user[%d] amount[%f]",
+					orderSnMain, userId, amount));
 			return 0;
 		}
 		if(balance < amount){
