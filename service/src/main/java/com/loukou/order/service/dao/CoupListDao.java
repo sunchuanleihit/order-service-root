@@ -36,7 +36,7 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 
 	@Transactional
 	@Modifying
-	@Query("UPDATE CoupList set ischecked = 0, usedtime=NULL where userId = ?2 and commoncode=?1")
+	@Query("UPDATE CoupList set ischecked = 0, usedTime=NOW() where userId = ?2 and commoncode=?1")
 	int refundCouponList(String commoncode,int userId);//优惠券状态改成未使用
 	
 	CoupList getByUserIdAndCommoncode(int userId,String commoncode);

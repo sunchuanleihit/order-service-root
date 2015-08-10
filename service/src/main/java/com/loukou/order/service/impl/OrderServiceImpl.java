@@ -45,7 +45,6 @@ import com.loukou.order.service.dao.AsyncTaskDao;
 import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.CoupTypeDao;
-import com.loukou.order.service.dao.CouponSnDao;
 import com.loukou.order.service.dao.ExpressDao;
 import com.loukou.order.service.dao.GoodsSpecDao;
 import com.loukou.order.service.dao.LKWhStockInDao;
@@ -143,8 +142,8 @@ import com.loukou.order.service.resp.dto.ShippingMsgDto;
 import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderResultDto;
-import com.loukou.order.service.resp.dto.basic.RespDto;
 import com.loukou.order.service.resp.dto.UserOrderNumRespDto;
+import com.loukou.order.service.resp.dto.basic.RespDto;
 import com.loukou.order.service.util.DateUtils;
 import com.loukou.order.service.util.DoubleUtils;
 import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
@@ -300,8 +299,10 @@ public class OrderServiceImpl implements OrderService {
 		int refund = 0;
 		List<Order> orders = orderList.getContent();
 		for(Order order : orders) {
-			if (order.getStatus() == OrderStatusEnum.STATUS_NEW.getId() && 
-					order.getPayStatus() == PayStatusEnum.STATUS_UNPAY.getId()) {
+			if ((order.getStatus() == OrderStatusEnum.STATUS_NEW.getId() && 
+					order.getPayStatus() == PayStatusEnum.STATUS_UNPAY.getId()) 
+					|| (order.getStatus() == OrderStatusEnum.STATUS_NEW.getId() && 
+					(order.getPayStatus() == PayStatusEnum.STATUS_PART_PAYED.getId()))) {
 				toPayNum++;
 			} else if ((order.getStatus() == OrderStatusEnum.STATUS_REVIEWED.getId()
 					|| order.getStatus() == OrderStatusEnum.STATUS_PICKED.getId()
@@ -341,18 +342,27 @@ public class OrderServiceImpl implements OrderService {
 			return resp;
 		}
 		
-		Page<Order> orderList = null;
+		Page<Order> orderPageList = null;
+		Page<Order> partPayList = null;
+		List<Order> orderList = new ArrayList<Order>();
 		List<Integer> statusList = new ArrayList<Integer>();
 		Page<OrderReturn> orderReturns = null;
 		Set<String> orderSnMains = new HashSet<String>();
 		Sort sort = new Sort(Direction.DESC, "orderId");
 		Pageable pageable = new PageRequest(pageNum - 1, pageSize, sort);
 		if(flag == FlagType.ALL) {
-			orderList = orderDao.findByBuyerIdAndIsDel(userId, 0, pageable);
+			orderPageList = orderDao.findByBuyerIdAndIsDel(userId, 0, pageable);
+			orderList.addAll(orderPageList.getContent());
 		} else if (flag == FlagType.TO_PAY) {
 			statusList.add(OrderStatusEnum.STATUS_NEW.getId());
-			orderList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusIn(userId, 0, 
+			orderPageList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusIn(userId, 0, 
 					PayStatusEnum.STATUS_UNPAY.getId(), statusList, pageable);
+			partPayList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusIn(
+					userId, 0, PayStatusEnum.STATUS_PART_PAYED.getId(), statusList, pageable);
+			orderList.addAll(orderPageList.getContent());
+			if(!CollectionUtils.isEmpty(partPayList.getContent())) {
+				orderList.addAll(partPayList.getContent());
+			}
 			
 		} else if (flag == FlagType.TO_RECIEVE) {
 			statusList.add(OrderStatusEnum.STATUS_REVIEWED.getId());
@@ -361,8 +371,9 @@ public class OrderServiceImpl implements OrderService {
 			statusList.add(OrderStatusEnum.STATUS_PACKAGED.getId());
 			statusList.add(OrderStatusEnum.STATUS_DELIVERIED.getId());
 			statusList.add(OrderStatusEnum.STATUS_NEW.getId());
-			orderList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusIn(userId, 0, 
+			orderPageList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusIn(userId, 0, 
 					PayStatusEnum.STATUS_PAYED.getId(),statusList, pageable);
+			orderList = orderPageList.getContent();
 	
 		} else if (flag == FlagType.REFUND) {
 			orderReturns = orderRDao.findByBuyerIdAndOrderStatus(userId, 0, pageable);
@@ -371,12 +382,15 @@ public class OrderServiceImpl implements OrderService {
 				for (OrderReturn orderReturn : returns) {
 					orderSnMains.add(orderReturn.getOrderSnMain());
 				}
-				orderList = orderDao.findByOrderSnMainIn(orderSnMains, pageable);
+				orderPageList = orderDao.findByOrderSnMainIn(orderSnMains, pageable);
+				orderList = orderPageList.getContent();
 			}
 		}
-		if (orderList.getTotalElements() == 0) {
-			resp.setMessage("订单列表为空");
-			return resp;
+		if ((int)orderPageList.getTotalElements() == 0) {
+			if(partPayList == null || (int)partPayList.getTotalElements() == 0) {
+				resp.setMessage("订单列表为空");
+				return resp;
+			}
 		}
 
 		OrderListResultDto resultDto = new OrderListResultDto();
@@ -388,6 +402,7 @@ public class OrderServiceImpl implements OrderService {
 		List<OrderGoods> orderGoodsList = orderGoodsDao.findByOrderIdIn(orderIds);
 		
 		Map<String, OrderListDto> orderListMap = new HashMap<String, OrderListDto>();
+		
 		for(Order order : orderList) {
 			OrderListDto orderListDto = new OrderListDto();
 			OrderListBaseDto baseDto = createBaseDto(order, BaseDtoType.LIST);
@@ -417,7 +432,7 @@ public class OrderServiceImpl implements OrderService {
 			List<OrderListDto> sortListDto = sortAfterMerge(finalListDto);
 			//合并未支付的子单
 			resultDto.setOrderList(sortListDto);
-			resultDto.setOrderCount((int)orderList.getTotalElements());
+			resultDto.setOrderCount((int)orderPageList.getTotalElements());
 			resp.setResult(resultDto);
 		}
 		return resp;
@@ -645,7 +660,7 @@ public class OrderServiceImpl implements OrderService {
 			}
 			orderListDto.setExtmMsg(extmMsgDto);
 			//物流信息
-			if(order.getStatus() > OrderStatusEnum.STATUS_REVIEWED.getId()
+			if(order.getStatus() >= OrderStatusEnum.STATUS_REVIEWED.getId()
 					|| (order.getStatus() == OrderStatusEnum.STATUS_NEW.getId() 
 						&& order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId())) {
 				getLogistics(order, orderListDto);
@@ -691,8 +706,8 @@ public class OrderServiceImpl implements OrderService {
 			List<ShippingListDto> shippingList = shippingDto.getResult().getShippingList();
 			if(!CollectionUtils.isEmpty(shippingList)) {
 				if(StringUtils.isBlank(shippingList.get(0).getDescription())) {
-					if(order.getStatus() >= OrderStatusEnum.STATUS_DELIVERIED.getId()
-							&& order.getStatus() <= OrderStatusEnum.STATUS_14.getId()
+					if(order.getStatus() == OrderStatusEnum.STATUS_DELIVERIED.getId()
+							&& order.getStatus() == OrderStatusEnum.STATUS_14.getId()
 							) {
 						shippingMsgDto.setDescription(ShippingMsgDesc.DELIEVER);
 						if(order.getShipTime() == null || order.getShipTime() == 0) {
@@ -1411,7 +1426,7 @@ public class OrderServiceImpl implements OrderService {
 						|| orderAction.getAction() == OrderActionTypeEnum.TYPE_INSPECTED.getId())) {
 					ShippingListDto shippingListDto = new ShippingListDto();
 					
-					if(orderAction.getTaoOrderSn() != null || StringUtils.isNotBlank(orderAction.getTaoOrderSn())) {
+					if(StringUtils.isNotBlank(orderAction.getTaoOrderSn())) {
 						if(StringUtils.equals(orderAction.getTaoOrderSn(), taoOrderSn)) {
 							shippingListDto.setCreatTime(orderAction.getTimestamp()
 									.toString());
