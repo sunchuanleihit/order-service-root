@@ -221,14 +221,14 @@ public class Order {
 	 * 对cvs留空null
 	 */
 	@Column(name = "need_shiptime")
-	private Date needShiptime = new Date();
+	private Date needShiptime = null;
 
 	/*
 	 * 期望送货时间段
 	 * 对cvs留空null
 	 */
 	@Column(name = "need_shiptime_slot")
-	private String needShiptimeSlot = "";
+	private String needShiptimeSlot = null;
 
 	/*
 	 * 评价状态

@@ -4,6 +4,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.loukou.order.pay.processor.OrderPayProcessor;
 import com.loukou.order.pay.processor.RechargePayProcessor;
@@ -35,6 +36,7 @@ public class PayServiceImpl implements PayService {
 	private RechargePayProcessor rechargePayProcessor;
 
 	@Override
+	@Transactional
 	public AbstractPayOrderRespDto payOrder(int userId, int payType,
 			int paymentId, String orderSnMain, int isTaoxinka, int isVcount) {
 		AbstractPayOrderRespDto resp = null;
@@ -94,6 +96,7 @@ public class PayServiceImpl implements PayService {
 			default:
 				resp = new AbstractPayOrderRespDto(ResultRespDtoCode.FAILED,"支付方式不正确");
 		}
+		
 		return resp;
 	}
 
@@ -101,6 +104,7 @@ public class PayServiceImpl implements PayService {
 	 * 实现支付回调逻辑
 	 */
 	@Override
+	@Transactional
 	public int finishOrderPay(int paymentId, double totalFee,
 			String orderSnMain) {
 		if (!verifyRechargePayInfo(paymentId, totalFee, orderSnMain)) {

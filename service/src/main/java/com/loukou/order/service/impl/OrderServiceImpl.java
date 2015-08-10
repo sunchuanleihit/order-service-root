@@ -935,12 +935,7 @@ public class OrderServiceImpl implements OrderService {
 		} else {
 			return new SubmitOrderRespDto(400, "目前只支持Android 和iOS 系统");
 		}
-		// shippingtime
-		if (req.getShippingTimes() == null
-				|| (req.getShippingTimes().getBooking().size() == 0 && req
-						.getShippingTimes().getMaterial().size() == 0)) {
-			return new SubmitOrderRespDto(400, "配送时间有误");
-		}
+				
 		// 地址
 		Address address = addressDao.findOne(req.getAddressId());
 		if (!Validate(address)) {
@@ -999,7 +994,7 @@ public class OrderServiceImpl implements OrderService {
 
 		Site site = siteDao.findOne(req.getCityId());
 
-		// 优惠券, 目前只有全场券
+		// 优惠券, 目前只有全场券和品类券
 		double needPay = DoubleUtils.add(cartRespDto.getTotalPrice(),
 				cartRespDto.getShippingFeeTotal()); // 还需付多少钱
 		int couponId = req.getCouponId();
@@ -1080,9 +1075,11 @@ public class OrderServiceImpl implements OrderService {
 				int specId = pl.getGoodsList().get(0).getSpecId();
 				needShippingTime = bookingShippingTimeMap.get(specId);
 			}
-			String[] strs = needShippingTime.split(" ");
-			order.setNeedShiptime(DateUtils.str2Date(strs[0].trim()));
-			order.setNeedShiptimeSlot(strs[1].trim());
+			if (needShippingTime != null) {
+				String[] strs = needShippingTime.split(" ");
+				order.setNeedShiptime(DateUtils.str2Date(strs[0].trim()));
+				order.setNeedShiptimeSlot(strs[1].trim());
+			}
 
 			int storeId = req.getStoreId();
 			StoreRespDto store = null;
@@ -1527,15 +1524,12 @@ public class OrderServiceImpl implements OrderService {
 	public OrderCancelRespDto cancelOrder(int userId, String orderSnMain) {
 		OrderCancelRespDto resp = new OrderCancelRespDto(200, "");
 		if (userId <= 0 || StringUtils.isBlank(orderSnMain)) {
-			resp.setCode(400);
-			resp.setMessage("参数有误");
-			return resp;
+			return new OrderCancelRespDto(400, "非法请求");
 		}
-		List<Order> orders = orderDao.findByOrderSnMainAndPayStatus(
-				orderSnMain, PayStatusEnum.STATUS_UNPAY.getId());
+		List<Order> orders = orderDao.findByOrderSnMain(
+				orderSnMain);
 		if (CollectionUtils.isEmpty(orders)) {
-			resp.setMessage("订单为空");
-			return resp;
+			return new OrderCancelRespDto(400, "订单号无效");
 		}
 
 		double returnAmountVcount = 0;
@@ -1543,19 +1537,23 @@ public class OrderServiceImpl implements OrderService {
 		double returnAmountCoupon = 0;
 		double returnAmount = 0;
 		double orderPayed = 0;
-
+		
+		boolean isAllPayed = true;
 		for (Order order : orders) {
 			if (order.getStatus() == OrderStatusEnum.STATUS_CANCELED.getId()
 					|| order.getStatus() == OrderStatusEnum.STATUS_REVIEWED
 							.getId()) {
-				resp.setMessage("订单已取消或已审核");
-				return resp;
+				return new OrderCancelRespDto(400, "订单不可取消");
 			}
 
+			isAllPayed &= (order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId());
 			if (order.getOrderPayed() > 0) {
 				orderPayed = DoubleUtils.add(orderPayed, order.getOrderPayed());
 				
 			}
+		}
+		if (isAllPayed) {
+			return new OrderCancelRespDto(400, "已付款订单不可取消,请联系客服");
 		}
 
 		if (orderPayed > 0) {
