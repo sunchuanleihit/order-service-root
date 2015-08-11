@@ -7,14 +7,10 @@ import com.loukou.order.service.req.dto.OrderListParamDto;
 import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
+import com.loukou.order.service.resp.dto.LkStatusItemDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderBonusRespDto;
 import com.loukou.order.service.resp.dto.OrderCancelRespDto;
-import com.loukou.order.service.resp.dto.OResponseDto;
-import com.loukou.order.service.resp.dto.OrderInfoDto;
-import com.loukou.order.service.req.dto.OrderListParamDto;
-import com.loukou.order.service.resp.dto.LkStatusItemDto;
-import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderInfoDto;
 import com.loukou.order.service.resp.dto.OrderListInfoDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
@@ -24,10 +20,8 @@ import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
-import com.loukou.order.service.resp.dto.basic.RespDto;
-import com.loukou.order.service.resp.dto.RefuseReasonDto;
-import com.loukou.order.service.resp.dto.RefuseReasonListDto;
 import com.loukou.order.service.resp.dto.UserOrderNumRespDto;
+import com.loukou.order.service.resp.dto.basic.RespDto;
 
 public interface OrderService {
 	
@@ -49,8 +43,9 @@ public interface OrderService {
 	 * @param userId 用户ID
 	 * @param storeId 店铺ID
 	 * @param openId 唯一设备号
+	 * @param usable 是否可用（0: 不限——过期和不过期的优惠券；1：可用优惠券）
 	 */
-	public CouponListRespDto getCouponList(int cityId, int userId, int storeId, String openId);
+	public CouponListRespDto getCouponList(int cityId, int userId, int storeId, String openId, int usable);
 	
 	/**
 	 * 

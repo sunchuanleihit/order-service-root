@@ -40,4 +40,7 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 	int refundCouponList(String commoncode,int userId);//优惠券状态改成未使用
 	
 	CoupList getByUserIdAndCommoncode(int userId,String commoncode);
+
+	@Query("SELECT c FROM CoupList c WHERE userId = ?1 AND issue=1 AND ischecked=1")
+	List<CoupList> getInvalidCoupLists(int userId);
 }
