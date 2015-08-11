@@ -149,6 +149,7 @@ import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
 import com.loukou.pos.client.txk.req.TxkCardRefundRespVO;
 import com.loukou.pos.client.vaccount.processor.VirtualAccountProcessor;
 import com.loukou.pos.client.vaccount.resp.VaccountUpdateRespVO;
+import com.loukou.pos.client.vaccount.resp.VaccountUpdateRespVO.Code;
 import com.loukou.search.service.api.GoodsSearchService;
 import com.loukou.search.service.dto.GoodsCateDto;
 import com.serverstarted.cart.service.api.CartService;
@@ -1615,7 +1616,12 @@ public class OrderServiceImpl implements OrderService {
 										addTime, 0,
 										noteStr,
 										order.getBuyerName());
-
+						// FIXME 目前不支持重试，先让用户联系客服吧
+//						if (vAccountResp == null || !StringUtils.equalsIgnoreCase(vAccountResp.getCode(), Code.SUCCESS)) {
+//							resp.setCode(400);
+//							resp.setMessage("余额退款失败");
+//							return resp;
+//						}
 					}
 					if (returnAmountTxk > 0) {// 淘心卡原额退
 						OrderPayR orderPayR = new OrderPayR();
@@ -1629,17 +1635,24 @@ public class OrderServiceImpl implements OrderService {
 								.getProcessor().refund(returnAmountTxk,
 										orderSnMain, userId,
 										order.getBuyerName());
+						// FIXME 目前不支持重试，先让用户联系客服吧
+//						if (txkCardResp == null || !StringUtils.equalsIgnoreCase(txkCardResp.getMsg(), TxkCardRefundRespVO.MSG_SUCCESS)) {
+//							resp.setCode(400);
+//							resp.setMessage("淘心卡退款失败");
+//							return resp;
+//						}
 					}
 
 					if (returnAmountCoupon > 0) {// 优惠券状态改成未使用
 						
 						if(useCouponNo != null && !StringUtils.equals(useCouponNo, "0")) {
 							int couponId = coupListDao.refundCouponList(useCouponNo, userId);
-							if(couponId <= 0) {
-								resp.setCode(400);
-								resp.setMessage("返回优惠券失败");
-								return resp;
-							}
+							// FIXME 目前不支持重试，先让用户联系客服吧
+//							if(couponId <= 0) {
+//								resp.setCode(400);
+//								resp.setMessage("返回优惠券失败");
+//								return resp;
+//							}
 						}
 					}
 				}
