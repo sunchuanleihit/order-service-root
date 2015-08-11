@@ -1537,6 +1537,7 @@ public class OrderServiceImpl implements OrderService {
 		double returnAmountCoupon = 0;
 		double returnAmount = 0;
 		double orderPayed = 0;
+		double returnSum = 0;
 		
 		boolean isAllPayed = true;
 		for (Order order : orders) {
@@ -1557,11 +1558,17 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		if (orderPayed > 0) {
+			int buyerId = 0;
+			String buyerName = "";
+			int sellerId = 0;
+			String useCouponNo = "";
+			Map<Integer, Double> allPaymentIdMoneyMap = new HashMap<Integer, Double>();
+			
 			for (Order order : orders) {
 				Map<Integer, Double> paymentIdMoneyMap = getPay(order
 						.getOrderId());
 				
-				String useCouponNo = order.getUseCouponNo();
+				useCouponNo = order.getUseCouponNo();
 				
 				for (Map.Entry<Integer, Double> entry : paymentIdMoneyMap
 						.entrySet()) {
@@ -1574,99 +1581,108 @@ public class OrderServiceImpl implements OrderService {
 					} else {
 						returnAmount = DoubleUtils.add(returnAmount, entry.getValue());
 					}
-				}
-				
-				double returnSum = DoubleUtils.add(returnAmountVcount, returnAmountTxk);
-				returnSum = DoubleUtils.add(returnSum, returnAmountCoupon);
-				returnSum = DoubleUtils.add(returnSum, returnAmount);
-
-				if (returnAmount > 0) {
-					// 有采用在线支付，则生成未退款单及应退明细记录
-					int orderIdR = getOrderReturnAdd(orderSnMain,
-							order.getOrderId(), order.getBuyerId(),
-							order.getSellerId(), returnSum, 0, 0);
-					for (Map.Entry<Integer, Double> entry : paymentIdMoneyMap
-							.entrySet()) {
-						OrderPayR orderPayR = new OrderPayR();
-						orderPayR.setOrderIdR(orderIdR);
-						orderPayR.setRepayWay(0);
-						orderPayR.setPaymentId(entry.getKey());
-						orderPayR.setValue(entry.getValue());
-						orderPayRDao.save(orderPayR);
+					
+					if (allPaymentIdMoneyMap.containsKey(entry.getKey())) {
+						allPaymentIdMoneyMap.put(entry.getKey(),
+								DoubleUtils.add(allPaymentIdMoneyMap.get(entry.getKey()), entry.getValue()));
+					} else {
+						allPaymentIdMoneyMap.put(entry.getKey(),
+								entry.getValue());
 					}
+				}
 
-				} else {
-					// 否则安照原先支付记录自动退款，并生成已退款单
-					int orderIdR = getOrderReturnAdd(orderSnMain,
-							order.getOrderId(), order.getBuyerId(),
-							order.getSellerId(), returnSum, 1, 1);
-					if (returnAmountVcount > 0) {// 虚拟帐户原额退
-						OrderPayR orderPayR = new OrderPayR();
-						orderPayR.setOrderIdR(orderIdR);
-						orderPayR.setRepayWay(0);
-						orderPayR.setPaymentId(2);
-						orderPayR.setValue(returnAmountVcount);
-						orderPayRDao.save(orderPayR);
-						String addTime = DateUtils.date2DateStr2(new Date());
-						String noteStr = String.format("取消订单退款:%s", addTime);
-						VaccountUpdateRespVO vAccountResp = VirtualAccountProcessor
-								.getProcessor().refund(userId,
-										order.getOrderId(), orderSnMain,
-										returnAmountVcount,
-										addTime, 0,
-										noteStr,
-										order.getBuyerName());
-						// FIXME 目前不支持重试，先让用户联系客服吧
+				buyerId = order.getBuyerId();
+				sellerId = order.getSellerId();
+				buyerName = order.getBuyerName();
+			}
+
+			returnSum = DoubleUtils.add(returnAmountVcount, returnAmountTxk);
+			returnSum = DoubleUtils.add(returnSum, returnAmountCoupon);
+			returnSum = DoubleUtils.add(returnSum, returnAmount);
+
+			if (returnAmount > 0) {
+				// 有采用在线支付，则生成未退款单及应退明细记录, 由客服退款，这里不调用余额和淘心卡 接口退款
+				int orderIdR = getOrderReturnAdd(orderSnMain,
+						0, buyerId,
+						sellerId, returnSum, 0, 0);
+				for (Map.Entry<Integer, Double> entry : allPaymentIdMoneyMap
+						.entrySet()) {
+					OrderPayR orderPayR = new OrderPayR();
+					orderPayR.setOrderIdR(orderIdR);
+					orderPayR.setRepayWay(0);
+					orderPayR.setPaymentId(entry.getKey());
+					orderPayR.setValue(entry.getValue());
+					orderPayRDao.save(orderPayR);
+				}
+
+			} else {
+				// 否则安照原先支付记录自动退款，并生成已退款单
+				int orderIdR = getOrderReturnAdd(orderSnMain,
+						0, buyerId,
+						sellerId, returnSum, 1, 1);
+				if (returnAmountVcount > 0) {// 虚拟帐户原额退
+					OrderPayR orderPayR = new OrderPayR();
+					orderPayR.setOrderIdR(orderIdR);
+					orderPayR.setRepayWay(0);
+					orderPayR.setPaymentId(2);
+					orderPayR.setValue(returnAmountVcount);
+					orderPayRDao.save(orderPayR);
+					String addTime = DateUtils.date2DateStr2(new Date());
+					String noteStr = String.format("取消订单退款:%s", addTime);
+					VaccountUpdateRespVO vAccountResp = VirtualAccountProcessor
+							.getProcessor().refund(userId,
+									0, orderSnMain,
+									returnAmountVcount,
+									addTime, 0,
+									noteStr,
+									buyerName);
+					// FIXME 目前不支持重试，先让用户联系客服吧
 //						if (vAccountResp == null || !StringUtils.equalsIgnoreCase(vAccountResp.getCode(), Code.SUCCESS)) {
 //							resp.setCode(400);
 //							resp.setMessage("余额退款失败");
 //							return resp;
 //						}
-					}
-					if (returnAmountTxk > 0) {// 淘心卡原额退
-						OrderPayR orderPayR = new OrderPayR();
-						orderPayR.setOrderIdR(orderIdR);
-						orderPayR.setPaymentId(PaymentEnum.PAY_TXK.getId());
-						orderPayR.setRepayWay(0);
-						orderPayR.setValue(returnAmountTxk);
-						orderPayRDao.save(orderPayR);
-						// TODO test
-						TxkCardRefundRespVO txkCardResp = AccountTxkProcessor
-								.getProcessor().refund(returnAmountTxk,
-										orderSnMain, userId,
-										order.getBuyerName());
-						// FIXME 目前不支持重试，先让用户联系客服吧
+				}
+				if (returnAmountTxk > 0) {// 淘心卡原额退
+					OrderPayR orderPayR = new OrderPayR();
+					orderPayR.setOrderIdR(orderIdR);
+					orderPayR.setPaymentId(PaymentEnum.PAY_TXK.getId());
+					orderPayR.setRepayWay(0);
+					orderPayR.setValue(returnAmountTxk);
+					orderPayRDao.save(orderPayR);
+					// TODO test
+					TxkCardRefundRespVO txkCardResp = AccountTxkProcessor
+							.getProcessor().refund(returnAmountTxk,
+									orderSnMain, userId,
+									buyerName);
+					// FIXME 目前不支持重试，先让用户联系客服吧
 //						if (txkCardResp == null || !StringUtils.equalsIgnoreCase(txkCardResp.getMsg(), TxkCardRefundRespVO.MSG_SUCCESS)) {
 //							resp.setCode(400);
 //							resp.setMessage("淘心卡退款失败");
 //							return resp;
 //						}
-					}
+				}
 
-					if (returnAmountCoupon > 0) {// 优惠券状态改成未使用
-						
-						if(useCouponNo != null && !StringUtils.equals(useCouponNo, "0")) {
-							int couponId = coupListDao.refundCouponList(useCouponNo, userId);
-							// FIXME 目前不支持重试，先让用户联系客服吧
+				if (returnAmountCoupon > 0) {// 优惠券状态改成未使用
+					
+					if(StringUtils.isEmpty(useCouponNo) && !StringUtils.equals(useCouponNo, "0")) {
+						int couponId = coupListDao.refundCouponList(useCouponNo, userId);
+						// FIXME 目前不支持重试，先让用户联系客服吧
 //							if(couponId <= 0) {
 //								resp.setCode(400);
 //								resp.setMessage("返回优惠券失败");
 //								return resp;
 //							}
-						}
 					}
 				}
-				
-				releaseAndLog(order, resp);
-				
-			} // end of for loop
+			}				
 
-		} else {
-			// 全部未支付，只需改订单状态及操作记录即可
-			for (Order order : orders) {
-				releaseAndLog(order, resp);
-			}
 		}
+		// 改订单状态及操作记录即可
+		for (Order order : orders) {
+			releaseAndLog(order, resp);
+		}
+		
 		return resp;
 	}
 	
@@ -1802,8 +1818,7 @@ public class OrderServiceImpl implements OrderService {
 				// if(orderPay.getPaymentId() != 14) {
 				if (paymentIdMoney.containsKey(orderPay.getPaymentId())) {
 					paymentIdMoney.put(orderPay.getPaymentId(),
-							paymentIdMoney.get(orderPay.getPaymentId())
-									+ orderPay.getMoney());
+							DoubleUtils.add(paymentIdMoney.get(orderPay.getPaymentId()), orderPay.getMoney()));
 				} else {
 					paymentIdMoney.put(orderPay.getPaymentId(),
 							orderPay.getMoney());
