@@ -161,6 +161,10 @@ public class OrderInfoService {
         // 按照正常的页码1,2,3,4,5传入 1,2,3,4,5传出
         PageRequest pagenation = new PageRequest((Math.max(1, param.getPageNum()) - 1), param.getPageSize(),new Sort(Sort.Direction.DESC,"orderId"));
         List<String> types = new ArrayList<String>();
+        //待送货和已完成　　都需要预售订单
+        if(param.getOrderStatus()==OrderStatusEnum.STATUS_14.getId() ||param.getOrderStatus() ==OrderStatusEnum.STATUS_FINISHED.getId()){
+            types.add("booking");
+        }
         switch (param.getOrderType()) {
         case 1:// 微仓
             types.add("wei_wh");
