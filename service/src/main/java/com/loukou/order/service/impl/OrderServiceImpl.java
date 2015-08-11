@@ -360,6 +360,7 @@ public class OrderServiceImpl implements OrderService {
 					PayStatusEnum.STATUS_UNPAY.getId(), statusList, pageable);
 			partPayList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusIn(
 					userId, 0, PayStatusEnum.STATUS_PART_PAYED.getId(), statusList, pageable);
+			List<Order> oo = orderPageList.getContent();
 			orderList.addAll(orderPageList.getContent());
 			if(!CollectionUtils.isEmpty(partPayList.getContent())) {
 				orderList.addAll(partPayList.getContent());
@@ -387,11 +388,10 @@ public class OrderServiceImpl implements OrderService {
 				orderList = orderPageList.getContent();
 			}
 		}
-		if ((int)orderPageList.getTotalElements() == 0) {
-			if(partPayList == null || (int)partPayList.getTotalElements() == 0) {
-				resp.setMessage("订单列表为空");
-				return resp;
-			}
+	
+		if(CollectionUtils.isEmpty(orderList)) {
+			resp.setMessage("订单列表为空");
+			return resp;
 		}
 
 		OrderListResultDto resultDto = new OrderListResultDto();
@@ -706,58 +706,28 @@ public class OrderServiceImpl implements OrderService {
 		if(shippingDto.getInnerCode() == 0) {
 			List<ShippingListDto> shippingList = shippingDto.getResult().getShippingList();
 			if(!CollectionUtils.isEmpty(shippingList)) {
-				if(StringUtils.isBlank(shippingList.get(0).getDescription())) {
+				ShippingListDto dto = shippingList.get(0);
 					if(order.getStatus() == OrderStatusEnum.STATUS_DELIVERIED.getId()
 							&& order.getStatus() == OrderStatusEnum.STATUS_14.getId()
 							) {
 						shippingMsgDto.setDescription(ShippingMsgDesc.DELIEVER);
-						if(order.getShipTime() == null || order.getShipTime() == 0) {
-							shippingMsgDto.setCreatTime("");
-						} else {
-							String shipTime = DateUtils.dateTimeToStr(order.getShipTime());
-							shippingMsgDto.setCreatTime(shipTime);
+						if(StringUtils.isNotBlank(dto.getCreatTime())) {
+							shippingMsgDto.setCreatTime(dto.getCreatTime());
 						}
 					} else if (order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
 						shippingMsgDto.setDescription(ShippingMsgDesc.FINISH);
-						if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
-							shippingMsgDto.setCreatTime("");
-						} else {
-							String finishedTime = DateUtils.dateTimeToStr(order.getFinishedTime());
-							shippingMsgDto.setCreatTime(finishedTime);
+						if(StringUtils.isNotBlank(dto.getCreatTime())) {
+							shippingMsgDto.setCreatTime(dto.getCreatTime());
+						}
+					} else {
+						shippingMsgDto.setDescription(dto.getDescription());
+						if(StringUtils.isNotBlank(dto.getCreatTime())) {
+							shippingMsgDto.setCreatTime(dto.getCreatTime());
 						}
 					}
-				} else {
-					shippingMsgDto.setDescription(shippingList.get(0).getDescription());
-					if(order.getAddTime() == null || order.getAddTime() == 0) {
-						shippingMsgDto.setCreatTime("");
-					} else {
-						String addTime = DateUtils.dateTimeToStr(order.getAddTime());
-						shippingMsgDto.setCreatTime(addTime);
-					}
-				}
 			}
 			
-		} else {
-			if(order.getStatus() >= OrderStatusEnum.STATUS_DELIVERIED.getId()
-					&& order.getStatus() <= OrderStatusEnum.STATUS_14.getId()) {
-				shippingMsgDto.setDescription(ShippingMsgDesc.DELIEVER);
-				if(order.getShipTime() == null || order.getShipTime() == 0) {
-					shippingMsgDto.setCreatTime("");
-				} else {
-					String shipTime = DateUtils.dateTimeToStr(order.getShipTime());
-					shippingMsgDto.setCreatTime(shipTime);
-				}
-			} else if (order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
-				shippingMsgDto.setDescription(ShippingMsgDesc.FINISH);
-				if(order.getFinishedTime() == null || order.getFinishedTime() == 0) {
-					shippingMsgDto.setCreatTime("");
-				} else {
-					String finishedTime = DateUtils.dateTimeToStr(order.getFinishedTime());
-					shippingMsgDto.setCreatTime(finishedTime);
-				}
-			}
-		}
-
+		} 
 		orderListDto.setShippingmsg(shippingMsgDto);
 	
 	}

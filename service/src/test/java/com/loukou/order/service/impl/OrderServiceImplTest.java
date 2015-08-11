@@ -105,7 +105,7 @@ public class OrderServiceImplTest extends AbstractTestObject {
 
 	@Test
 	public void getOrderList() {
-		OrderListRespDto  resp = orderService.getOrderList(1032752, 1, 1, 10);
+		OrderListRespDto  resp = orderService.getOrderList(1032752, 2, 6, 10);
 		System.out.println(resp.getCode());
 		
 	}
@@ -121,7 +121,7 @@ public class OrderServiceImplTest extends AbstractTestObject {
 	
 	@Test 
 	public void getOrderInfoTest2() {
-		OrderListRespDto resp = orderService.getOrderInfo(1032752, "150807095023438", 1, 0);
+		OrderListRespDto resp = orderService.getOrderInfo(1032752, "150807102826381", 1, 0);
 		resp.getCode();
 	}
 }
