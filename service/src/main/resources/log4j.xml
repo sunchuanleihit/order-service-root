@@ -11,7 +11,7 @@
     </appender>
     
     <appender name="appAppender" class="org.apache.log4j.DailyRollingFileAppender">
-        <param name="File" value="/loukou/log/order-service/app.log" />
+        <param name="File" value="/data/applogs/order-service/app.log" />
         <layout class="org.apache.log4j.PatternLayout">
             <param name="ConversionPattern" value="[%p][%d{yyyy-MM-dd HH:mm:ss}][%c]-[%m]%n" />
         </layout>
