@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.loukou.order.AbstractTestObject;
+import com.loukou.order.service.api.PayService;
 import com.loukou.order.service.resp.dto.AbstractPayOrderRespDto;
 
 /**
@@ -14,16 +15,16 @@ import com.loukou.order.service.resp.dto.AbstractPayOrderRespDto;
 public class PayServiceImplTest extends AbstractTestObject{
 
 	@Autowired
-	private PayServiceImpl payServiceImpl;
+	private PayService payServiceImpl;
 	
 	@Test
 	public void testPayOrder() {
-		int userId = 60094;
+		int userId = 1032752;
 		int payType = 2;
 		int paymentId = 207;
-		String orderSnMain = "121012145816991";
-		int isTaoxinka = 0;
-		int isVcount = 0;
+		String orderSnMain = "150807194023437";
+		int isTaoxinka = 1;
+		int isVcount = 1;
 		AbstractPayOrderRespDto resp = payServiceImpl.payOrder(userId, payType, paymentId, orderSnMain, isTaoxinka, isVcount);
 		System.out.println(resp.getCode());
 	}

@@ -62,14 +62,26 @@ public class OrderPayProcessor {
 	public ALiPayOrderResultDto payAli(int userId, String orderSnMain,
 			boolean useVcount, boolean useTxk) {
 		OrderPayContext context = new OrderPayContext(userId, orderSnMain,getDaoProcessor);
-		if (context.init() && 
-				(!useVcount || vaPay.pay(context)) && 
-				(!useTxk || txkPay.pay(context))) {
+		if (context.init()) {
+			if (useVcount && !context.isPaid(PaymentEnum.PAY_VACOUNT)) {
+				// 如果还未用余额支付(避免重复支付)，用余额支付
+				boolean vaPayResult = vaPay.pay(context);
+				if (!vaPayResult) {
+					return null;
+				}
+			}
+			if (useTxk && !context.isPaid(PaymentEnum.PAY_TXK)) {
+				// 如果还未用淘心卡支付(避免重复支付)，用淘心卡支付，
+				boolean txkPayResult = txkPay.pay(context);
+				if (!txkPayResult) {
+					return null;
+				}
+			}
 			//如果相继支付成功
 			return aliPay.preparePay(context);
 		} else {
 			logger.error(String
-					.format("payAli fail user_id[%d] order_sn_main[%s] use_va[%s] use_txk[%s]",
+					.format("payAli context.init fail user_id[%d] order_sn_main[%s] use_va[%s] use_txk[%s]",
 							userId, orderSnMain, String.valueOf(useVcount),
 							String.valueOf(useTxk)));
 			return null;
@@ -92,10 +104,21 @@ public class OrderPayProcessor {
 	public WeixinPayOrderResultDto payWx(int userId, String orderSnMain,
 			boolean useVcount, boolean useTxk) {
 		OrderPayContext context = new OrderPayContext(userId, orderSnMain,getDaoProcessor);
-		if (context.init() && 
-				(!useVcount || vaPay.pay(context)) && 
-				(!useTxk || txkPay.pay(context))) {
-			//如果相继支付成功
+		if (context.init()) {
+			if (useVcount && !context.isPaid(PaymentEnum.PAY_VACOUNT)) {
+				// 如果还未用余额支付(避免重复支付)，用余额支付
+				boolean vaPayResult = vaPay.pay(context);
+				if (!vaPayResult) {
+					return null;
+				}
+			}
+			if (useTxk && !context.isPaid(PaymentEnum.PAY_TXK)) {
+				// 如果还未用淘心卡支付(避免重复支付)，用淘心卡支付，
+				boolean txkPayResult = txkPay.pay(context);
+				if (!txkPayResult) {
+					return null;
+				}
+			}
 			return wxPay.preparePay(context);
 		} else {
 			logger.error(String

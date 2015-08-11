@@ -297,12 +297,14 @@ public class OrderServiceImpl implements OrderService {
 		int toRecieve = 0;
 		int refund = 0;
 		List<Order> orders = orderList.getContent();
+		Set<String> mainOrderSet = new HashSet<String>();
 		for(Order order : orders) {
 			if ((order.getStatus() == OrderStatusEnum.STATUS_NEW.getId() && 
 					order.getPayStatus() == PayStatusEnum.STATUS_UNPAY.getId()) 
 					|| (order.getStatus() == OrderStatusEnum.STATUS_NEW.getId() && 
 					(order.getPayStatus() == PayStatusEnum.STATUS_PART_PAYED.getId()))) {
-				toPayNum++;
+				mainOrderSet.add(order.getOrderSnMain());
+//				toPayNum++;
 			} else if ((order.getStatus() == OrderStatusEnum.STATUS_REVIEWED.getId()
 					|| order.getStatus() == OrderStatusEnum.STATUS_PICKED.getId()
 					|| order.getStatus() == OrderStatusEnum.STATUS_ALLOCATED.getId()
@@ -313,7 +315,7 @@ public class OrderServiceImpl implements OrderService {
 				toRecieve++;
 			}	
 		}
-		
+		toPayNum = mainOrderSet.size();
 		Page<OrderReturn> orderReturns = orderRDao.findByBuyerIdAndOrderStatus(userId, 0, pageable);
 		refund = (int) orderReturns.getTotalElements();
 		resp.setPayNum(toPayNum);
@@ -876,7 +878,7 @@ public class OrderServiceImpl implements OrderService {
 		} else if (coupRule.getCouponType() == CouponType.BRAND) {
 			// FIXME 目前没有品牌券，不实现
 		}
-		else if (coupRule.getCouponType() == CouponType.GOODS) {
+		else if (coupRule.getCouponType() == CouponType.CATE) {
 			// 分类券可用的分类可以是一级和二级分类
 			// 如果商品包含其他分类的商品，不能使用分类优惠券
 			List<Integer> cateIds = getOutId(coupRule);
@@ -1091,7 +1093,7 @@ public class OrderServiceImpl implements OrderService {
 				goods = goodsService.getGoods(spec.getGoodsId());
 				storeId = goods.getStoreId();
 			}
-			store = storeService.getByStoreId(req.getStoreId());
+			store = storeService.getByStoreId(storeId);
 			order.setSellerId(storeId);
 			order.setSellerName(store.getStoreName());
 			order.setType(pl.getPackageType());
@@ -1392,16 +1394,18 @@ public class OrderServiceImpl implements OrderService {
 			return resp;
 		}
 		Order order = orderDao.findByTaoOrderSn(taoOrderSn);
-		Express express = expressDao.findByCodeNum(order.getShippingCompany());
+		String shippingCompany = order.getShippingCompany();
 		StringBuilder sb = new StringBuilder();
-		if (order.getShippingId() == 0 || order.getShippingId() > 5) {
-			sb.append("淘常州小黄蜂配送");
-		} else {
-			sb.append("商家自送");
-		}
-		if ( express != null && StringUtils.isNotBlank(express.getExpressName())) {
-			sb.append("(").append(express.getExpressName()).append(")");
-//			resultDto.setShippingName(sb.toString());
+		if(StringUtils.isNotBlank(shippingCompany)) {
+			Express express = expressDao.findByCodeNum(shippingCompany);
+			if (order.getShippingId() == 0 || order.getShippingId() > 5) {
+				sb.append("淘常州小黄蜂配送");
+			} else {
+				sb.append("商家自送");
+			}
+			if ( express != null && StringUtils.isNotBlank(express.getExpressName())) {
+				sb.append("(").append(express.getExpressName()).append(")");
+			}
 		}
 
 		resultDto.setShippingName(sb.toString());
@@ -1422,8 +1426,7 @@ public class OrderServiceImpl implements OrderService {
 					
 					if(StringUtils.isNotBlank(orderAction.getTaoOrderSn())) {
 						if(StringUtils.equals(orderAction.getTaoOrderSn(), taoOrderSn)) {
-							shippingListDto.setCreatTime(orderAction.getTimestamp()
-									.toString());
+							shippingListDto.setCreatTime(DateUtils.date2DateStr2(orderAction.getTimestamp()));
 							shippingListDto.setDescription(orderAction.getNotes());
 							shippingListDto.setTaoOrderSn(taoOrderSn);
 							shippingList.add(shippingListDto);

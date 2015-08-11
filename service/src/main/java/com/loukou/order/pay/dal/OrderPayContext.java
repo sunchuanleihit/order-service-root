@@ -10,6 +10,7 @@ import com.loukou.order.pay.processor.GetDaoProcessor;
 import com.loukou.order.service.dao.OrderDao;
 import com.loukou.order.service.dao.OrderPayDao;
 import com.loukou.order.service.entity.Order;
+import com.loukou.order.service.entity.OrderPay;
 import com.loukou.order.service.enums.PaymentEnum;
 import com.loukou.order.service.util.DoubleUtils;
 
@@ -77,7 +78,7 @@ public class OrderPayContext extends BasePayContext {
 	 */
 	//TODO:事务
 	public double consume(PaymentEnum payment, double available) {
-		if (allModels != null) {
+		if (allModels != null && available > 0) {
 			for (OrderModel oneModel : allModels) {
 				available = oneModel.consume(payment, available);
 				if (available < 0) {
@@ -86,8 +87,28 @@ public class OrderPayContext extends BasePayContext {
 							getOrderSnMain(), payment.getId()));
 					return -1;
 				}
+				else if(available == 0){
+					break;
+				}
 			}
 		}
 		return available;
+	}
+	
+	/**
+	 * 是否用某种支付方式支付过，比如 账号余额、淘心卡 等
+	 * @param paymentEnum
+	 * @return
+	 */
+	public boolean isPaid (PaymentEnum paymentEnum) {
+		for (OrderModel m: allModels) {
+			List<OrderPay> orderPays = m.getPays();
+			for (OrderPay orderPay: orderPays) {
+				if (orderPay.getPaymentId() == paymentEnum.getId()) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }
