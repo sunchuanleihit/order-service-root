@@ -360,7 +360,6 @@ public class OrderServiceImpl implements OrderService {
 					PayStatusEnum.STATUS_UNPAY.getId(), statusList, pageable);
 			partPayList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusIn(
 					userId, 0, PayStatusEnum.STATUS_PART_PAYED.getId(), statusList, pageable);
-			List<Order> oo = orderPageList.getContent();
 			orderList.addAll(orderPageList.getContent());
 			if(!CollectionUtils.isEmpty(partPayList.getContent())) {
 				orderList.addAll(partPayList.getContent());
