@@ -37,11 +37,10 @@ public class TXKPay {
 	private double makeTXKPay(int userId, String userName, double amount,
 			int orderId, String orderSnMain) {
 		double paid = 0;
-		double balance = VirtualAccountProcessor.getProcessor()
-				.getVirtualBalanceByUserId(userId);
+		double balance = AccountTxkProcessor.getProcessor().getTxkBalanceByUserId(userId);
 		if(balance <= 0){
 			logger.info(String.format(
-					"makeVaPay amount balance zero order[%s] user[%d] amount[%f]",
+					"makeTXKPay amount balance zero order[%s] user[%d] amount[%f]",
 					orderSnMain, userId, amount));
 			return 0;
 		}
