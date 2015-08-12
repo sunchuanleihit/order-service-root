@@ -419,6 +419,12 @@ public class OrderServiceImpl implements OrderService {
 				}
 			}
 			orderListDto.setGoodsList(goodsListDtoList);
+			
+			//物流信息
+			if(order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
+				getLogistics(order, orderListDto);
+			}
+			
 			orderListMap.put(order.getTaoOrderSn(), orderListDto);
 		}
 		if(orderListMap.isEmpty()) {
