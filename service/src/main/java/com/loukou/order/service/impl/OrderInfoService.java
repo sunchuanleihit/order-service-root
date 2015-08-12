@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
@@ -118,6 +119,9 @@ public class OrderInfoService {
         orderInfoDto.setSpecList(specList);
         orderInfoDto.setDeliveryInfo(deliveryInfo);
 
+        if(!Strings.isNullOrEmpty(order.getShippingNo())){
+            orderInfoDto.setShippingNo(order.getShippingNo());
+        }
         // 各个状态需要加一些特殊字段
         if (order.getStatus() == OrderStatusEnum.STATUS_REFUSED.getId()) {
             OrderRefuse orderRefuse = orderRefuseDao.findByTaoOrderSn(order.getTaoOrderSn());
