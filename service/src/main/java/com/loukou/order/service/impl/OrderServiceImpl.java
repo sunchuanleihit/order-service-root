@@ -421,6 +421,12 @@ public class OrderServiceImpl implements OrderService {
 				}
 			}
 			orderListDto.setGoodsList(goodsListDtoList);
+			
+			//物流信息
+			if(order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
+				getLogistics(order, orderListDto);
+			}
+			
 			orderListMap.put(order.getTaoOrderSn(), orderListDto);
 		}
 		if(orderListMap.isEmpty()) {
@@ -1376,53 +1382,57 @@ public class OrderServiceImpl implements OrderService {
 			return resp;
 		}
 		Order order = orderDao.findByTaoOrderSn(taoOrderSn);
-		String shippingCompany = order.getShippingCompany();
-		StringBuilder sb = new StringBuilder();
-		if(StringUtils.isNotBlank(shippingCompany)) {
-			Express express = expressDao.findByCodeNum(shippingCompany);
-			if (order.getShippingId() == 0 || order.getShippingId() > 5) {
-				sb.append("淘常州小黄蜂配送");
-			} else {
-				sb.append("商家自送");
-			}
-			if ( express != null && StringUtils.isNotBlank(express.getExpressName())) {
-				sb.append("(").append(express.getExpressName()).append(")");
-			}
-		}
-
-		resultDto.setShippingName(sb.toString());
-		
-		if (order.getPayType() == OrderPayTypeEnum.TYPE_ARRIVAL.getId()) {
-			resultDto.setPayType("货到付款");
-		} else if (order.getPayType() == OrderPayTypeEnum.TYPE_ONLINE.getId()) {
-			resultDto.setPayType("在线支付");
-		}
 		List<ShippingListDto> shippingList = new ArrayList<ShippingListDto>();
-		List<OrderAction> orderActionList = orderActionDao.findByOrderSnMainDesc(order.getOrderSnMain());
-		if(!CollectionUtils.isEmpty(orderActionList)) {
-			for (OrderAction orderAction : orderActionList) {
-				if (!(orderAction.getAction() == OrderActionTypeEnum.TYPE_33.getId()
-						|| orderAction.getAction() == OrderActionTypeEnum.TYPE_CHOOSE_PAY.getId() 
-						|| orderAction.getAction() == OrderActionTypeEnum.TYPE_INSPECTED.getId())) {
-					ShippingListDto shippingListDto = new ShippingListDto();
-					
-					if(StringUtils.isNotBlank(orderAction.getTaoOrderSn())) {
-						if(StringUtils.equals(orderAction.getTaoOrderSn(), taoOrderSn)) {
+		
+		if(order != null) {
+			String shippingCompany = order.getShippingCompany();
+			StringBuilder sb = new StringBuilder();
+			if(StringUtils.isNotBlank(shippingCompany)) {
+				Express express = expressDao.findByCodeNum(shippingCompany);
+				if (order.getShippingId() == 0 || order.getShippingId() > 5) {
+					sb.append("淘常州小黄蜂配送");
+				} else {
+					sb.append("商家自送");
+				}
+				if ( express != null && StringUtils.isNotBlank(express.getExpressName())) {
+					sb.append("(").append(express.getExpressName()).append(")");
+				}
+			}
+
+			resultDto.setShippingName(sb.toString());
+			
+			if (order.getPayType() == OrderPayTypeEnum.TYPE_ARRIVAL.getId()) {
+				resultDto.setPayType("货到付款");
+			} else if (order.getPayType() == OrderPayTypeEnum.TYPE_ONLINE.getId()) {
+				resultDto.setPayType("在线支付");
+			}
+			
+			List<OrderAction> orderActionList = orderActionDao.findByOrderSnMainDesc(order.getOrderSnMain());
+			if(!CollectionUtils.isEmpty(orderActionList)) {
+				for (OrderAction orderAction : orderActionList) {
+					if (!(orderAction.getAction() == OrderActionTypeEnum.TYPE_33.getId()
+							|| orderAction.getAction() == OrderActionTypeEnum.TYPE_CHOOSE_PAY.getId() 
+							|| orderAction.getAction() == OrderActionTypeEnum.TYPE_INSPECTED.getId())) {
+						ShippingListDto shippingListDto = new ShippingListDto();
+						
+						if(StringUtils.isNotBlank(orderAction.getTaoOrderSn())) {
+							if(StringUtils.equals(orderAction.getTaoOrderSn(), taoOrderSn)) {
+								shippingListDto.setCreatTime(DateUtils.date2DateStr2(orderAction.getTimestamp()));
+								shippingListDto.setDescription(orderAction.getNotes());
+								shippingListDto.setTaoOrderSn(taoOrderSn);
+								shippingList.add(shippingListDto);
+							}
+						} else {
 							shippingListDto.setCreatTime(DateUtils.date2DateStr2(orderAction.getTimestamp()));
 							shippingListDto.setDescription(orderAction.getNotes());
 							shippingListDto.setTaoOrderSn(taoOrderSn);
 							shippingList.add(shippingListDto);
 						}
-					} else {
-						shippingListDto.setCreatTime(DateUtils.date2DateStr2(orderAction.getTimestamp()));
-						shippingListDto.setDescription(orderAction.getNotes());
-						shippingListDto.setTaoOrderSn(taoOrderSn);
-						shippingList.add(shippingListDto);
 					}
 				}
 			}
 		}
-		
+
 		resultDto.setShippingList(shippingList);
 		resp.setResult(resultDto);
 		resp.setCode(200);
