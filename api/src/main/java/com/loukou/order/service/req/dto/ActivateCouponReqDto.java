@@ -2,18 +2,18 @@ package com.loukou.order.service.req.dto;
 
 import java.io.Serializable;
 
-public class ActivateCoupon implements Serializable {
+public class ActivateCouponReqDto implements Serializable {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 515391985030940343L;
 
-	private int userId;
+	private int userId = 0;
 	
-	private String commoncode;// 公有券券码
+	private String commoncode = "";// 公有券券码
 	
-	private String openId;
+	private String openId = "";
 
 	public int getUserId() {
 		return userId;
