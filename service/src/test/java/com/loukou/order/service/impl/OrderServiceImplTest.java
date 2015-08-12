@@ -13,6 +13,7 @@ import com.loukou.order.service.resp.dto.OrderCancelRespDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
+import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
 import com.loukou.order.service.resp.dto.UserOrderNumRespDto;
 
@@ -122,6 +123,12 @@ public class OrderServiceImplTest extends AbstractTestObject {
 	@Test 
 	public void getOrderInfoTest2() {
 		OrderListRespDto resp = orderService.getOrderInfo(1032752, "150807102826381", 1, 0);
+		resp.getCode();
+	}
+	
+	@Test
+	public void shippingMsgTest() {
+		ShippingMsgRespDto  resp = orderService.getShippingResult("150812095073811");
 		resp.getCode();
 	}
 }
