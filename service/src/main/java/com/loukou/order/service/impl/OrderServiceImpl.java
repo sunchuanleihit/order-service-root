@@ -1648,7 +1648,7 @@ public class OrderServiceImpl implements OrderService {
 
 				if (returnAmountCoupon > 0) {// 优惠券状态改成未使用
 					
-					if(StringUtils.isEmpty(useCouponNo) && !StringUtils.equals(useCouponNo, "0")) {
+					if(!StringUtils.isEmpty(useCouponNo) && !StringUtils.equals(useCouponNo, "0")) {
 						int couponId = coupListDao.refundCouponList(useCouponNo, userId);
 						// FIXME 目前不支持重试，先让用户联系客服吧
 //							if(couponId <= 0) {
