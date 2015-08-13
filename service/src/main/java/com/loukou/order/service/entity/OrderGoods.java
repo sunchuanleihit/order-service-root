@@ -143,7 +143,7 @@ public class OrderGoods {
 	 * 对cvs=0
 	 */
 	@Column(name = "package_id")
-	private int packageId = 0;
+	private Integer packageId = 0;
 
 	/*
 	 * 来自goods_spec
@@ -337,11 +337,11 @@ public class OrderGoods {
 		this.goodsImage = goodsImage;
 	}
 
-	public int getPackageId() {
+	public Integer getPackageId() {
 		return packageId;
 	}
 
-	public void setPackageId(int packageId) {
+	public void setPackageId(Integer packageId) {
 		this.packageId = packageId;
 	}
 

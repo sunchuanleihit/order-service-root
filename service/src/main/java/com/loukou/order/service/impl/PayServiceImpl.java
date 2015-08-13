@@ -1,5 +1,7 @@
 package com.loukou.order.service.impl;
 
+import java.util.List;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -137,16 +139,18 @@ public class PayServiceImpl implements PayService {
 	
 	private boolean verifyRechargePayInfo(int paymentId, double totalFee,
 			String orderSnMain) {
-		OrderPaySign paySign = orderPaySignDao.findByOrderSnMainAndPayId(
+		List<OrderPaySign> paySignList = orderPaySignDao.findByOrderSnMainAndPayId(
 				orderSnMain, paymentId);
+		int size = paySignList.size();
 		//支付单要有的吧
-		if (paySign == null) {
+		if (size == 0) {
 			logger.error(String
 					.format("verifyRechargePayInfo fail to find paysign order_sn_main[%s] payment_id[%d]",
 							orderSnMain, paymentId));
 			return false;
 		}
 		//金额要一致吧
+		OrderPaySign paySign = paySignList.get(size-1);
 		if (paySign.getMoney() != totalFee) {
 			logger.error(String
 					.format("verifyRechargePayInfo paysign money not match order_sn_main[%s] payment_id[%d] total_fee[%f] money[%f]",
