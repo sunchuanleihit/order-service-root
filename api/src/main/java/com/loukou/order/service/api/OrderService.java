@@ -43,9 +43,9 @@ public interface OrderService {
 	 * @param userId 用户ID
 	 * @param storeId 店铺ID
 	 * @param openId 唯一设备号
-	 * @param usable 是否可用（0: 不限——过期和不过期的优惠券；1：可用优惠券）
+	 * @param isUsable 是否可用（0: 不限——过期和不过期的优惠券；1：可用优惠券）
 	 */
-	public CouponListRespDto getCouponList(int cityId, int userId, int storeId, String openId, int usable);
+	public CouponListRespDto getCouponList(int cityId, int userId, int storeId, String openId, int isUsable);
 	
 	/**
 	 * 
