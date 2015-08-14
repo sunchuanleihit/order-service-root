@@ -1247,7 +1247,9 @@ public class OrderServiceImpl implements OrderService {
 		List<Integer> ids = Lists.newArrayList();
 		String[] strs = coupRule.getOutId().split(",");
 		if (strs.length > 0) {
-			ids.add(Integer.valueOf(strs[0]));
+			for (int i=0; i< strs.length; i ++) {
+				ids.add(Integer.valueOf(strs[i]));				
+			}
 		}
 		return ids;
 	}
