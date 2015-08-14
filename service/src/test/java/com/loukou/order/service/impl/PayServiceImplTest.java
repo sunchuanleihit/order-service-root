@@ -22,9 +22,9 @@ public class PayServiceImplTest extends AbstractTestObject{
 		int userId = 1032752;
 		int payType = 2;
 		int paymentId = 207;
-		String orderSnMain = "150807194023437";
+		String orderSnMain = "150811184413443";
 		int isTaoxinka = 0;
-		int isVcount = 0;
+		int isVcount = 1;
 		AbstractPayOrderRespDto resp = payServiceImpl.payOrder(userId, payType, paymentId, orderSnMain, isTaoxinka, isVcount);
 		System.out.println(resp.getCode());
 	}

@@ -78,21 +78,39 @@ public class OrderPayContext extends BasePayContext {
 	 */
 	//TODO:事务
 	public double consume(PaymentEnum payment, double available) {
+		double left = available;	// 剩余
 		if (allModels != null && available > 0) {
-			for (OrderModel oneModel : allModels) {
-				available = oneModel.consume(payment, available);
-				if (available < 0) {
-					logger.info(String.format(
+			double totalToPay = getAmountToPay();
+			int size = allModels.size();
+			for (int i = 0; i < size; i++) {
+				OrderModel oneModel = allModels.get(i);
+				double toConsume = 0;
+				if (i == size-1) {
+					// 如果是最后一个子单
+					toConsume = left;
+					left = 0;
+				}
+				else {
+					// 支付金额拆到每个子单
+					double orderAmount = oneModel.getAmountToPay();
+					toConsume = DoubleUtils.mul(DoubleUtils.div(orderAmount, totalToPay), available, 2);
+					left = DoubleUtils.sub(left, toConsume);
+				}
+				
+				if (toConsume <= 0) {
+					logger.warn("consumer get toConsume <= 0");
+					continue;
+				}
+				double ret = oneModel.consume(payment, toConsume);
+				if (ret < 0) {
+					logger.warn(String.format(
 							"consume faile to pay order_sn_main[%s] payment_id[%d]",
 							getOrderSnMain(), payment.getId()));
 					return -1;
 				}
-				else if(available == 0){
-					break;
-				}
 			}
 		}
-		return available;
+		return left;
 	}
 	
 	/**
