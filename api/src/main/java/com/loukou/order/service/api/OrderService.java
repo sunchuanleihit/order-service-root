@@ -47,6 +47,10 @@ public interface OrderService {
 	 */
 	public CouponListRespDto getCouponList(int cityId, int userId, int storeId, String openId, int isUsable);
 	
+	
+	public OResponseDto<String> activateCoupon(int userId, String openId, String commoncode);
+	
+	
 	/**
 	 * 
 	 * @param userId 用户ID

@@ -43,4 +43,8 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 
 	@Query("SELECT c FROM CoupList c WHERE userId = ?1 AND issue=1 AND ischecked=1")
 	List<CoupList> getInvalidCoupLists(int userId);
+	
+	List<CoupList> findByUserIdAndCouponId(int userId, int couponId);
+
+	List<CoupList> findByCouponIdAndOpenId(int couponId, String openId);
 }
