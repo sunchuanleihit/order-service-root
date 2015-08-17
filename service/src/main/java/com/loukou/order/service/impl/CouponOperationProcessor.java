@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -20,11 +19,15 @@ import com.loukou.order.service.constants.CouponType;
 import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupLogDao;
 import com.loukou.order.service.dao.CoupRuleDao;
+import com.loukou.order.service.dao.CoupTypeDao;
 import com.loukou.order.service.dao.MemberDao;
+import com.loukou.order.service.dao.OrderDao;
 import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupLog;
 import com.loukou.order.service.entity.CoupRule;
+import com.loukou.order.service.entity.CoupType;
 import com.loukou.order.service.entity.Member;
+import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.enums.ActivateCouponMessage;
 import com.loukou.order.service.enums.CoupListReqTypeEnum;
 import com.loukou.order.service.resp.dto.CouponListDto;
@@ -59,7 +62,13 @@ public class CouponOperationProcessor {
 	private CoupLogDao coupLogDao;
 	
 	@Autowired
+	private CoupTypeDao coupTypeDao;
+	
+	@Autowired
 	private MemberDao memberDao;
+	
+	@Autowired
+	private OrderDao orderDao;
 	
 	@Autowired 
 	private GoodsSearchService goodsSearchService;
@@ -474,6 +483,7 @@ public class CouponOperationProcessor {
     private int checkCoupon(String commoncode, int type, int userId, String openId) {
 
     	int couponId = 0;
+    	Date listEndTime = null;
         if(type == 1) {
 
         	CoupRule coupRule = coupRuleDao.findByCommoncode(commoncode);
@@ -494,7 +504,7 @@ public class CouponOperationProcessor {
         } else {
         	
         	CoupList coupList = coupListDao.findByCommoncode(commoncode);
-           
+        	listEndTime = coupList.getEndtime();
         	if(CollectionUtils.isEmpty(coupList)) {
         		return 0;
         	}
@@ -511,80 +521,156 @@ public class CouponOperationProcessor {
       
         }
         
+        CoupType coupType = null;
+        
         CoupRule coupRule = coupRuleDao.findOne(couponId);
         
         if(coupRule != null) {
+        	// 判断可领取的天数
         	if(coupRule.getCanusetype() == 1) {
+        		if(coupRule.getCanuseday() <= 0) {
+        			return 2;
+        		}
+        	} else {
+        		// 判断是否过期
+        		if(coupRule.getCanusetype() == 0 && coupRule.getEndtime() < new Date()) {//FIXME
+            		return 2;
+            	}
         		
+        		if(listEndTime != null && listEndTime < new Date()) {
+        			return 2;
+        		}
         	}
-        }
-
-        $rRes = $this->_coup_rule_mod->get("{$this->_counpon_id}");
-        if($rRes) {
-            // 判断可领取的天数
-            if($rRes['canusetype'] == 1) {
-                if(!$rRes['canuseday']){
-                    return 2;
-                }
-            }else{
-                // 判断是否过期
-                if($rRes['canusetype'] == 0 && strtotime($rRes['endtime']) < time()){
-                    return 2;
-                }
-
-                if(isset($codeRes['endtime']) && strtotime($codeRes['endtime']) < time()) {
-                    return 2; // COUPON_OUT_DATE
-                }      
-            }
-
-            if($rRes['issue'] != 1) { // 停用或者未启用
-                return 4;
-            }
-
-            $typeRes = $this->_coup_type_mod->get("{$rRes['typeid']}");
-
-            if($typeRes) {
-                $this->_type_id = $typeRes['typeid'];
-                $this->_usenum = $typeRes['usenum'];
-                $this->_newuser = $typeRes['newuser'];
-            }else{
-                return 999; // 无法查找父节点，数据异常
-            }
-
-            // 该类型的券逻辑删除
-            if($typeRes['status'] == 1) {
-                return 4;
-            }
-            
-        }else{
-            return 999; // 无法查找父节点，数据异常
+        	
+        	if(coupRule.getIssue() != 1) { // 停用或者未启用
+        		return 4;
+        	}
+        	
+        	coupType = coupTypeDao.findOne(coupRule.getTypeid());
+        	if(coupType == null) {
+        		return 999;// 无法查找父节点，数据异常
+        	}       	
+        	
+        	// 该类型的券逻辑删除
+        	if(coupType.getStatus() == 1) {
+        		return 4;
+        	}
+        } else {
+        	return 999;// 无法查找父节点，数据异常
         }
 
         // 继续检查
         // 上面检测优惠券通过， 继续检测（新老用户，互斥量等信息）
         // 1: 新用户的优惠券，检测只有新用户能领
-        if($this->_newuser == 1 && !$this->_check_user_new($user_id)) {
-            return 6;
+        
+        if(coupType.getNewuser() == 1 && !checkUserNew(userId)) {
+        	return 6;
         }
 
         // 2: 老用户的优惠券，检测只有老用户能领
-        if($this->_newuser == 2 && $this->_check_user_new($user_id)) {
+        if(coupType.getNewuser() == 2 && checkUserNew(userId)) {
             return 7;
         }
 
         // 如果存在互斥量限制则，检测互斥量
-        if($this->_usenum > 0 && !$this->_check_user_coupon($user_id, $typeRes['id'])){
-            return 8;
+        if(coupType.getUsenum() > 0 && !checkUserCoupon(userId, coupType.getId())) {
+        	return 8;
         }
 
         // 如果存在互斥量限制则，检测互斥量
-        if($openid) {
-            if($this->_usenum > 0 && !$this->_check_device_coupon($openid, $typeRes['id'])){
+        if(StringUtils.isNotBlank(openId)) {
+            if(coupType.getUsenum() > 0 && !checkDeviceCoupon(openId, coupType.getId())){
                 return 9;
             }
         }
 
-        return 1; // COUPON_ENABLE
-            
+        return 1; // COUPON_ENABLE       
     }
+    
+    /**
+     * [检查设备互斥量]
+     *
+     * @return [type]     [description]
+     * @author zhaozl
+     * @since  2015-04-10
+     */
+    private boolean checkDeviceCoupon(String openId, int typeId) {
+    	
+    	
+    	
+        $db =& db();
+        $sql = "SELECT COUNT(cl.id) AS TOTAL FROM tcz_coup_list cl INNER JOIN tcz_coup_rule cr ON cl.coupon_id = cr.id INNER JOIN 
+        tcz_coup_type ct ON cr.typeid = ct.id WHERE cl.openid = '{$openid}' AND ct.id = '{$type_id}'";
+        $res = $db->getOne($sql);
+
+        if($res && $res >= $this->_usenum){
+            return false;
+        }
+
+        return true;
+    }
+    
+   /** 
+    * 检测用户领券的条件是否满足, 互斥限制检测
+    *
+    * @param  [int]     $user_id [用户ID]
+    * @return [int]              [检测结果集]
+    */
+   private boolean checkUserCoupon(int userId, int typeId) {
+	   
+	   List<CoupList> coupLists = coupListDao.findByUserId(userId);
+	   
+	   if(CollectionUtils.isEmpty(coupLists)) {
+		   return true;
+	   }
+	   
+	   int count = 0;
+	   for(CoupList c : coupLists) {
+		   CoupRule coupRule = coupRuleDao.findOne(c.getCouponId());
+		   if(coupRule == null) {
+			   continue;
+		   }
+		   if(coupRule.getTypeid() != typeId) {
+			   continue;
+		   }
+		   
+		   CoupType coupType = coupTypeDao.findOne(coupRule.getTypeid());
+		   if(coupType == null) {
+			  continue;
+	       }
+		   count++;
+	   }
+	   
+       if(count > 0) {
+    	   return false;
+       }
+
+       return true;
+      
+   }
+    
+    /**
+     * 检测用户是否是新用户
+     *
+     * @param  [int]     $user_id [用户ID]
+     * @return [bol]              [true: 新用户， false: 老用户]
+     * 
+     * @author zhaozl
+     * @since  2015-03-21
+     */
+    private boolean checkUserNew(int userId) {
+    	
+    	List<Integer> statusList = new ArrayList<Integer>();
+    	statusList.add(1);
+    	statusList.add(2);
+    	List<Order> orders = orderDao.findByBuyerIdAndStatusNotIn(userId, statusList);
+    	
+    	if(CollectionUtils.isEmpty(orders)) {
+    		return true;
+    	}
+    	
+        return false;
+
+    }
+
 }

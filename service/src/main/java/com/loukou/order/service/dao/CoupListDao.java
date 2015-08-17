@@ -52,4 +52,6 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 
 	@Query(value = "select max(floor(replace(commoncode, ?2, ''))) from tcz_coup_list where coupon_id = ?1", nativeQuery=true)
 	Integer findByCouponId(int couponId, String replaceCode);
+
+	List<CoupList> findByUserId(int userId);
 }
