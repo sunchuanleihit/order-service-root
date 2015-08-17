@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -184,6 +185,7 @@ public class OrderOperationProcessor {
                 String[] mobiles = { orderExm.getPhoneMob() };
                 SingletonSmsClient.getClient().sendSMS(mobiles, messageString);
             } catch (RemoteException e) {
+                LogFactory.getLog(OrderOperationProcessor.class).error("sending message error",e);
             }
         }
         return true;
