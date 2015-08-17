@@ -180,10 +180,10 @@ public class OrderOperationProcessor {
 
     private boolean sendMessage(Order order, String messageString) {
         // 发送短信
-        OrderExtm orderExm = orderExtmDao.findByOrderId(order.getOrderId());
-        if (orderExm != null && !StringUtils.isEmpty(orderExm.getPhoneMob())) {
+        List<OrderExtm> orderExm = orderExtmDao.findByOrderSnMain(order.getOrderSnMain());
+        if (orderExm != null &&orderExm.size()!=0&& !StringUtils.isEmpty(orderExm.get(0).getPhoneMob())) {
             MultiClient.getProvider(MultiClient.CHUANGLAN_PROVIDER).sendMessage(
-                    Lists.newArrayList(orderExm.getPhoneMob()), messageString);
+                    Lists.newArrayList(orderExm.get(0).getPhoneMob()), messageString);
         }
         return true;
     }
