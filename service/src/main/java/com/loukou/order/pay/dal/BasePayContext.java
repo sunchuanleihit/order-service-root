@@ -2,6 +2,7 @@ package com.loukou.order.pay.dal;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Random;
 
 import org.apache.commons.lang3.StringUtils;
@@ -94,8 +95,20 @@ public abstract class BasePayContext {
 			return null;
 		}
 		//如果该订单该支付方式已经有对应的记录，使用旧记录
-		OrderPaySign oldOutTradeNo = orderPaySignDao.findByOrderSnMainAndPayId(orderSnMain, paymentId);
-		if (oldOutTradeNo != null) {
+		List<OrderPaySign> orderPaySignList = orderPaySignDao.findByOrderSnMainAndPayId(orderSnMain, paymentId);
+		int size = orderPaySignList.size();
+		if (size > 0) {
+			// 如果paysign status 不是ready，返回失败
+			OrderPaySign oldOutTradeNo = orderPaySignList.get(size-1);
+			if (!PaySignStatusEnum.STATUS_READY.getStatus().equals(oldOutTradeNo.getStatus())) {
+				return null;
+			}
+			
+			if (oldOutTradeNo.getMoney() != money) {
+				oldOutTradeNo.setMoney(money);
+				orderPaySignDao.save(oldOutTradeNo);
+			}
+			
 			return oldOutTradeNo.getOutOrderSn();
 		}
 		//如果没有旧记录，则生成(其实不会用了！！！！先留着)
@@ -179,13 +192,15 @@ public abstract class BasePayContext {
 	 */
 	private boolean finishPaySign(PaymentEnum payment) {
 		// 生成数据库记录
-		OrderPaySign orderPaySign = orderPaySignDao.findByOrderSnMainAndPayId(orderSnMain, payment.getId());
-		if (orderPaySign == null) {
+		List<OrderPaySign> orderPaySignList = orderPaySignDao.findByOrderSnMainAndPayId(orderSnMain, payment.getId());
+		int size = orderPaySignList.size();
+		if (size == 0) {
 			logger.error(String
 					.format("finishPaySign fail to find paysign order_sn_main[%s] payment_id[%d]",
 							orderSnMain, payment.getId()));
 			return false;
 		}
+		OrderPaySign orderPaySign = orderPaySignList.get(size-1);
 		orderPaySign.setfTime(new Date().getTime() / 1000);
 		orderPaySign.setStatus(PaySignStatusEnum.STATUS_SUCC.getStatus());
 		// 更新记录

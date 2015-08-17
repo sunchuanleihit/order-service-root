@@ -67,7 +67,7 @@ public class OrderModel {
 		//计算可支付金额
 		double toPay = getAmountToPay();
 		double canPay = available >= toPay ? toPay : available;
-		if (addOrderPay(payment, canPay) && updateOrderPayed(canPay)) {
+		if (addOrderPay(payment, canPay) && updateOrderPayed(canPay, payment)) {
 			logger.info(String.format(
 					"consume done to finish pay order_id[%d] payment_id[%d] amount[%f]",
 					order.getOrderId(), payment.getId(), canPay));
@@ -117,16 +117,20 @@ public class OrderModel {
 	 * 根据已支付金额计算订单当前状态
 	 * 并更新状态和order_payed
 	 * @param amount 已支付的金额
+	 * @param payment 
 	 * @return
 	 */
 	//TODO:事务
-	private boolean updateOrderPayed(double amount) {
+	private boolean updateOrderPayed(double amount, PaymentEnum payment) {
 		//订单总共已付
 		double paid = DoubleUtils.add(order.getOrderPayed(), amount);
 		double allNeed = DoubleUtils.add(order.getGoodsAmount(), order.getShippingFee());
 		// 0未付款 1已付款 2部分付款，整单待支付
 		if (paid >= allNeed) {
 			order.setPayStatus(1);
+			order.setPayId(payment.getId());
+			order.setPayName(payment.getName());
+			order.setPayTime((int) (new Date().getTime()/1000));
 		} else if (paid > 0) {
 			order.setPayStatus(2);
 		} else {
