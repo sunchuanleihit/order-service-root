@@ -334,6 +334,10 @@ public class CouponOperationProcessor {
     		}
     	}
     	
+    	coupRule.getCanusetype();//有效期类型。0:开始begintime/结束endtime时间;1:有效期n天canuseday
+    	if() {
+    		
+    	}
        
 			
     }
