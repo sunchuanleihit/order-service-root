@@ -47,4 +47,9 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 	List<CoupList> findByUserIdAndCouponId(int userId, int couponId);
 
 	List<CoupList> findByCouponIdAndOpenId(int couponId, String openId);
+
+	CoupList findByCommoncode(String code);
+
+	@Query(value = "select max(floor(replace(commoncode, ?2, ''))) from tcz_coup_list where coupon_id = ?1", nativeQuery=true)
+	Integer findByCouponId(int couponId, String replaceCode);
 }

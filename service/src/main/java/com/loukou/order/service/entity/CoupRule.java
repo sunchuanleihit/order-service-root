@@ -1,6 +1,5 @@
 package com.loukou.order.service.entity;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -12,9 +11,6 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "tcz_coup_rule")
 public class CoupRule {
-
-	private final static SimpleDateFormat SDF = new SimpleDateFormat(
-			"yyyy-MM-dd HH:mm:ss");
 
 	@Id
 	@GeneratedValue
@@ -40,10 +36,10 @@ public class CoupRule {
 	private int canuseday;// 优惠券有效期，即：领用开始起，n天有效；与开始／结束时间互斥
 
 	@Column(name = "begintime")
-	private String begintime;// 开始时间
+	private Date begintime;// 开始时间
 
 	@Column(name = "endtime")
-	private String endtime;// 结束时间
+	private Date endtime;// 结束时间
 
 	@Column(name = "coupontypeid")
 	private int coupontypeid = 0;// 优惠券类型，关联优惠券类型表
@@ -74,7 +70,7 @@ public class CoupRule {
 	private String prefix;// 券码前缀
 
 	@Column(name = "timestamp")
-	private String timestamp = SDF.format(new Date().getTime());
+	private Date timestamp = new Date();
 
 	@Column(name = "coupon_type")
 	private int couponType;// 0:全场券；1:店铺券；2:商品券；3:品牌券；4:分类券
@@ -150,19 +146,19 @@ public class CoupRule {
 		this.canuseday = canuseday;
 	}
 
-	public String getBegintime() {
+	public Date getBegintime() {
 		return begintime;
 	}
 
-	public void setBegintime(String begintime) {
+	public void setBegintime(Date begintime) {
 		this.begintime = begintime;
 	}
 
-	public String getEndtime() {
+	public Date getEndtime() {
 		return endtime;
 	}
 
-	public void setEndtime(String endtime) {
+	public void setEndtime(Date endtime) {
 		this.endtime = endtime;
 	}
 
@@ -238,11 +234,11 @@ public class CoupRule {
 		this.prefix = prefix;
 	}
 
-	public String getTimestamp() {
+	public Date getTimestamp() {
 		return timestamp;
 	}
 
-	public void setTimestamp(String timestamp) {
+	public void setTimestamp(Date timestamp) {
 		this.timestamp = timestamp;
 	}
 

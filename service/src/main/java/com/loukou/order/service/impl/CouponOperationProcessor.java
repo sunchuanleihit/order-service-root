@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -21,6 +22,7 @@ import com.loukou.order.service.dao.CoupLogDao;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.MemberDao;
 import com.loukou.order.service.entity.CoupList;
+import com.loukou.order.service.entity.CoupLog;
 import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.Member;
 import com.loukou.order.service.enums.ActivateCouponMessage;
@@ -299,20 +301,20 @@ public class CouponOperationProcessor {
      * @author zhaozl
      * @since  2015-03-21
      */
-    public boolean createCouponCode(int userId, int couponId, boolean type, boolean check, 
+    public boolean createCouponCode(int userId, int couponId, int type, boolean check, 
     		int num, String openId, double money) {
 
     	CoupRule coupRule = coupRuleDao.findOne(couponId);
     	
     	if(coupRule == null) {
-    		recordLog();//TODO
+    		recordLog(userId, couponId, "[检查结果] 找不到正确的券", 1, openId);
     		return false;
     	} 
     	
-    	int checkCode = checkCoupon(commoncode, type, userId, openId);
+    	int checkCode = checkCoupon(coupRule.getCommoncode(), type, userId, openId);
     	
     	if(checkCode != ActivateCouponMessage.SUCCESS.getCode()) {
-    		recordLog();
+    		recordLog(userId, couponId, "[检查结果]".concat(String.valueOf(checkCode)), checkCode, openId);
     		return false;
     	}
     	
@@ -320,7 +322,8 @@ public class CouponOperationProcessor {
     	if(num > 0) {
     		boolean checkCouponNum = checkCouponIdNum(couponId, userId, openId, num, CouponFormType.PUBLIC);
     		if(checkCouponNum == false) {
-    			recordLog();
+    			recordLog(userId, couponId, "[检查结果]  (超出个人最大领取量 : ".concat(String.valueOf(num))
+    					.concat(" ，无法领取了)"), 11, openId);
     			checkCode = 11;// c超出领取最大量（个人）
     			return false;
     		}
@@ -328,18 +331,101 @@ public class CouponOperationProcessor {
     		if(StringUtils.isNotBlank(openId)) {
     			checkCouponNum = checkCouponIdNum(couponId, userId, openId, num, CouponFormType.PRIVATE);
     			if(checkCouponNum == false) {
+    				recordLog(userId, couponId, "[检查结果]  (超出设备最大领取量 : ".concat(String.valueOf(num))
+    						.concat(" ，无法领取了)"), 12, openId);
     				checkCode = 12; // c超出领取最大量（设备）
     				return false;
     			}
+    		}  
+    	}
+    	
+    	int canUseType = coupRule.getCanusetype();//有效期类型。0:开始begintime/结束endtime时间;1:有效期n天canuseday
+    	Date beginTime = null;
+    	Date endTime = null;
+    	String dateStr = DateUtils.date2DateStr(new Date());
+    	if(canUseType == 1) {
+    		beginTime = DateUtils.str2Date(dateStr.concat(" 00:00:00"));
+    		endTime = DateUtils.str2Date(dateStr.concat(" 23:59:59"));
+    	} else {
+    		beginTime = coupRule.getBegintime();
+    		endTime = coupRule.getEndtime();
+    	}
+    	double totalMoney = 0;
+    	
+    	if(money > 0) {
+    		totalMoney = money;
+    	} else {
+    		totalMoney = coupRule.getMoney();
+    	}
+    	
+    	String code = null;
+    	if(type == 1) {//私有券
+    		String pre = coupRule.getPrefix();
+    		String mtime = StringUtils.substring(String.valueOf((long)new Date().getTime()), 7, 13);
+    		//随机生成券号
+    		String rcode = String.valueOf(Math.random() * (99999 - 10000) + 10000);
+    		code = mkCode(pre, mtime, rcode);
+    	} else {//公有券
+    		// 公用券领取，生成规则是当前公用券领取的次数code0001
+    		String replaceCode = coupRule.getCommoncode().concat("N");
+    		Integer coupCodeNum = coupListDao.findByCouponId(couponId, replaceCode);
+    		if(coupCodeNum != null) {
+    			code = coupRule.getCommoncode().concat("N").concat(String.valueOf(coupCodeNum + 1));
+    		} else {
+    			code = coupRule.getCommoncode().concat("N1");
     		}
     	}
     	
-    	coupRule.getCanusetype();//有效期类型。0:开始begintime/结束endtime时间;1:有效期n天canuseday
-    	if() {
-    		
+    	CoupList coupL = new CoupList();
+    	
+    	coupL.setCouponId(couponId);
+    	coupL.setUserId(userId);
+    	coupL.setBegintime(beginTime);
+    	coupL.setEndtime(endTime);
+    	coupL.setCommoncode(code);
+    	coupL.setMoney(totalMoney);
+    	coupL.setMinprice(coupRule.getLowemoney());
+    	coupL.setIssue(coupRule.getIssue());
+    	coupL.setCreatetime(new Date());
+    	coupL.setSellSite(coupRule.getSellSite());
+    	coupL.setOpenid(openId);
+    	coupListDao.save(coupL);
+    	
+    	int coupNum = coupRule.getNum() + 1;//优惠券总张数
+    	int sumResiduenum = coupRule.getResiduenum() + 1;//优惠券未使用张数
+    	
+    	coupRuleDao.update(couponId, coupNum, sumResiduenum);
+    	recordLog(userId, couponId, "[检查结果]  领取成功", 1, openId);
+		return true;
+    }
+    
+    private void recordLog(int userId, int coupId, String msg, int res, String openId) {
+
+    	CoupLog coupLog = new CoupLog();
+    	coupLog.setUserId(userId);
+    	coupLog.setCoupId(coupId);
+    	coupLog.setOpenId(openId);
+    	coupLog.setMsg(msg);
+    	coupLog.setResult(res);
+    	coupLog.setActiveTime(new Date());
+    	
+    	coupLogDao.save(coupLog);
+    }
+    
+    /**
+     * 生成随机券码
+     */
+    private String mkCode(String pre, String mtime, String rcode){
+    	
+    	String code = pre.concat(mtime).concat(rcode);
+    	CoupList coupList = coupListDao.findByCommoncode(code);
+    	if(coupList == null) {
+    		String mtime2 = StringUtils.substring(String.valueOf((long)new Date().getTime()), 7, 13);
+    		//随机生成券号
+    		String rcode2 = String.valueOf(Math.random() * (99999 - 10000) + 10000);
+    		code = mkCode(pre, mtime2, rcode2);
     	}
-       
-			
+    	return code;
     }
     
     /**
@@ -387,50 +473,50 @@ public class CouponOperationProcessor {
      */
     private int checkCoupon(String commoncode, int type, int userId, String openId) {
 
-        if($type == 1){
+    	int couponId = 0;
+        if(type == 1) {
 
-            $ruleRes = $this->_coup_rule_mod->get(array(
-                'fields' => 'id, typeid, issue, canusetype, canuseday, begintime, endtime, maxnum',
-                'conditions' => "commoncode = '{$code}'"
-            ));
+        	CoupRule coupRule = coupRuleDao.findByCommoncode(commoncode);
+        	if(coupRule == null) {
+        		return 0;
+        	}
+        
+        	List<CoupList> coupList = coupListDao.findByCouponId(couponId);
+        	 // 判断最大发放量
+        	int alreadySend = CollectionUtils.size(coupList);
+        	
+        	if(coupRule.getMaxnum() > 0 && coupRule.getMaxnum() <= alreadySend) {
+        		return 5;
+        	}
+        	 // 赋值优惠券规则ID
+        	couponId = coupRule.getId();
 
-            if(!$ruleRes){
-                return 0; // COUPON_NO_EXIST
-            }
-
-            // 判断最大发放量
-            $alreadySend =  $this->_coup_list_mod->get(array(
-                'fields' => 'count(id) as total',
-                'conditions' => "coupon_id = '{$ruleRes['id']}'"
-            ));
-            $alSends = !empty($alreadySend['total'])?$alreadySend['total']:0;
-
-            if($ruleRes['maxnum'] > 0 && $ruleRes['maxnum'] <= $alSends) {
-                return 5;
-            }
-
-            // 赋值优惠券规则ID
-            $this->_counpon_id = $ruleRes['id'];
-
-        }else{
-            $codeRes = $this->_coup_list_mod->get(array(
-                'fields' => 'user_id, endtime, coupon_id',
-                'conditions' => "commoncode = '{$code}'"
-            ));
-            if(!$codeRes){
-                return 0; // COUPON_NO_EXIST
-            }else{
-                if($codeRes['user_id']){
-                    return 3; // COUPON_ALREADY_DRAW
-                }
-
-                if($codeRes['issue']){
-                    return 4; // COUPON_ALREADY_DRAW
-                }
-
-                // 赋值优惠券规则ID
-                $this->_counpon_id = $codeRes['coupon_id'];
-            }
+        } else {
+        	
+        	CoupList coupList = coupListDao.findByCommoncode(commoncode);
+           
+        	if(CollectionUtils.isEmpty(coupList)) {
+        		return 0;
+        	}
+        	
+        	if(coupList.getUserId() <= 0) {
+        		return 3;
+        	}
+        	
+        	if(coupList.getIssue() != 1) {
+        		return 4;
+        	}
+        	
+        	couponId = coupList.getCouponId();
+      
+        }
+        
+        CoupRule coupRule = coupRuleDao.findOne(couponId);
+        
+        if(coupRule != null) {
+        	if(coupRule.getCanusetype() == 1) {
+        		
+        	}
         }
 
         $rRes = $this->_coup_rule_mod->get("{$this->_counpon_id}");
