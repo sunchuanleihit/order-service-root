@@ -54,4 +54,13 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 	Integer findByCouponId(int couponId, String replaceCode);
 
 	List<CoupList> findByUserId(int userId);
+
+	List<CoupList> findByOpenid(String openId);
+
+	List<CoupList> findByCouponId(int couponId);
+	
+	@Transactional
+	@Modifying
+	@Query("UPDATE CoupList SET userId=?1, begintime = ?2, endtime=?3 openid=?4, createtime=NOW() WHERE commoncode=?5")
+	int update(int userId, Date beginTime, Date endTime, String openId, String commoncode);
 }
