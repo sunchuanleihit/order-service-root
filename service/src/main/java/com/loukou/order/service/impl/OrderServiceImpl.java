@@ -154,7 +154,6 @@ import com.serverstarted.goods.service.api.GoodsSpecService;
 import com.serverstarted.goods.service.resp.dto.GoodsRespDto;
 import com.serverstarted.goods.service.resp.dto.GoodsSpecRespDto;
 import com.serverstarted.goods.service.resp.dto.GoodsStockInfoRespDto;
-import com.serverstarted.goods.service.resp.dto.ResultRespDto;
 import com.serverstarted.store.service.api.StoreService;
 import com.serverstarted.store.service.resp.dto.StoreRespDto;
 import com.serverstarted.user.api.UserService;
@@ -762,14 +761,14 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		// 购物车
-		ResultRespDto<CartRespDto> cartRespDto = cartService.getCart(req.getUserId(),
+		CartRespDto cartRespDto = cartService.getCart(req.getUserId(),
 				req.getOpenId(), req.getCityId(), req.getStoreId());
-		int packageNum = cartRespDto.getResult().getPackageList().size();
+		int packageNum = cartRespDto.getPackageList().size();
 		if (packageNum == 0) {
 			return new SubmitOrderRespDto(400, "购物车是空的");
 		}
 		// 校验库存
-		List<PackageRespDto> packageList = cartRespDto.getResult().getPackageList();
+		List<PackageRespDto> packageList = cartRespDto.getPackageList();
 		for (PackageRespDto p : packageList) {
 			for (CartGoodsRespDto g : p.getGoodsList()) {
 				if (g.getAmount() > g.getStock()) {
@@ -817,8 +816,8 @@ public class OrderServiceImpl implements OrderService {
 		Site site = siteDao.findOne(req.getCityId());
 
 		// 优惠券, 目前只有全场券和品类券
-		double needPay = DoubleUtils.add(cartRespDto.getResult().getTotalPrice(),
-				cartRespDto.getResult().getShippingFeeTotal()); // 还需付多少钱
+		double needPay = DoubleUtils.add(cartRespDto.getTotalPrice(),
+				cartRespDto.getShippingFeeTotal()); // 还需付多少钱
 		int couponId = req.getCouponId();
 		CoupList coupList = null;
 		if (couponId > 0) {
@@ -828,7 +827,7 @@ public class OrderServiceImpl implements OrderService {
 			}
 
 			// 校验优惠券是否可用
-			if (coupList.getMinprice() > cartRespDto.getResult().getTotalPrice()) {
+			if (coupList.getMinprice() > cartRespDto.getTotalPrice()) {
 				return new SubmitOrderRespDto(400, String.format(
 						"使用优惠券最小金额为%.2f. 优惠券不可用", coupList.getMinprice()));
 			}
@@ -868,7 +867,7 @@ public class OrderServiceImpl implements OrderService {
 					// 该包裹折扣 = 该包裹商品总额 * 折扣总金额/所有商品总额
 					discount = DoubleUtils.div(
 							DoubleUtils.mul(goodsAmount, totalDiscount),
-							cartRespDto.getResult().getTotalPrice(), 1);
+							cartRespDto.getTotalPrice(), 1);
 				}
 				// 如果折扣金额大于总额，折扣=总额
 				if (discount > goodsAmount) {
@@ -886,7 +885,7 @@ public class OrderServiceImpl implements OrderService {
 			order.setOrderSn(generateOrderSn());
 			order.setTaoOrderSn(taoOrderSn);
 			if (PackageType.MATERIAL.equals(pl.getPackageType())) {
-				order.setShippingFee(cartRespDto.getResult().getShippingFeeTotal());
+				order.setShippingFee(cartRespDto.getShippingFeeTotal());
 			} else {
 				order.setShippingFee(0);
 			}
@@ -946,7 +945,7 @@ public class OrderServiceImpl implements OrderService {
 				order.setShippingId(1); // 商家自送
 			}
 			if (PackageType.MATERIAL.equals(pl.getPackageType())) {
-				order.setShippingFee(cartRespDto.getResult().getShippingFeeTotal());
+				order.setShippingFee(cartRespDto.getShippingFeeTotal());
 			} else {
 				order.setShippingFee(0);
 			}
@@ -1711,11 +1710,11 @@ public class OrderServiceImpl implements OrderService {
 		}
 
 		// 购物车
-		ResultRespDto<CartRespDto> cart = cartService.getCart(userId, openId, cityId, storeId);
-		CartRespDto cartResult = cart.getResult();
-		double orderTotal = cartResult.getTotalPrice();
-		double shippingFee = cartResult.getShippingFeeTotal();
-		if (cartResult.getPackageList().size() == 0) {
+		CartRespDto cart = cartService.getCart(userId, openId, cityId, storeId);
+
+		double orderTotal = cart.getTotalPrice();
+		double shippingFee = cart.getShippingFeeTotal();
+		if (cart.getPackageList().size() == 0) {
 			return new PayBeforeRespDto(400, "购物车没有商品");
 		}
 
