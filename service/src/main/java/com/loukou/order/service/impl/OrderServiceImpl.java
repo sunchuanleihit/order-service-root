@@ -2169,7 +2169,7 @@ public class OrderServiceImpl implements OrderService {
 		// 计算已回订单金额和运费
 		double feedback = 0;
 		double feedbackDelivery = 0;
-		List<Order> orderList = orderDao.findByStatusAndAddTimeBetween(15, start, end);
+		List<Order> orderList = orderDao.findByStatusAndSellerIdAndAddTimeBetween(OrderStatusEnum.STATUS_FINISHED.getId(),storeId, start, end);
 		for (Order order : orderList) {
 			feedback = DoubleUtils.add(feedback, order.getOrderAmount());
 			feedbackDelivery = DoubleUtils.add(feedbackDelivery,order.getShippingFee());
