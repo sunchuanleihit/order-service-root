@@ -128,6 +128,7 @@ import com.loukou.order.service.resp.dto.PayOrderMsgDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgRespDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
 import com.loukou.order.service.resp.dto.ResponseCodeDto;
+import com.loukou.order.service.resp.dto.ResponseDto;
 import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
 import com.loukou.order.service.resp.dto.ShareDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
@@ -2126,7 +2127,7 @@ public class OrderServiceImpl implements OrderService {
 	}
 
 	@Override
-	public OResponseDto<String> activateCoupon(int userId, String openId,
+	public ResponseDto<String> activateCoupon(int userId, String openId,
 			String commoncode) {
 		
 		return couponOperationProcessor.activateCoupon(userId, openId, commoncode);
