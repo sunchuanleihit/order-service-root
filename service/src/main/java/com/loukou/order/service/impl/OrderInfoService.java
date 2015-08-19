@@ -264,6 +264,7 @@ public class OrderInfoService {
                 spec.setGoodsInfo(new GoodsInfoDto(ordergood.getGoodsId(), ordergood.getGoodsName(), ordergood.getGoodsImage()));
                 spec.setSpecId(ordergood.getSpecId());
                 spec.setBuyNum(ordergood.getQuantity());
+                spec.setSellPrice(ordergood.getPricePurchase());
                 value.getSpecList().add(spec);
             }
         }
