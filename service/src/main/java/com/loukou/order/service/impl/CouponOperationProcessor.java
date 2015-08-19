@@ -165,7 +165,8 @@ public class CouponOperationProcessor {
 					couponListDto.setCouponName(couponName);
 					couponListDto.setMoney(coupList.getMoney());
 					couponListDto.setCouponMsg(coupRule.getCouponName());
-					couponListDto.setEndtime(DateUtils.date2DateStr2(coupList.getEndtime()));
+					couponListDto.setStarttime(DateUtils.date2DateStr(coupList.getBegintime()));
+					couponListDto.setEndtime(DateUtils.date2DateStr(coupList.getEndtime()));
 					couponListDto.setIsUsable(CoupListReqTypeEnum.USABLE.getId());
 					couponListDto.setCouponRange(generateCouponRange(coupRule));
 					couponListDtos.add(couponListDto);
@@ -208,7 +209,8 @@ public class CouponOperationProcessor {
 					couponListDto.setCouponName(couponName);
 					couponListDto.setMoney(coupList.getMoney());
 					couponListDto.setCouponMsg(coupRule.getCouponName());
-					couponListDto.setEndtime(DateUtils.date2DateStr2(coupList.getEndtime()));
+					couponListDto.setStarttime(DateUtils.date2DateStr(coupList.getBegintime()));
+					couponListDto.setEndtime(DateUtils.date2DateStr(coupList.getEndtime()));
 					couponListDto.setIsUsable(CoupListReqTypeEnum.USABLE.getId());
 					couponListDto.setCouponRange(generateCouponRange(coupRule));
 					couponListDtos.add(couponListDto);
@@ -231,7 +233,8 @@ public class CouponOperationProcessor {
 					couponListDto.setCouponName(couponName);
 					couponListDto.setMoney(coupList.getMoney());
 					couponListDto.setCouponMsg(coupRule.getCouponName());
-					couponListDto.setEndtime(DateUtils.date2DateStr2(coupList.getEndtime()));
+					couponListDto.setStarttime(DateUtils.date2DateStr(coupList.getBegintime()));
+					couponListDto.setEndtime(DateUtils.date2DateStr(coupList.getEndtime()));
 					couponListDto.setIsUsable(CoupListReqTypeEnum.ALL.getId());
 					couponListDto.setCouponRange(generateCouponRange(coupRule));
 					couponListDtos.add(couponListDto);

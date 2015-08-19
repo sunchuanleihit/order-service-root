@@ -11,6 +11,7 @@ public class CouponListDto implements Serializable{
 	private String couponName = "";
 	private String commoncode = "";
 	private double money = 0.0;
+	private String starttime = "";
 	private String endtime = "";
 	private String couponMsg = "";
 	
@@ -81,6 +82,14 @@ public class CouponListDto implements Serializable{
 
 	public void setCouponMsg(String couponMsg) {
 		this.couponMsg = couponMsg;
+	}
+
+	public String getStarttime() {
+		return starttime;
+	}
+
+	public void setStarttime(String starttime) {
+		this.starttime = starttime;
 	}
 
 }
