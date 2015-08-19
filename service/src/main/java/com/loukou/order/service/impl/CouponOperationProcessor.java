@@ -37,6 +37,7 @@ import com.loukou.order.service.resp.dto.CouponListDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.CouponListResultDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
+import com.loukou.order.service.resp.dto.ResponseDto;
 import com.loukou.order.service.util.DateUtils;
 import com.loukou.search.service.api.GoodsSearchService;
 import com.loukou.search.service.dto.GoodsCateDto;
@@ -345,25 +346,25 @@ public class CouponOperationProcessor {
 		return ids;
 	}
 
-	public OResponseDto<String> activateCoupon(int userId, String openId,
+	public ResponseDto<String> activateCoupon(int userId, String openId,
 			String commoncode) {
-		 OResponseDto<String> resp = new OResponseDto<String>(200, "");
+		 ResponseDto<String> resp = new ResponseDto<String>(200, "");
 		 
 		 if(userId <= 0 || StringUtils.isBlank(openId) || StringUtils.isBlank(commoncode)) {
 			 resp.setCode(400);
-			 resp.setResult("参数有误");
+			 resp.setMessage("参数有误");
 			 return resp;
 		 }
 		Member user = memberDao.findOne(userId);
 		if(user == null) {
 			resp.setCode(400);
-			resp.setResult("用户不存在");
+			resp.setMessage("用户不存在");
 			return resp;
 		}
 		
 		if(user.getPhoneChecked() != 1) {
 			resp.setCode(400);
-			resp.setResult("用户未绑定手机,请先绑定手机号");
+			resp.setMessage("用户未绑定手机,请先绑定手机号");
 			return resp;
 		}
 		
@@ -383,7 +384,7 @@ public class CouponOperationProcessor {
 		if(checkCode != ActivateCouponMessage.SUCCESS.getCode()) {
 			String message = ActivateCouponMessage.parseCode(checkCode).getMessage();
 			resp.setCode(400);
-			resp.setResult(message);
+			resp.setMessage(message);
 			return resp;
 		}
 		
@@ -393,7 +394,7 @@ public class CouponOperationProcessor {
 			
 			if(createStatus == false) {
 				resp.setCode(400);
-				resp.setResult("激活失败");
+				resp.setMessage("激活失败");
 				return resp;
 			}
 			
