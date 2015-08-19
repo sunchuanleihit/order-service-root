@@ -1,5 +1,6 @@
 package com.loukou.order.service.dao;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
@@ -22,7 +23,7 @@ public interface OrderActionDao extends CrudRepository<OrderAction, Integer>{
 	
 	List<OrderAction> findByTaoOrderSnAndAction(String taoOrderSn,int action);
 	
-	List<OrderAction> findByTaoOrderSnInAndAction(List<String> taoOrderSn,int action);
+	List<OrderAction> findByTaoOrderSnInAndAction(Collection<String> taoOrderSn,int action);
 	@Query("SELECT m FROM OrderAction m WHERE orderSnMain=?1 order by timestamp desc")
 	List<OrderAction> findByOrderSnMainDesc(String orderSnMain);
 

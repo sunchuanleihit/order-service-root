@@ -4,12 +4,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.LogFactory;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
@@ -201,7 +201,7 @@ public class OrderInfoService {
                     startTime = DateUtils.str2Date(param.getFinishedTime()).getTime() / 1000;
                     endTime = startTime + 86400;
                 } catch (Exception e) {
-                    // TODO: handle exception
+                    LogFactory.getLog(OrderInfoService.class).error("parsing time error ", e);
                 }
                 orders = orderDao.findBySellerIdAndStatusAndFinishedTimeBetweenAndTypeIn(param.getStoreId(),
                         param.getOrderStatus(), (int) startTime, (int) endTime, types, pagenation);
@@ -228,17 +228,13 @@ public class OrderInfoService {
         }
         // 订单id
         List<Integer> orderIds = new ArrayList<Integer>();
-        // 订单 tao_order_sn 子单号
-        List<String> taoOrderStrings = new ArrayList<String>();
-
         // 订单id 对应的tao_order_sn可反向查询
         HashBiMap<Integer, String> biMap = HashBiMap.create();
         for (Order o : orders.getContent()) {
             orderIds.add(o.getOrderId());
-            taoOrderStrings.add(o.getTaoOrderSn());
             biMap.put(o.getOrderId(), o.getTaoOrderSn());
         }
-        List<OrderGoods> goods = orderGoodsDao.findByOrderIdIn(orderIds);
+        //封装基本信息
         Map<Integer, OrderInfoDto> map = new HashMap<Integer, OrderInfoDto>();
         for (Order o : orders.getContent()) {
             OrderInfoDto value = new OrderInfoDto();
@@ -256,29 +252,37 @@ public class OrderInfoService {
 
             map.put(o.getOrderId(), value);
         }
-        for (OrderGoods ordergood : goods) {
-            OrderInfoDto value = map.get(ordergood.getOrderId());
-            List<SpecDto> specList = new ArrayList<SpecDto>();
-            for (OrderGoods good : goods) {
-                SpecDto spec = new SpecDto();
-                spec.setGoodsInfo(new GoodsInfoDto(good.getGoodsId(), good.getGoodsName(), good.getGoodsImage()));
-                spec.setSpecId(good.getSpecId());
-                spec.setBuyNum(good.getQuantity());
-                specList.add(spec);
+        
+        
+        List<OrderGoods> goods = orderGoodsDao.findByOrderIdIn(orderIds);
+        if(!CollectionUtils.isEmpty(goods)){
+            for (OrderGoods ordergood : goods) {
+                OrderInfoDto value = map.get(ordergood.getOrderId());
+                List<SpecDto> specList = new ArrayList<SpecDto>();
+                for (OrderGoods good : goods) {
+                    SpecDto spec = new SpecDto();
+                    spec.setGoodsInfo(new GoodsInfoDto(good.getGoodsId(), good.getGoodsName(), good.getGoodsImage()));
+                    spec.setSpecId(good.getSpecId());
+                    spec.setBuyNum(good.getQuantity());
+                    specList.add(spec);
+                }
+                value.setSpecList(specList);
             }
-            value.setSpecList(specList);
         }
+        
         // 根据请求的订单状态添加附加属性
         if (param.getOrderStatus() == OrderStatusEnum.STATUS_REVIEWED.getId()) {
 
         } else if (param.getOrderStatus() == OrderStatusEnum.STATUS_CANCELED.getId()) {
 
-            List<OrderAction> orderActions = orderActionDao.findByTaoOrderSnInAndAction(taoOrderStrings,
+            List<OrderAction> orderActions = orderActionDao.findByTaoOrderSnInAndAction(biMap.values(),
                     OrderStatusEnum.STATUS_CANCELED.getId());
             if (!CollectionUtils.isEmpty(orderActions)) {
                 for (OrderAction orderAction : orderActions) {
                     OrderInfoDto value = map.get(orderAction.getOrderId());
-                    value.setCancelTime(DateUtils.date2DateStr2(orderAction.getActionTime()));
+                    if(value!=null){
+                        value.setCancelTime(DateUtils.date2DateStr2(orderAction.getActionTime()));
+                    }
                 }
             }
             for (Order order : orders.getContent()) {
@@ -299,7 +303,7 @@ public class OrderInfoService {
         } else if (param.getOrderStatus() == OrderStatusEnum.STATUS_14.getId()) {
 
         } else if (param.getOrderStatus() == OrderStatusEnum.STATUS_REFUSED.getId()) {
-            List<OrderRefuse> orderRefuses = orderRefuseDao.findByTaoOrderSnIn(taoOrderStrings);
+            List<OrderRefuse> orderRefuses = orderRefuseDao.findByTaoOrderSnIn(biMap.values());
 
             if (!CollectionUtils.isEmpty(orderRefuses)) {
                 for (OrderRefuse refuse : orderRefuses) {
@@ -314,23 +318,30 @@ public class OrderInfoService {
                 value.setFinishTime(DateUtils.date2DateStr2(new Date((long) (order.getFinishedTime()) * 1000)));
                 value.setDeliverResult(calDelivertResult(order.getNeedShiptime(), order.getNeedShiptimeSlot(),
                         order.getFinishedTime()));
-                List<OrderExtm> orderExtmList = orderExtmDao.findByOrderSnMain(order.getOrderSnMain());
-                DeliveryInfo deliveryInfo = new DeliveryInfo();
-                if (!CollectionUtils.isEmpty(orderExtmList)) {
-                    OrderExtm orderExtm = orderExtmList.get(0);
-                    // 封装收货人等信息
-
-                    deliveryInfo.setAddress(orderExtm.getRegionName() + orderExtm.getAddress());
-                    deliveryInfo.setConsignee(orderExtm.getConsignee());
-                    deliveryInfo.setTel(orderExtm.getPhoneMob());
-                    deliveryInfo.setNeedShippingTime(DateUtils.date2DateStr(order.getNeedShiptime()) + " "
-                            + order.getNeedShiptimeSlot());
-                }
-                value.setDeliveryInfo(deliveryInfo);
             }
+            List<String> orderSnMainList = new ArrayList<String>();
+            for (Order o : orders.getContent()) {
+                orderSnMainList.add(o.getOrderSnMain());
+            }
+            List<OrderExtm> orderExtmLists = orderExtmDao.findByOrderSnMainIn(orderSnMainList);
+            if (!CollectionUtils.isEmpty(orderExtmLists)) {
+                for (Order o : orders.getContent()) {
+                    for (OrderExtm m : orderExtmLists) {
+                        if (o.getOrderSnMain().equals(m.getOrderSnMain())) {
+                            OrderInfoDto value = map.get(o.getOrderId());
+                            DeliveryInfo deliveryInfo = new DeliveryInfo();
+                            deliveryInfo.setAddress(m.getRegionName() + m.getAddress());
+                            deliveryInfo.setConsignee(m.getConsignee());
+                            deliveryInfo.setTel(m.getPhoneMob());
+                            deliveryInfo.setNeedShippingTime(DateUtils.date2DateStr(o.getNeedShiptime()) + " "
+                                    + o.getNeedShiptimeSlot());
+                            value.setDeliveryInfo(deliveryInfo);
+                        }
+                    }
+                }
 
+            }
         }
-
         orderInfoDtos.addAll(map.values());
 
         orderListInfoDto.setOrders(orderInfoDtos);
@@ -361,7 +372,7 @@ public class OrderInfoService {
                 return 2; // 及时送达
             }
         } catch (Exception e) {
-
+                LogFactory.getLog(OrderInfoService.class).error("parsing time error",e);
         }
         return 0;
     }
