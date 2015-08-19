@@ -32,10 +32,12 @@ import com.loukou.order.service.entity.Member;
 import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.enums.ActivateCouponMessage;
 import com.loukou.order.service.enums.CoupListReqTypeEnum;
+import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.resp.dto.CouponListDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.CouponListResultDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
+import com.loukou.order.service.resp.dto.ResponseDto;
 import com.loukou.order.service.util.DateUtils;
 import com.loukou.search.service.api.GoodsSearchService;
 import com.loukou.search.service.dto.GoodsCateDto;
@@ -255,11 +257,14 @@ public class CouponOperationProcessor {
 				for (GCategoryNew g : gCateNews) {
 					result.append(g.getCateName()).append("、");
 				}
+				
 				result.append("品类使用。");
 			}
 			
 		}
-		return result.toString();
+		String resultStr = result.toString();
+		StringUtils.removeEnd(resultStr, "、");
+		return resultStr;
 	}
 	
 	public boolean verifyCoup(int userId, String openId, int cityId,
@@ -338,25 +343,25 @@ public class CouponOperationProcessor {
 		return ids;
 	}
 
-	public OResponseDto<String> activateCoupon(int userId, String openId,
+	public ResponseDto<String> activateCoupon(int userId, String openId,
 			String commoncode) {
-		 OResponseDto<String> resp = new  OResponseDto<String>(200, "");
+		 ResponseDto<String> resp = new ResponseDto<String>(200, "");
 		 
-		 if(userId <=0 || StringUtils.isBlank(openId) || StringUtils.isBlank(commoncode)) {
+		 if(userId <= 0 || StringUtils.isBlank(openId) || StringUtils.isBlank(commoncode)) {
 			 resp.setCode(400);
-			 resp.setResult("参数有误");
+			 resp.setMessage("参数有误");
 			 return resp;
 		 }
 		Member user = memberDao.findOne(userId);
 		if(user == null) {
 			resp.setCode(400);
-			resp.setResult("用户不存在");
+			resp.setMessage("用户不存在");
 			return resp;
 		}
 		
 		if(user.getPhoneChecked() != 1) {
 			resp.setCode(400);
-			resp.setResult("用户未绑定手机,请先绑定手机号");
+			resp.setMessage("用户未绑定手机,请先绑定手机号");
 			return resp;
 		}
 		
@@ -375,7 +380,8 @@ public class CouponOperationProcessor {
 		}
 		if(checkCode != ActivateCouponMessage.SUCCESS.getCode()) {
 			String message = ActivateCouponMessage.parseCode(checkCode).getMessage();
-			resp.setResult(message);
+			resp.setCode(400);
+			resp.setMessage(message);
 			return resp;
 		}
 		
@@ -384,7 +390,8 @@ public class CouponOperationProcessor {
 			boolean createStatus = createCouponCode(userId, dto.getCouponId(), 0, false, 0, openId, 0);
 			
 			if(createStatus == false) {
-				resp.setResult("激活失败");
+				resp.setCode(400);
+				resp.setMessage("激活失败");
 				return resp;
 			}
 			
@@ -407,7 +414,8 @@ public class CouponOperationProcessor {
 		    	
 		    	int code = coupListDao.update(userId, beginTime, endTime, openId, coupRule.getCommoncode());
 		    	if(code > 0) {
-		    		resp.setResult("激活失败");
+		    		resp.setCode(200);
+		    		resp.setResult("激活成功");
 					return resp;
 		    	}
 			}
@@ -416,7 +424,7 @@ public class CouponOperationProcessor {
 		 // 记录领券LOG
         // ****************?????********************** //
 //        $this->json_result('恭喜！激活成功');
-		return null;
+		return resp;
 	}
 	
 	
@@ -604,7 +612,7 @@ public class CouponOperationProcessor {
     	CheckCouponDto dto = new CheckCouponDto();
     	int couponId = 0;
     	Date listEndTime = null;
-        if(type == 1) {
+        if(type == CouponFormType.PUBLIC) {
 
         	CoupRule coupRule = coupRuleDao.findByCommoncode(commoncode);
         	if(coupRule == null) {
@@ -827,8 +835,8 @@ public class CouponOperationProcessor {
     private boolean checkUserNew(int userId) {
     	
     	List<Integer> statusList = new ArrayList<Integer>();
-    	statusList.add(1);
-    	statusList.add(2);
+    	statusList.add(OrderStatusEnum.STATUS_CANCELED.getId());
+    	statusList.add(OrderStatusEnum.STATUS_INVALID.getId());
     	List<Order> orders = orderDao.findByBuyerIdAndStatusNotIn(userId, statusList);
     	
     	if(CollectionUtils.isEmpty(orders)) {
@@ -841,7 +849,7 @@ public class CouponOperationProcessor {
 
 }
 
-class CheckCouponDto{
+class CheckCouponDto {
 	private int result = 0;
 	private int couponId = 0;
 	public int getResult() {

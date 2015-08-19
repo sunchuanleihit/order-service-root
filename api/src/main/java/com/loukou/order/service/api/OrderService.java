@@ -16,6 +16,7 @@ import com.loukou.order.service.resp.dto.OrderListInfoDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
+import com.loukou.order.service.resp.dto.ResponseDto;
 import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
@@ -48,7 +49,7 @@ public interface OrderService {
 	public CouponListRespDto getCouponList(int cityId, int userId, int storeId, String openId, int isUsable);
 	
 	
-	public OResponseDto<String> activateCoupon(int userId, String openId, String commoncode);
+	public ResponseDto<String> activateCoupon(int userId, String openId, String commoncode);
 	
 	
 	/**
