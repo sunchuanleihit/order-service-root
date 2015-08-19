@@ -46,7 +46,7 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 	
 	List<CoupList> findByUserIdAndCouponId(int userId, int couponId);
 
-	List<CoupList> findByCouponIdAndOpenId(int couponId, String openId);
+	List<CoupList> findByCouponIdAndOpenid(int couponId, String openId);
 
 	CoupList findByCommoncode(String code);
 
