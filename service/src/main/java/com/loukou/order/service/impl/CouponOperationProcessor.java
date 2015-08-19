@@ -32,6 +32,7 @@ import com.loukou.order.service.entity.Member;
 import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.enums.ActivateCouponMessage;
 import com.loukou.order.service.enums.CoupListReqTypeEnum;
+import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.resp.dto.CouponListDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.CouponListResultDto;
@@ -247,11 +248,14 @@ public class CouponOperationProcessor {
 				for (GCategoryNew g : gCateNews) {
 					result.append(g.getCateName()).append("、");
 				}
+				
 				result.append("品类使用。");
 			}
 			
 		}
-		return result.toString();
+		String resultStr = result.toString();
+		StringUtils.removeEnd(resultStr, "、");
+		return resultStr;
 	}
 	
 	public boolean verifyCoup(int userId, String openId, int cityId,
@@ -330,9 +334,9 @@ public class CouponOperationProcessor {
 
 	public OResponseDto<String> activateCoupon(int userId, String openId,
 			String commoncode) {
-		 OResponseDto<String> resp = new  OResponseDto<String>(200, "");
+		 OResponseDto<String> resp = new OResponseDto<String>(200, "");
 		 
-		 if(userId <=0 || StringUtils.isBlank(openId) || StringUtils.isBlank(commoncode)) {
+		 if(userId <= 0 || StringUtils.isBlank(openId) || StringUtils.isBlank(commoncode)) {
 			 resp.setCode(400);
 			 resp.setResult("参数有误");
 			 return resp;
@@ -594,7 +598,7 @@ public class CouponOperationProcessor {
     	CheckCouponDto dto = new CheckCouponDto();
     	int couponId = 0;
     	Date listEndTime = null;
-        if(type == 1) {
+        if(type == CouponFormType.PUBLIC) {
 
         	CoupRule coupRule = coupRuleDao.findByCommoncode(commoncode);
         	if(coupRule == null) {
@@ -817,8 +821,8 @@ public class CouponOperationProcessor {
     private boolean checkUserNew(int userId) {
     	
     	List<Integer> statusList = new ArrayList<Integer>();
-    	statusList.add(1);
-    	statusList.add(2);
+    	statusList.add(OrderStatusEnum.STATUS_CANCELED.getId());
+    	statusList.add(OrderStatusEnum.STATUS_INVALID.getId());
     	List<Order> orders = orderDao.findByBuyerIdAndStatusNotIn(userId, statusList);
     	
     	if(CollectionUtils.isEmpty(orders)) {
@@ -831,7 +835,7 @@ public class CouponOperationProcessor {
 
 }
 
-class CheckCouponDto{
+class CheckCouponDto {
 	private int result = 0;
 	private int couponId = 0;
 	public int getResult() {
