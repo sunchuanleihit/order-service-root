@@ -36,7 +36,6 @@ import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.resp.dto.CouponListDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.CouponListResultDto;
-import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.ResponseDto;
 import com.loukou.order.service.util.DateUtils;
 import com.loukou.search.service.api.GoodsSearchService;

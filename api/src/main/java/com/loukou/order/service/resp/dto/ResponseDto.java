@@ -10,6 +10,7 @@ public class ResponseDto <T> implements Serializable{
 	 */
 	private static final long serialVersionUID = 1557028649389397553L;
 
+
 	public ResponseDto (int code, String message) {
 		this.code = code;
 		this.message = message;
