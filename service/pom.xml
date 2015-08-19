@@ -29,7 +29,7 @@
 		<dependency>
 	    	<groupId>com.loukou</groupId>
 	    	<artifactId>search-client</artifactId>
-	    	<version>0.1.0</version>
+	    	<version>0.2.4</version>
 	    </dependency>
     
 		<!-- order-pay-client -->
