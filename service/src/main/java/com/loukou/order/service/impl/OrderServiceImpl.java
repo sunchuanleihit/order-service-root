@@ -736,8 +736,8 @@ public class OrderServiceImpl implements OrderService {
 	
 	@Override
 	public CouponListRespDto getCouponList(int cityId, int userId, int storeId,
-			String openId, int usable) {
-		return couponOperationProcessor.getCouponList(cityId, userId, storeId, openId, usable);
+			String openId, int type) {
+		return couponOperationProcessor.getCouponList(cityId, userId, storeId, openId, type);
 	}
 
 	@Override
