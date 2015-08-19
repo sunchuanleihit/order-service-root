@@ -11,6 +11,7 @@ import com.loukou.order.service.dao.OrderDao;
 import com.loukou.order.service.dao.OrderPayDao;
 import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderPay;
+import com.loukou.order.service.enums.OrderPayStatusEnum;
 import com.loukou.order.service.enums.PaymentEnum;
 import com.loukou.order.service.util.DoubleUtils;
 
@@ -122,7 +123,9 @@ public class OrderPayContext extends BasePayContext {
 		for (OrderModel m: allModels) {
 			List<OrderPay> orderPays = m.getPays();
 			for (OrderPay orderPay: orderPays) {
-				if (orderPay.getPaymentId() == paymentEnum.getId()) {
+				if (orderPay.getPaymentId() == paymentEnum.getId() 
+						//fix:必须是成功状态的才算支付过
+						&& orderPay.getStatus() != OrderPayStatusEnum.STATUS_SUCC.getStatus()) {
 					return true;
 				}
 			}

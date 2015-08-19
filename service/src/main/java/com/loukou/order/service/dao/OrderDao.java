@@ -15,7 +15,7 @@ import com.loukou.order.service.entity.Order;
 
 public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 
-	Order findByTaoOrderSn(String taoOrderSn);
+	List<Order> findByTaoOrderSn(String taoOrderSn);
 	
 	List<Order> findByOrderSnMain(String orderSnMain);
 
@@ -29,7 +29,7 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	int countValidOrderBetweenAddTime(int storeId, int start, int end);
 	
 
-	List<Order> findByStatusAndAddTimeBetween(int storeId, int start, int end);
+	List<Order> findByStatusAndSellerIdAndAddTimeBetween(int orderStatus,int storeId, int start, int end);
 
 
 	Page<Order> findBySellerIdAndPayStatusAndStatusIn(int storeId, int payStatus, List<Integer> statusList, Pageable Pageable);

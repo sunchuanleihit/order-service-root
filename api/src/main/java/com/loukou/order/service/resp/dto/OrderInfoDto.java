@@ -1,6 +1,7 @@
 package com.loukou.order.service.resp.dto;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class OrderInfoDto  implements Serializable{
@@ -22,7 +23,7 @@ public class OrderInfoDto  implements Serializable{
     private int orderStatus; // 订单状态
     private int  goodsReturnStatus; // 1待退货　2已退货　
     private DeliveryInfo deliveryInfo; // 配送信息
-    private List<SpecDto> specList; // 规格信息列表
+    private List<SpecDto> specList = new ArrayList<SpecDto>(); // 规格信息列表
     private int deliveryResult;//送达结果　　　早，及时，延时
 
     public String getTaoOrderSn() {

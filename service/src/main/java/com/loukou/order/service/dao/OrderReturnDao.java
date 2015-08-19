@@ -46,6 +46,8 @@ public interface OrderReturnDao extends PagingAndSortingRepository<OrderReturn, 
 
 	List<OrderReturn> findByOrderSnMain(String orderSnMain);
 	
+	List<OrderReturn> findByOrderSnMainIn(List<String> orderSnMain);
+	
 	List<OrderReturn> findByOrderSnMainAndSellerId(String orderSnMain,int sellerId);
 }
 
