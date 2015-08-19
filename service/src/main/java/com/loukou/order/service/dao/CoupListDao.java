@@ -61,6 +61,6 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 	
 	@Transactional
 	@Modifying
-	@Query("UPDATE CoupList SET userId=?1, begintime = ?2, endtime=?3 openid=?4, createtime=NOW() WHERE commoncode=?5")
+	@Query("UPDATE CoupList SET userId=?1, begintime = ?2, endtime=?3, openid=?4, createtime=NOW() WHERE commoncode=?5")
 	int update(int userId, Date beginTime, Date endTime, String openId, String commoncode);
 }
