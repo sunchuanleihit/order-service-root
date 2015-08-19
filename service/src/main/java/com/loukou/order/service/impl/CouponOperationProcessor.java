@@ -81,18 +81,26 @@ public class CouponOperationProcessor {
 	private static final int LIMIT_COUPON_PER_DAY = 20; // 每天限用优惠券张数
 	
 	public CouponListRespDto getCouponList(int cityId, int userId, int storeId,
-			String openId, int usable) {
+			String openId, int type) {
 		CouponListRespDto resp = new CouponListRespDto(200, "");
-		if (cityId <= 0 || userId <= 0 || storeId <= 0
+		if (userId <= 0
 				|| StringUtils.isEmpty(openId)) {
 			resp.setCode(400);
 			resp.setMessage("参数有误");
 			return resp;
 		}
-		// FIXME 查询语句
-		List<CoupList> coupLists = coupListDao.getValidCoupLists(userId);// 以及其他的一些过滤条件
+		// 可用优惠券，必须有storeId和cityId
+		if (type == CoupListReqTypeEnum.USABLE.getId() && 
+				(cityId <= 0 || storeId <= 0)) {
+			resp.setCode(400);
+			resp.setMessage("参数有误");
+			return resp;
+		}
+		
+		// 查询语句
+		List<CoupList> coupLists = coupListDao.getValidCoupLists(userId);
 		List<CoupList> invalidCoupLists = null;
-		if(usable == CoupListReqTypeEnum.ALL.getId()) {
+		if(type == CoupListReqTypeEnum.ALL.getId()) {
 			invalidCoupLists = coupListDao.getInvalidCoupLists(userId);// 以及其他的一些过滤条件
 			if(CollectionUtils.isEmpty(coupLists) && CollectionUtils.isEmpty(invalidCoupLists)) {
 				resp.setCode(200);
@@ -122,7 +130,7 @@ public class CouponOperationProcessor {
 		
 		CouponListResultDto result = resp.getResult();
 		
-		if(usable == CoupListReqTypeEnum.USABLE.getId()) {
+		if(type == CoupListReqTypeEnum.USABLE.getId()) {
 			List<CoupList> validCoupList = Lists.newArrayList();
 			CoupList recommendCoupList = null; // 推荐用的券
 			CartRespDto cart = cartService.getCart(userId, openId, cityId, storeId);
@@ -327,7 +335,9 @@ public class CouponOperationProcessor {
 		List<Integer> ids = Lists.newArrayList();
 		String[] strs = coupRule.getOutId().split(",");
 		if (strs.length > 0) {
-			ids.add(Integer.valueOf(strs[0]));
+			for (String id: strs) {
+				ids.add(Integer.valueOf(id));
+			}
 		}
 		return ids;
 	}
