@@ -382,6 +382,7 @@ public class CouponOperationProcessor {
 		}
 		if(checkCode != ActivateCouponMessage.SUCCESS.getCode()) {
 			String message = ActivateCouponMessage.parseCode(checkCode).getMessage();
+			resp.setCode(400);
 			resp.setResult(message);
 			return resp;
 		}
@@ -391,6 +392,7 @@ public class CouponOperationProcessor {
 			boolean createStatus = createCouponCode(userId, dto.getCouponId(), 0, false, 0, openId, 0);
 			
 			if(createStatus == false) {
+				resp.setCode(400);
 				resp.setResult("激活失败");
 				return resp;
 			}
@@ -414,7 +416,8 @@ public class CouponOperationProcessor {
 		    	
 		    	int code = coupListDao.update(userId, beginTime, endTime, openId, coupRule.getCommoncode());
 		    	if(code > 0) {
-		    		resp.setResult("激活失败");
+		    		resp.setCode(200);
+		    		resp.setResult("激活成功");
 					return resp;
 		    	}
 			}
@@ -423,7 +426,7 @@ public class CouponOperationProcessor {
 		 // 记录领券LOG
         // ****************?????********************** //
 //        $this->json_result('恭喜！激活成功');
-		return null;
+		return resp;
 	}
 	
 	
