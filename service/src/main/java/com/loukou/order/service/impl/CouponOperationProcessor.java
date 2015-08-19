@@ -20,12 +20,14 @@ import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupLogDao;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.CoupTypeDao;
+import com.loukou.order.service.dao.GCategoryNewDao;
 import com.loukou.order.service.dao.MemberDao;
 import com.loukou.order.service.dao.OrderDao;
 import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupLog;
 import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.CoupType;
+import com.loukou.order.service.entity.GCategoryNew;
 import com.loukou.order.service.entity.Member;
 import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.enums.ActivateCouponMessage;
@@ -71,6 +73,9 @@ public class CouponOperationProcessor {
 	
 	@Autowired 
 	private GoodsSearchService goodsSearchService;
+	
+	@Autowired
+	private GCategoryNewDao gCategoryNewDao;
 
 	private static final int LIMIT_COUPON_PER_DAY = 20; // 每天限用优惠券张数
 	
@@ -85,17 +90,20 @@ public class CouponOperationProcessor {
 		}
 		// FIXME 查询语句
 		List<CoupList> coupLists = coupListDao.getValidCoupLists(userId);// 以及其他的一些过滤条件
+		List<CoupList> invalidCoupLists = null;
 		if(usable == CoupListReqTypeEnum.ALL.getId()) {
-			List<CoupList> invalidCoupLists = coupListDao.getInvalidCoupLists(userId);// 以及其他的一些过滤条件
-			coupLists.addAll(invalidCoupLists);
-		} 
-//		else if (usable == CoupListReqTypeEnum.USABLE.getId()) {
-//			
-//		}
-		if (coupLists.size() == 0) {
-			resp.setCode(200);
-			return resp;
+			invalidCoupLists = coupListDao.getInvalidCoupLists(userId);// 以及其他的一些过滤条件
+			if(CollectionUtils.isEmpty(coupLists) && CollectionUtils.isEmpty(invalidCoupLists)) {
+				resp.setCode(200);
+				return resp;
+			}
+		} else {
+			if (coupLists.size() == 0) {
+				resp.setCode(200);
+				return resp;
+			}
 		}
+		
 		List<Integer> couponIds = new ArrayList<Integer>();
 		for (CoupList couplist : coupLists) {
 			couponIds.add(couplist.getCouponId());
@@ -110,86 +118,141 @@ public class CouponOperationProcessor {
 		// coupTypeIds.add(coupRule.getTypeid());
 		// }
 		// List<CoupType> coupTypes = coupTypeDao.findByIdIn(coupTypeIds);
-		List<CoupList> validCoupList = Lists.newArrayList();
-		CoupList recommendCoupList = null; // 推荐用的券
-		CartRespDto cart = cartService.getCart(userId, openId, cityId, storeId);
-		for (CoupList coupList : coupLists) {
-			CoupRule coupRule = ruleMap.get(coupList.getCouponId());
-			if (verifyCoup(userId, openId, cityId, storeId, coupList, cart,
-					coupRule)) {
-				validCoupList.add(coupList);
-				if (recommendCoupList == null) {
-					recommendCoupList = coupList;
-				} else if (coupList.getMoney() > recommendCoupList.getMoney()) {
-					recommendCoupList = coupList;
-				}
-			}
-		}
-
+		
 		CouponListResultDto result = resp.getResult();
-		// 组装 dto
-		if (validCoupList.size() > 0) {
-			List<CouponListDto> couponListDtos = result.getCouponList();
-			for (CoupList coupList : validCoupList) {
-				String couponName = "";
+		
+		if(usable == CoupListReqTypeEnum.USABLE.getId()) {
+			List<CoupList> validCoupList = Lists.newArrayList();
+			CoupList recommendCoupList = null; // 推荐用的券
+			CartRespDto cart = cartService.getCart(userId, openId, cityId, storeId);
+			for (CoupList coupList : coupLists) {
 				CoupRule coupRule = ruleMap.get(coupList.getCouponId());
-				if (coupRule.getCoupontypeid() == 1) {
-					couponName = "现金券";
-				} else {
-					couponName = String.format("满%.1f减%.1f",
-							coupList.getMinprice(), coupList.getMoney());
-				}
-				CouponListDto couponListDto = new CouponListDto();
-				couponListDto.setCouponId(coupList.getId());
-				couponListDto.setCommoncode(coupList.getCommoncode());
-				couponListDto.setCouponName(couponName);
-				couponListDto.setMoney(coupList.getMoney());
-				couponListDto.setCouponMsg(coupRule.getCouponName());
-				couponListDto.setEndtime(DateUtils.date2DateStr2(coupList.getEndtime()));
-				couponListDtos.add(couponListDto);
-
-				if (coupList == recommendCoupList) {
-					result.getRecommend().add(couponListDto);
+				if (verifyCoup(userId, openId, cityId, storeId, coupList, cart,
+						coupRule)) {
+					validCoupList.add(coupList);
+					if (recommendCoupList == null) {
+						recommendCoupList = coupList;
+					} else if (coupList.getMoney() > recommendCoupList.getMoney()) {
+						recommendCoupList = coupList;
+					}
 				}
 			}
-		}
+			
+			// 组装 dto
+			if (validCoupList.size() > 0) {
+				List<CouponListDto> couponListDtos = result.getCouponList();
+				for (CoupList coupList : validCoupList) {
+					String couponName = "";
+					CoupRule coupRule = ruleMap.get(coupList.getCouponId());
+					if (coupRule.getCoupontypeid() == 1) {
+						couponName = "现金券";
+					} else {
+						couponName = String.format("满%.1f减%.1f",
+								coupList.getMinprice(), coupList.getMoney());
+					}
+					CouponListDto couponListDto = new CouponListDto();
+					couponListDto.setCouponId(coupList.getId());
+					couponListDto.setCommoncode(coupList.getCommoncode());
+					couponListDto.setCouponName(couponName);
+					couponListDto.setMoney(coupList.getMoney());
+					couponListDto.setCouponMsg(coupRule.getCouponName());
+					couponListDto.setEndtime(DateUtils.date2DateStr2(coupList.getEndtime()));
+					couponListDto.setIsUsable(CoupListReqTypeEnum.USABLE.getId());
+					couponListDto.setCouponRange(generateCouponRange(coupRule));
+					couponListDtos.add(couponListDto);
+					
+					if (coupList == recommendCoupList) {
+						result.getRecommend().add(couponListDto);
+					}
+				}
+			}
+			
+			// 能否使用券
+			int canUse = 1;
+			Date now = new Date();
+			Date start = DateUtils.getStartofDate(now);
+			int count = coupListDao.getUsedCoupNumber(userId, start);
+			if (count > LIMIT_COUPON_PER_DAY) {
+				// 一天最多只能用20张券
+				canUse = 2;
+			}
+			result.setCanUse(canUse);
+			result.setEverydayNum(String.valueOf(20));
+			result.setEverydayMsg(String.format("每天限使用%d张优惠券，明天再来吧",
+					LIMIT_COUPON_PER_DAY));
 
-		// 能否使用券
-		int canUse = 1;
-		Date now = new Date();
-		Date start = DateUtils.getStartofDate(now);
-		int count = coupListDao.getUsedCoupNumber(userId, start);
-		if (count > LIMIT_COUPON_PER_DAY) {
-			// 一天最多只能用20张券
-			canUse = 2;
+		} else {
+			List<CouponListDto> couponListDtos = result.getCouponList();
+			if(CollectionUtils.isNotEmpty(coupLists)) {
+				for(CoupList coupList : coupLists) {
+					String couponName = "";
+					CoupRule coupRule = ruleMap.get(coupList.getCouponId());
+					if (coupRule.getCoupontypeid() == 1) {
+						couponName = "现金券";
+					} else {
+						couponName = String.format("满%.1f减%.1f",
+								coupList.getMinprice(), coupList.getMoney());
+					}
+					CouponListDto couponListDto = new CouponListDto();
+					couponListDto.setCouponId(coupList.getId());
+					couponListDto.setCommoncode(coupList.getCommoncode());
+					couponListDto.setCouponName(couponName);
+					couponListDto.setMoney(coupList.getMoney());
+					couponListDto.setCouponMsg(coupRule.getCouponName());
+					couponListDto.setEndtime(DateUtils.date2DateStr2(coupList.getEndtime()));
+					couponListDto.setIsUsable(CoupListReqTypeEnum.USABLE.getId());
+					couponListDto.setCouponRange(generateCouponRange(coupRule));
+					couponListDtos.add(couponListDto);
+				}
+			}
+			
+			if(CollectionUtils.isNotEmpty(invalidCoupLists)) {
+				for(CoupList coupList : invalidCoupLists) {
+					String couponName = "";
+					CoupRule coupRule = ruleMap.get(coupList.getCouponId());
+					if (coupRule.getCoupontypeid() == 1) {
+						couponName = "现金券";
+					} else {
+						couponName = String.format("满%.1f减%.1f",
+								coupList.getMinprice(), coupList.getMoney());
+					}
+					CouponListDto couponListDto = new CouponListDto();
+					couponListDto.setCouponId(coupList.getId());
+					couponListDto.setCommoncode(coupList.getCommoncode());
+					couponListDto.setCouponName(couponName);
+					couponListDto.setMoney(coupList.getMoney());
+					couponListDto.setCouponMsg(coupRule.getCouponName());
+					couponListDto.setEndtime(DateUtils.date2DateStr2(coupList.getEndtime()));
+					couponListDto.setIsUsable(CoupListReqTypeEnum.ALL.getId());
+					couponListDto.setCouponRange(generateCouponRange(coupRule));
+					couponListDtos.add(couponListDto);
+				}
+			}
+			
 		}
-		result.setCanUse(canUse);
-		result.setEverydayNum(String.valueOf(20));
-		result.setEverydayMsg(String.format("每天限使用%d张优惠券，明天再来吧",
-				LIMIT_COUPON_PER_DAY));
-
+	
 		return resp;
 	}
 	
-	public CouponListRespDto getAllCouponList(int userId) {
-		CouponListRespDto resp = new CouponListRespDto(200, "");
-		if(userId <= 0) {
-			resp.setCode(400);
-			resp.setMessage("参数有误");
-			return resp;
+	private String generateCouponRange(CoupRule coupRule) {
+		StringBuilder result = new StringBuilder();
+		if (coupRule.getCouponType() == CouponType.CATE) {
+			List<GCategoryNew> gCateNews = null;
+			List<Integer> cateIds = getOutId(coupRule);
+			if (CollectionUtils.isNotEmpty(cateIds)) {
+				gCateNews = gCategoryNewDao.findByCateIdIn(cateIds);
+			}
+			if (CollectionUtils.isNotEmpty(gCateNews)) {
+				result.append("限");
+				for (GCategoryNew g : gCateNews) {
+					result.append(g.getCateName()).append("、");
+				}
+				result.append("品类使用。");
+			}
+			
 		}
-		List<CoupList> coupLists = coupListDao.getValidCoupLists(userId);// 以及其他的一些过滤条件
-		List<CoupList> invalidCoupLists = coupListDao.getInvalidCoupLists(userId);// 以及其他的一些过滤条件
-		coupLists.addAll(invalidCoupLists);
-		
-		if (coupLists.size() == 0) {
-			resp.setCode(200);
-			return resp;
-		}
-		
-		return resp;
+		return result.toString();
 	}
-	
 	
 	public boolean verifyCoup(int userId, String openId, int cityId,
 			int storeId, CoupList coupList, CartRespDto cart, CoupRule coupRule) {
@@ -507,7 +570,7 @@ public class CouponOperationProcessor {
         if(type == 1) {
         	coupList = coupListDao.findByUserIdAndCouponId(userId, couponId);
         }else{
-        	coupList = coupListDao.findByCouponIdAndOpenId(couponId, openId);
+        	coupList = coupListDao.findByCouponIdAndOpenid(couponId, openId);
         }
 		int codeNum = CollectionUtils.size(coupList);
 		
@@ -750,9 +813,6 @@ public class CouponOperationProcessor {
      *
      * @param  [int]     $user_id [用户ID]
      * @return [bol]              [true: 新用户， false: 老用户]
-     * 
-     * @author zhaozl
-     * @since  2015-03-21
      */
     private boolean checkUserNew(int userId) {
     	

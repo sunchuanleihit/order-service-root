@@ -62,6 +62,7 @@ import com.loukou.order.service.dao.OrderPayDao;
 import com.loukou.order.service.dao.OrderPayRDao;
 import com.loukou.order.service.dao.OrderRefuseDao;
 import com.loukou.order.service.dao.OrderReturnDao;
+import com.loukou.order.service.dao.OrderUserDao;
 import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.SiteDao;
 import com.loukou.order.service.dao.StoreDao;
@@ -84,6 +85,7 @@ import com.loukou.order.service.entity.OrderLnglat;
 import com.loukou.order.service.entity.OrderPay;
 import com.loukou.order.service.entity.OrderPayR;
 import com.loukou.order.service.entity.OrderReturn;
+import com.loukou.order.service.entity.OrderUser;
 import com.loukou.order.service.entity.Site;
 import com.loukou.order.service.entity.Store;
 import com.loukou.order.service.entity.WeiCangGoodsStore;
@@ -266,7 +268,7 @@ public class OrderServiceImpl implements OrderService {
 	private CouponOperationProcessor couponOperationProcessor;
 	
 	@Autowired
-	private OrderInfoService OrderInfoService;
+	private OrderInfoService orderInfoService;
 	
 	@Autowired
 	private UserService userService;
@@ -288,6 +290,9 @@ public class OrderServiceImpl implements OrderService {
 	
 	@Autowired
 	private LKWhStockInGoodsDao whStockInGoodsDao;
+	
+	@Autowired
+	private OrderUserDao orderUserDao;
 	
 	@Override
 	public UserOrderNumRespDto getOrderNum(int userId) {
@@ -956,6 +961,12 @@ public class OrderServiceImpl implements OrderService {
 			}
 
 			Order newOrder = orderDao.save(order);
+			// 在lk_order_user中记录用户、订单、openId的关联信息
+			OrderUser orderUser = new OrderUser();
+			orderUser.setOrderId(newOrder.getOrderId());
+			orderUser.setOpenId(req.getOpenId());
+			orderUser.setUserId(req.getUserId());
+			orderUserDao.save(orderUser);
 
 			// 新建tcz_order_goods
 			List<OrderGoods> orderGoodsList = Lists.newArrayList();
@@ -1774,7 +1785,7 @@ public class OrderServiceImpl implements OrderService {
 	 */
     @Override
     public OResponseDto<OrderInfoDto> getOrderGoodsInfo(String orderNo) {
-       return OrderInfoService.getOrderGoodsInfo(orderNo);
+       return orderInfoService.getOrderGoodsInfo(orderNo);
     }
 
     /**
@@ -1782,7 +1793,7 @@ public class OrderServiceImpl implements OrderService {
      */
     @Override
     public OResponseDto<OrderListInfoDto> getOrderListInfo(OrderListParamDto param) {
-        return OrderInfoService.getOrderListInfo(param);
+        return orderInfoService.getOrderListInfo(param);
     }
 
     /**
