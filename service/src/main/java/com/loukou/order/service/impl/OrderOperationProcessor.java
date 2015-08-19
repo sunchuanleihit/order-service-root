@@ -1,14 +1,13 @@
 package com.loukou.order.service.impl;
 
-import java.rmi.RemoteException;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import com.google.common.collect.Lists;
 import com.loukou.order.service.constants.ShortMessage;
@@ -31,7 +30,6 @@ import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.util.DateUtils;
 import com.loukou.sms.sdk.client.MultiClient;
-import com.loukou.sms.sdk.client.SingletonSmsClient;
 
 @Service
 public class OrderOperationProcessor {
@@ -61,10 +59,12 @@ public class OrderOperationProcessor {
     private OrderRefuseDao orderRefuseDao;
 
     public OResponseDto<String> confirmBookOrder(String taoOrderSn, String userName, int senderId) {
-        Order order = orderDao.findByTaoOrderSn(taoOrderSn);
-        if (order == null || order.getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()) {
+       List<Order> orders = orderDao.findByTaoOrderSn(taoOrderSn);
+       
+        if (CollectionUtils.isEmpty(orders) || orders.get(0).getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()) {
             return new OResponseDto<String>(500, "错误的订单号");
         }
+        Order order = orders.get(0);
         LkWhDelivery lkDelivery = lkWhDeliveryDao.findByDId(senderId);
         if (lkDelivery == null) {
             return new OResponseDto<String>(500, "错误的快递员");
@@ -80,10 +80,12 @@ public class OrderOperationProcessor {
     }
 
     public OResponseDto<String> confirmRevieveOrder(String taoOrderSn, String gps, String userName) {
-        Order order = orderDao.findByTaoOrderSn(taoOrderSn);
-        if (order.getStatus() != OrderStatusEnum.STATUS_14.getId()) {
+        List<Order> orders = orderDao.findByTaoOrderSn(taoOrderSn);
+        
+        if (CollectionUtils.isEmpty(orders) || orders.get(0).getStatus() != OrderStatusEnum.STATUS_14.getId()) {
             return new OResponseDto<String>(500, "错误的订单号");
         }
+        Order order = orders.get(0);
         orderDao.updateStatusAndFinishedTime(OrderStatusEnum.STATUS_FINISHED.getId(), DateUtils.getTime(),
                 order.getOrderId());
 
@@ -96,11 +98,11 @@ public class OrderOperationProcessor {
 
     @Transactional
     public OResponseDto<String> finishPackagingOrder(String taoOrderSn, String userName, int senderId) {
-        Order order = orderDao.findByTaoOrderSn(taoOrderSn);
-        if (order == null || order.getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()) {
+        List<Order> orders = orderDao.findByTaoOrderSn(taoOrderSn);
+        if (CollectionUtils.isEmpty(orders)|| orders.get(0).getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()) {
             return new OResponseDto<String>(500, "错误的订单号");
         }
-
+        Order order = orders.get(0);
         LkWhDelivery lkDelivery = lkWhDeliveryDao.findByDId(senderId);
         if (lkDelivery == null) {
             return new OResponseDto<String>(500, "错误的快递员");
@@ -130,11 +132,12 @@ public class OrderOperationProcessor {
 
     @Transactional
     public OResponseDto<String> refuseOrder(String taoOrderSn, String userName, int refuseId, String refuseReason) {
-        Order order = orderDao.findByTaoOrderSn(taoOrderSn);
+        List<Order> orders = orderDao.findByTaoOrderSn(taoOrderSn);
 
-        if (order == null || order.getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()) {
+        if (CollectionUtils.isEmpty(orders) || orders.get(0).getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()) {
             return new OResponseDto<String>(500, "失败");
         }
+        Order order  = orders.get(0);
         List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
         for (OrderGoods good : goods) {
             lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(good.getSpecId(), good.getStoreId(), new Date(),

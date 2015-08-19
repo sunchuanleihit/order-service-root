@@ -15,7 +15,7 @@ import com.loukou.order.service.entity.Order;
 
 public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 
-	Order findByTaoOrderSn(String taoOrderSn);
+	List<Order> findByTaoOrderSn(String taoOrderSn);
 	
 	List<Order> findByOrderSnMain(String orderSnMain);
 
