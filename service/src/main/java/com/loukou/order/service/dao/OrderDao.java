@@ -98,7 +98,7 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	@Transactional
 	void updateStatusAndFinishedTime(int status,int finishedTime,int orderId);
 
-    
-	
+	List<Order> findByBuyerIdAndStatusNotIn(int userId, List<Integer> statusList);
+
 }
 

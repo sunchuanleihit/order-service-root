@@ -7,12 +7,33 @@ public class CouponListDto implements Serializable{
 	 * 
 	 */
 	private static final long serialVersionUID = -8413159346299672994L;
-	private int couponId;
-	private String couponName;
-	private String commoncode;
-	private double money;
-	private String endtime;
-	private String couponMsg;
+	private int couponId = 0;
+	private String couponName = "";
+	private String commoncode = "";
+	private double money = 0.0;
+	private String starttime = "";
+	private String endtime = "";
+	private String couponMsg = "";
+	
+	private String couponRange = "";//品类券的使用范围说明
+	private int isUsable = 0;//是否可用（0: 不限——过期和不过期的优惠券；1：可用优惠券）
+	
+
+	public String getCouponRange() {
+		return couponRange;
+	}
+
+	public void setCouponRange(String couponRange) {
+		this.couponRange = couponRange;
+	}
+
+	public int getIsUsable() {
+		return isUsable;
+	}
+
+	public void setIsUsable(int isUsable) {
+		this.isUsable = isUsable;
+	}
 
 	public int getCouponId() {
 		return couponId;
@@ -61,6 +82,14 @@ public class CouponListDto implements Serializable{
 
 	public void setCouponMsg(String couponMsg) {
 		this.couponMsg = couponMsg;
+	}
+
+	public String getStarttime() {
+		return starttime;
+	}
+
+	public void setStarttime(String starttime) {
+		this.starttime = starttime;
 	}
 
 }
