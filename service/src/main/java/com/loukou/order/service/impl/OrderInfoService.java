@@ -257,15 +257,14 @@ public class OrderInfoService {
         if (!CollectionUtils.isEmpty(goods)) {
             for (OrderGoods ordergood : goods) {
                 OrderInfoDto value = map.get(ordergood.getOrderId());
-                List<SpecDto> specList = new ArrayList<SpecDto>();
-                for (OrderGoods good : goods) {
-                    SpecDto spec = new SpecDto();
-                    spec.setGoodsInfo(new GoodsInfoDto(good.getGoodsId(), good.getGoodsName(), good.getGoodsImage()));
-                    spec.setSpecId(good.getSpecId());
-                    spec.setBuyNum(good.getQuantity());
-                    specList.add(spec);
+                if (value == null) {
+                    continue;
                 }
-                value.setSpecList(specList);
+                SpecDto spec = new SpecDto();
+                spec.setGoodsInfo(new GoodsInfoDto(ordergood.getGoodsId(), ordergood.getGoodsName(), ordergood.getGoodsImage()));
+                spec.setSpecId(ordergood.getSpecId());
+                spec.setBuyNum(ordergood.getQuantity());
+                value.getSpecList().add(spec);
             }
         }
 
@@ -341,7 +340,7 @@ public class OrderInfoService {
                 }
             }
         }
-        
+
         orderInfoDtos.addAll(map.values());
 
         orderListInfoDto.setOrders(orderInfoDtos);
