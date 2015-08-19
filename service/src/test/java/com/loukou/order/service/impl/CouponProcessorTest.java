@@ -20,7 +20,7 @@ public class CouponProcessorTest extends AbstractTestObject {
 	
 	@Test 
 	public void activateCoupon() {
-		orderService.activateCoupon(113981, "test-openId", "SHARE93475896228");
+		orderService.activateCoupon(113981, "test-openId", "LKWUXI120");
 	}
 	
 }
