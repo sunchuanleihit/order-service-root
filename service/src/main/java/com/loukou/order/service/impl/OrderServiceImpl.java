@@ -127,6 +127,7 @@ import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgRespDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
+import com.loukou.order.service.resp.dto.ResponseCodeDto;
 import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
 import com.loukou.order.service.resp.dto.ShareDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
@@ -768,22 +769,14 @@ public class OrderServiceImpl implements OrderService {
 		// 购物车
 		CartRespDto cartRespDto = cartService.getCart(req.getUserId(),
 				req.getOpenId(), req.getCityId(), req.getStoreId());
-		int packageNum = cartRespDto.getPackageList().size();
-		if (packageNum == 0) {
-			return new SubmitOrderRespDto(400, "购物车是空的");
+		ResponseCodeDto validateCart = validateCart(cartRespDto);
+		if (validateCart.getCode() != 200) {
+			return new SubmitOrderRespDto(validateCart.getCode(), validateCart.getMessage());
 		}
-		// 校验库存
+		
 		List<PackageRespDto> packageList = cartRespDto.getPackageList();
-		for (PackageRespDto p : packageList) {
-			for (CartGoodsRespDto g : p.getGoodsList()) {
-				if (g.getAmount() > g.getStock()) {
-					return new SubmitOrderRespDto(400, "部分商品库存不足");
-				}
-				if (g.getOverdue() == 1) {
-					return new SubmitOrderRespDto(400, "部分预售商品预售时间已过");
-				}
-			}
-		}
+		int packageNum = packageList.size();
+		
 		// 校验配送时间
 		List<String> materialShippingTime = req.getShippingTimes()
 				.getMaterial();
@@ -1080,6 +1073,34 @@ public class OrderServiceImpl implements OrderService {
 		result.setOrderSnMain(orderSnMain);
 		result.setNeedPay(needPay);
 		return dto;
+	}
+	
+	/**
+	 * 校验购物车
+	 * @return
+	 */
+	private ResponseCodeDto validateCart(CartRespDto cartRespDto) {
+		int packageNum = cartRespDto.getPackageList().size();
+		if (packageNum == 0) {
+			return new ResponseCodeDto(400, "购物车是空的");
+		}		
+		
+		// 校验库存, 校验购物车商品是否有错误信息
+		List<PackageRespDto> packageList = cartRespDto.getPackageList();
+		for (PackageRespDto p : packageList) {
+			for (CartGoodsRespDto g : p.getGoodsList()) {
+				if (g.getAmount() > g.getStock()) {
+					return new ResponseCodeDto(400, "部分商品库存不足");
+				}
+				if (g.getOverdue() == 1) {
+					return new ResponseCodeDto(400, "部分预售商品预售时间已过");
+				}
+				if (!StringUtils.isEmpty(g.getErrorMsg())) {
+					return new ResponseCodeDto(400, "部分商品不能购买");
+				}
+			}
+		}
+		return new ResponseCodeDto(200, "");
 	}
 
 	private boolean Validate(Address address) {
@@ -1722,12 +1743,13 @@ public class OrderServiceImpl implements OrderService {
 
 		// 购物车
 		CartRespDto cart = cartService.getCart(userId, openId, cityId, storeId);
+		ResponseCodeDto validateCart = validateCart(cart);
+		if (validateCart.getCode() != 200) {
+			return new PayBeforeRespDto(validateCart.getCode(), validateCart.getMessage());
+		}
 
 		double orderTotal = cart.getTotalPrice();
 		double shippingFee = cart.getShippingFeeTotal();
-		if (cart.getPackageList().size() == 0) {
-			return new PayBeforeRespDto(400, "购物车没有商品");
-		}
 
 		double total = 0.0; // 订单总价（订单金额+运费-优惠）
 		double discountAmount = 0.0; // 折扣金额
