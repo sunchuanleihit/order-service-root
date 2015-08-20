@@ -16,7 +16,7 @@ public interface CoupRuleDao extends CrudRepository<CoupRule, Integer>{
 
 	@Transactional
 	@Modifying
-	@Query("UPDATE CoupRule SET num=?2, residuenum=?3 WHERE couponId = ?1")
+	@Query("UPDATE CoupRule SET num=?2, residuenum=?3 WHERE id = ?1")
 	void update(int couponId, int coupNum, int sumResiduenum);
 
 	CoupRule findByCommoncode(String commoncode);

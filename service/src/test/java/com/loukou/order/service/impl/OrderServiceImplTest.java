@@ -131,4 +131,19 @@ public class OrderServiceImplTest extends AbstractTestObject {
 		ShippingMsgRespDto  resp = orderService.getShippingResult("150807100189816");
 		resp.getCode();
 	}
+	
+	@Test
+	public void createCouponCode() {
+		int userId = 1156390;
+		int couponId = 932;
+		
+		boolean resp = orderService.createCouponCode(userId, couponId, 1, false, 1, "openId", 0);
+		System.out.println(resp);
+		
+		
+		couponId = 933;
+		
+		resp = orderService.createCouponCode(userId, couponId, 1, false, 1, "openId", 0);
+		System.out.println(resp);
+	}
 }

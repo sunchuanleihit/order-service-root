@@ -354,10 +354,10 @@ public class CouponOperationProcessor {
 		CheckCouponDto dto = new CheckCouponDto();
 		
 		if(StringUtils.equals(prefix, "LK")) { // 公用券码
-			dto = checkCoupon(commoncode, CouponFormType.PUBLIC, userId, openId);
+			dto = checkCoupon(0, commoncode, CouponFormType.PUBLIC, userId, openId);
 			checkCode = dto.getResult();
 		} else {
-			dto = checkCoupon(commoncode, CouponFormType.PRIVATE, userId, openId);
+			dto = checkCoupon(0, commoncode, CouponFormType.PRIVATE, userId, openId);
 			checkCode = dto.getResult();
 		}
 		if(checkCode != ActivateCouponMessage.SUCCESS.getCode()) {
@@ -432,7 +432,7 @@ public class CouponOperationProcessor {
     		return false;
     	} 
     	
-    	CheckCouponDto dto = checkCoupon(coupRule.getCommoncode(), type, userId, openId);
+    	CheckCouponDto dto = checkCoupon(couponId, coupRule.getCommoncode(), type, userId, openId);
     	int checkCode = dto.getResult();
     	if(checkCode != ActivateCouponMessage.SUCCESS.getCode()) {
     		recordLog(userId, couponId, "[检查结果]".concat(String.valueOf(checkCode)), checkCode, openId);
@@ -541,7 +541,7 @@ public class CouponOperationProcessor {
     	
     	String code = pre.concat(mtime).concat(rcode);
     	CoupList coupList = coupListDao.findByCommoncode(code);
-    	if(coupList == null) {
+    	if(coupList != null) {
     		String mtime2 = StringUtils.substring(String.valueOf((long)new Date().getTime()), 7, 13);
     		//随机生成券号
     		String rcode2 = String.valueOf(Math.random() * (99999 - 10000) + 10000);
@@ -574,7 +574,7 @@ public class CouponOperationProcessor {
         }
 		int codeNum = CollectionUtils.size(coupList);
 		
-		if(codeNum >= num || codeNum <=0) {
+		if(codeNum >= num) {
 			return false;
 		}
 		return true;
@@ -590,13 +590,19 @@ public class CouponOperationProcessor {
      * 
      * @return [int]                 [检测结果标识]
      */
-    private CheckCouponDto checkCoupon(String commoncode, int type, int userId, String openId) {
+    private CheckCouponDto checkCoupon(int couponId, String commoncode, int type, int userId, String openId) {
     	CheckCouponDto dto = new CheckCouponDto();
-    	int couponId = 0;
     	Date listEndTime = null;
         if(type == CouponFormType.PUBLIC) {
 
-        	CoupRule coupRule = coupRuleDao.findByCommoncode(commoncode);
+        	CoupRule coupRule = null;
+        	if (couponId > 0) {
+            	coupRule = coupRuleDao.findOne(couponId);
+        	}
+        	else {
+        		coupRule = coupRuleDao.findByCommoncode(commoncode);
+        	}
+        	
         	if(coupRule == null) {
         		dto.setResult(ActivateCouponMessage.ERROR_COMMONCODE.getCode());
 //        		dto.setCouponId(coupRule.getId());
