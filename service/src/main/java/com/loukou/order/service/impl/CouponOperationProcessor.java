@@ -78,7 +78,7 @@ public class CouponOperationProcessor {
 	@Autowired
 	private GCategoryNewDao gCategoryNewDao;
 
-	private static final int LIMIT_COUPON_PER_DAY = 20; // 每天限用优惠券张数
+	private static final int LIMIT_COUPON_PER_DAY = 2; // 每天限用优惠券张数
 	
 	public CouponListRespDto getCouponList(int cityId, int userId, int storeId,
 			String openId, int type) {
@@ -99,7 +99,7 @@ public class CouponOperationProcessor {
 		
 		// 查询语句
 		List<CoupList> coupLists = coupListDao.getValidCoupLists(userId);
-		List<CoupList> invalidCoupLists = null;
+		List<CoupList> invalidCoupLists = Lists.newArrayList();
 		if(type == CoupListReqTypeEnum.ALL.getId()) {
 			invalidCoupLists = coupListDao.getInvalidCoupLists(userId);// 以及其他的一些过滤条件
 			if(CollectionUtils.isEmpty(coupLists) && CollectionUtils.isEmpty(invalidCoupLists)) {
@@ -117,6 +117,10 @@ public class CouponOperationProcessor {
 		for (CoupList couplist : coupLists) {
 			couponIds.add(couplist.getCouponId());
 		}
+		for (CoupList couplist : invalidCoupLists) {
+			couponIds.add(couplist.getCouponId());
+		}
+		
 		List<CoupRule> coupRules = coupRuleDao.findByIdIn(couponIds);
 		Map<Integer, CoupRule> ruleMap = Maps.newHashMap();
 		for (CoupRule coupRule : coupRules) {
@@ -136,6 +140,7 @@ public class CouponOperationProcessor {
 			CartRespDto cart = cartService.getCart(userId, openId, cityId, storeId);
 			for (CoupList coupList : coupLists) {
 				CoupRule coupRule = ruleMap.get(coupList.getCouponId());
+				//  校验优惠券是否可用
 				if (verifyCoup(userId, openId, cityId, storeId, coupList, cart,
 						coupRule)) {
 					validCoupList.add(coupList);
@@ -151,24 +156,8 @@ public class CouponOperationProcessor {
 			if (validCoupList.size() > 0) {
 				List<CouponListDto> couponListDtos = result.getCouponList();
 				for (CoupList coupList : validCoupList) {
-					String couponName = "";
 					CoupRule coupRule = ruleMap.get(coupList.getCouponId());
-					if (coupRule.getCoupontypeid() == 1) {
-						couponName = "现金券";
-					} else {
-						couponName = String.format("满%.1f减%.1f",
-								coupList.getMinprice(), coupList.getMoney());
-					}
-					CouponListDto couponListDto = new CouponListDto();
-					couponListDto.setCouponId(coupList.getId());
-					couponListDto.setCommoncode(coupList.getCommoncode());
-					couponListDto.setCouponName(couponName);
-					couponListDto.setMoney(coupList.getMoney());
-					couponListDto.setCouponMsg(coupRule.getCouponName());
-					couponListDto.setStarttime(DateUtils.date2DateStr(coupList.getBegintime()));
-					couponListDto.setEndtime(DateUtils.date2DateStr(coupList.getEndtime()));
-					couponListDto.setIsUsable(CoupListReqTypeEnum.USABLE.getId());
-					couponListDto.setCouponRange(generateCouponRange(coupRule));
+					CouponListDto couponListDto = assembleDto(coupList, coupRule, 1);
 					couponListDtos.add(couponListDto);
 					
 					if (coupList == recommendCoupList) {
@@ -183,11 +172,11 @@ public class CouponOperationProcessor {
 			Date start = DateUtils.getStartofDate(now);
 			int count = coupListDao.getUsedCoupNumber(userId, start);
 			if (count > LIMIT_COUPON_PER_DAY) {
-				// 一天最多只能用20张券
-				canUse = 2;
+				// 一天最多只能用2张券
+				canUse = 0;
 			}
 			result.setCanUse(canUse);
-			result.setEverydayNum(String.valueOf(20));
+			result.setEverydayNum(String.valueOf(LIMIT_COUPON_PER_DAY));
 			result.setEverydayMsg(String.format("每天限使用%d张优惠券，明天再来吧",
 					LIMIT_COUPON_PER_DAY));
 
@@ -195,55 +184,47 @@ public class CouponOperationProcessor {
 			List<CouponListDto> couponListDtos = result.getCouponList();
 			if(CollectionUtils.isNotEmpty(coupLists)) {
 				for(CoupList coupList : coupLists) {
-					String couponName = "";
 					CoupRule coupRule = ruleMap.get(coupList.getCouponId());
-					if (coupRule.getCoupontypeid() == 1) {
-						couponName = "现金券";
-					} else {
-						couponName = String.format("满%.1f减%.1f",
-								coupList.getMinprice(), coupList.getMoney());
-					}
-					CouponListDto couponListDto = new CouponListDto();
-					couponListDto.setCouponId(coupList.getId());
-					couponListDto.setCommoncode(coupList.getCommoncode());
-					couponListDto.setCouponName(couponName);
-					couponListDto.setMoney(coupList.getMoney());
-					couponListDto.setCouponMsg(coupRule.getCouponName());
-					couponListDto.setStarttime(DateUtils.date2DateStr(coupList.getBegintime()));
-					couponListDto.setEndtime(DateUtils.date2DateStr(coupList.getEndtime()));
-					couponListDto.setIsUsable(CoupListReqTypeEnum.USABLE.getId());
-					couponListDto.setCouponRange(generateCouponRange(coupRule));
+					CouponListDto couponListDto = assembleDto(coupList, coupRule, 1);
 					couponListDtos.add(couponListDto);
 				}
 			}
 			
 			if(CollectionUtils.isNotEmpty(invalidCoupLists)) {
 				for(CoupList coupList : invalidCoupLists) {
-					String couponName = "";
 					CoupRule coupRule = ruleMap.get(coupList.getCouponId());
-					if (coupRule.getCoupontypeid() == 1) {
-						couponName = "现金券";
-					} else {
-						couponName = String.format("满%.1f减%.1f",
-								coupList.getMinprice(), coupList.getMoney());
-					}
-					CouponListDto couponListDto = new CouponListDto();
-					couponListDto.setCouponId(coupList.getId());
-					couponListDto.setCommoncode(coupList.getCommoncode());
-					couponListDto.setCouponName(couponName);
-					couponListDto.setMoney(coupList.getMoney());
-					couponListDto.setCouponMsg(coupRule.getCouponName());
-					couponListDto.setStarttime(DateUtils.date2DateStr(coupList.getBegintime()));
-					couponListDto.setEndtime(DateUtils.date2DateStr(coupList.getEndtime()));
-					couponListDto.setIsUsable(CoupListReqTypeEnum.ALL.getId());
-					couponListDto.setCouponRange(generateCouponRange(coupRule));
+					CouponListDto couponListDto = assembleDto(coupList, coupRule, 0);
 					couponListDtos.add(couponListDto);
 				}
 			}
-			
 		}
 	
 		return resp;
+	}
+	
+
+
+	
+	private CouponListDto assembleDto(CoupList coupList, CoupRule coupRule, int isUsable) {
+		String couponName = "";
+		if (coupRule.getCoupontypeid() == 1) {
+			couponName = "现金券";
+		} else {
+			couponName = String.format("满%.1f减%.1f",
+					coupList.getMinprice(), coupList.getMoney());
+		}
+		CouponListDto couponListDto = new CouponListDto();
+		couponListDto.setCouponId(coupList.getId());
+		couponListDto.setCommoncode(coupList.getCommoncode());
+		couponListDto.setCouponName(couponName);
+		couponListDto.setMoney(coupList.getMoney());
+		couponListDto.setCouponMsg(coupRule.getCouponName());
+		couponListDto.setStarttime(DateUtils.date2DateStr(coupList.getBegintime()));
+		couponListDto.setEndtime(DateUtils.date2DateStr(coupList.getEndtime()));
+		couponListDto.setIsUsable(isUsable);
+		couponListDto.setCouponRange(generateCouponRange(coupRule));
+		
+		return couponListDto;
 	}
 	
 	public String generateCouponRange(CoupRule coupRule) {
