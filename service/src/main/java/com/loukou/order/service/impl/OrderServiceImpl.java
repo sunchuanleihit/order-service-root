@@ -2145,4 +2145,11 @@ public class OrderServiceImpl implements OrderService {
 		return couponOperationProcessor.activateCoupon(userId, openId, commoncode);
 	}
 	
+	@Override
+	public boolean createCouponCode(int userId, int couponId, int type, boolean check, 
+    		int num, String openId, double money) {
+		return couponOperationProcessor.createCouponCode(userId, couponId, type, check, 
+	    		 num, openId, money);
+	}
+	
 }

@@ -441,7 +441,7 @@ public class CouponOperationProcessor {
     	
     	// 检测会员的领取数据量
     	if(num > 0) {
-    		boolean checkCouponNum = checkCouponIdNum(couponId, userId, openId, num, CouponFormType.PUBLIC);
+    		boolean checkCouponNum = checkCouponIdNum(couponId, userId, openId, num, CheckCouponIdNum.USER);
     		if(checkCouponNum == false) {
     			recordLog(userId, couponId, "[检查结果]  (超出个人最大领取量 : ".concat(String.valueOf(num))
     					.concat(" ，无法领取了)"), 11, openId);
@@ -450,7 +450,7 @@ public class CouponOperationProcessor {
     		}
     		
     		if(StringUtils.isNotBlank(openId)) {
-    			checkCouponNum = checkCouponIdNum(couponId, userId, openId, num, CouponFormType.PRIVATE);
+    			checkCouponNum = checkCouponIdNum(couponId, userId, openId, num, CheckCouponIdNum.DEVICE);
     			if(checkCouponNum == false) {
     				recordLog(userId, couponId, "[检查结果]  (超出设备最大领取量 : ".concat(String.valueOf(num))
     						.concat(" ，无法领取了)"), 12, openId);
@@ -567,9 +567,9 @@ public class CouponOperationProcessor {
     private boolean checkCouponIdNum(int couponId, int userId, String openId, int num, int type) {
     	
     	List<CoupList> coupList = null;
-        if(type == 1) {
+        if (type == CheckCouponIdNum.USER) {
         	coupList = coupListDao.findByUserIdAndCouponId(userId, couponId);
-        }else{
+        } else if (type == CheckCouponIdNum.DEVICE) {
         	coupList = coupListDao.findByCouponIdAndOpenid(couponId, openId);
         }
 		int codeNum = CollectionUtils.size(coupList);
@@ -584,7 +584,7 @@ public class CouponOperationProcessor {
      * 检测用户填写的优惠券是否有效，并获取一些优惠券相关的数据，如新老用户标识，类型，互斥量等
      *
      * @param  [string]     $code    [优惠券ID]
-     * @param  [int]        $type    [优惠券类型： 1：公用券， 2， 私用券]
+     * @param  [int]        $type    [优惠券类型： 1：公用券， 2， 私用券]（此处优惠券）
      * @param  [string]     $user_id [用户ID]
      * @param  [string]     $openid  [设备ID，检测设备互斥]
      * 
@@ -846,6 +846,12 @@ class CheckCouponDto {
 	public void setCouponId(int couponId) {
 		this.couponId = couponId;
 	}	
+}
+
+class CheckCouponIdNum {
+	public static int USER = 1;
+	public static int DEVICE = 2;
+	
 }
 
 
