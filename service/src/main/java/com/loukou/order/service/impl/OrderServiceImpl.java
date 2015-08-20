@@ -1277,20 +1277,24 @@ public class OrderServiceImpl implements OrderService {
 						if(StringUtils.isNotBlank(orderAction.getTaoOrderSn())) {
 							if(StringUtils.equals(orderAction.getTaoOrderSn(), taoOrderSn)) {
 								shippingListDto.setCreatTime(DateUtils.date2DateStr2(orderAction.getTimestamp()));
-								shippingListDto.setDescription(orderAction.getNotes());
 								shippingListDto.setTaoOrderSn(taoOrderSn);
-								shippingList.add(shippingListDto);
+								shippingListDto.setDescription(orderAction.getNotes());
 							}
 						} else {
 							shippingListDto.setCreatTime(DateUtils.date2DateStr2(orderAction.getTimestamp()));
-							shippingListDto.setDescription(orderAction.getNotes());
 							shippingListDto.setTaoOrderSn(taoOrderSn);
-							shippingList.add(shippingListDto);
+							shippingListDto.setDescription(orderAction.getNotes());
 						}
+						shippingList.add(shippingListDto);
 					}
 				}
 			}
+			
+			if(order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
+				shippingList.get(0).setDescription("用户已收货，订单完成");
+			}
 		}
+		
 
 		resultDto.setShippingList(shippingList);
 		resp.setResult(resultDto);

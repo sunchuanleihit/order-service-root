@@ -128,7 +128,7 @@ public class OrderServiceImplTest extends AbstractTestObject {
 	
 	@Test
 	public void shippingMsgTest() {
-		ShippingMsgRespDto  resp = orderService.getShippingResult("150812095073811");
+		ShippingMsgRespDto  resp = orderService.getShippingResult("150807100189816");
 		resp.getCode();
 	}
 }
