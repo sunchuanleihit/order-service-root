@@ -201,8 +201,7 @@ public class CouponOperationProcessor {
 	
 		return resp;
 	}
-	
-	
+		
 	private CouponListDto assembleDto(CoupList coupList, CoupRule coupRule, int isUsable) {
 		String couponName = "";
 		if (coupRule.getCoupontypeid() == 1) {
@@ -225,8 +224,10 @@ public class CouponOperationProcessor {
 		return couponListDto;
 	}
 	
-	private String generateCouponRange(CoupRule coupRule) {
-		StringBuilder result = new StringBuilder();
+	public String generateCouponRange(CoupRule coupRule) {
+		StringBuilder result = new StringBuilder();;
+		String resultStr = "";
+		StringBuilder returnResultStr = new StringBuilder();
 		if (coupRule.getCouponType() == CouponType.CATE) {
 			List<GCategoryNew> gCateNews = null;
 			List<Integer> cateIds = getOutId(coupRule);
@@ -238,14 +239,14 @@ public class CouponOperationProcessor {
 				for (GCategoryNew g : gCateNews) {
 					result.append(g.getCateName()).append("、");
 				}
-				
-				result.append("品类使用。");
+				resultStr = result.toString();
+				returnResultStr.append(StringUtils.removeEnd(resultStr, "、"));
+				returnResultStr.append("品类使用。");
 			}
 			
 		}
-		String resultStr = result.toString();
-		StringUtils.removeEnd(resultStr, "、");
-		return resultStr;
+		
+		return returnResultStr.toString();
 	}
 	
 	public boolean verifyCoup(int userId, String openId, int cityId,
@@ -393,7 +394,7 @@ public class CouponOperationProcessor {
 		    		endTime = coupRule.getEndtime();
 		    	}
 		    	
-		    	int code = coupListDao.update(userId, beginTime, endTime, openId, coupRule.getCommoncode());
+		    	int code = coupListDao.update(userId, beginTime, endTime, openId, commoncode);
 		    	if(code > 0) {
 		    		resp.setCode(200);
 		    		resp.setResult("激活成功");
@@ -626,7 +627,7 @@ public class CouponOperationProcessor {
         	listEndTime = coupList.getEndtime();
         	// 赋值优惠券规则ID
         	couponId = coupList.getCouponId();
-        	if(coupList.getUserId() <= 0) {
+        	if(coupList.getUserId() > 0) {
         		dto.setResult(ActivateCouponMessage.USED.getCode());
         		dto.setCouponId(couponId);
         		return dto;
