@@ -165,4 +165,7 @@ public interface OrderService {
 	public Map<String,List<LkStatusItemDto>> getLkStatusItemMap();
 	
 	public Map<String,Object> getLkConfigureMap();
+
+	public boolean createCouponCode(int userId, int couponId, int type, boolean check,
+			int num, String openId, double money);
 }
