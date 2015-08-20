@@ -201,10 +201,7 @@ public class CouponOperationProcessor {
 	
 		return resp;
 	}
-	
-
-
-	
+		
 	private CouponListDto assembleDto(CoupList coupList, CoupRule coupRule, int isUsable) {
 		String couponName = "";
 		if (coupRule.getCoupontypeid() == 1) {
