@@ -1236,7 +1236,11 @@ public class OrderServiceImpl implements OrderService {
 			resp.setMessage("参数有误");
 			return resp;
 		}
-		Order order = orderDao.findByTaoOrderSn(taoOrderSn);
+		List<Order> orders = orderDao.findByTaoOrderSn(taoOrderSn);
+		Order order = null;
+		if(!CollectionUtils.isEmpty(orders)){
+		    order = orders.get(0);
+		}
 		List<ShippingListDto> shippingList = new ArrayList<ShippingListDto>();
 		
 		if(order != null) {
@@ -1839,8 +1843,12 @@ public class OrderServiceImpl implements OrderService {
 		//预售商品退货时，修改订单状态，新建退款单
 		//操作库存，包括库存操作流水（退货状态）
 		//触发退款（退款状态）
+        Order order =  null;
+		List<Order> orders = orderDao.findByTaoOrderSn(returnStorageReqDto.getTaoOrderSn());
+		if(!CollectionUtils.isEmpty(orders)){
+		    order = orders.get(0);
+		}
 		
-		Order order = orderDao.findByTaoOrderSn(returnStorageReqDto.getTaoOrderSn());
 		if(order==null){
 			return new ReturnStorageRespDto(402,"订单不存在");
 		}
@@ -2038,7 +2046,7 @@ public class OrderServiceImpl implements OrderService {
 		// 计算已回订单金额和运费
 		double feedback = 0;
 		double feedbackDelivery = 0;
-		List<Order> orderList = orderDao.findByStatusAndAddTimeBetween(15, start, end);
+		List<Order> orderList = orderDao.findByStatusAndSellerIdAndAddTimeBetween(OrderStatusEnum.STATUS_FINISHED.getId(),storeId, start, end);
 		for (Order order : orderList) {
 			feedback = DoubleUtils.add(feedback, order.getOrderAmount());
 			feedbackDelivery = DoubleUtils.add(feedbackDelivery,order.getShippingFee());

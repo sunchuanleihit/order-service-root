@@ -36,7 +36,6 @@ import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.resp.dto.CouponListDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.CouponListResultDto;
-import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.ResponseDto;
 import com.loukou.order.service.util.DateUtils;
 import com.loukou.search.service.api.GoodsSearchService;
@@ -166,7 +165,8 @@ public class CouponOperationProcessor {
 					couponListDto.setCouponName(couponName);
 					couponListDto.setMoney(coupList.getMoney());
 					couponListDto.setCouponMsg(coupRule.getCouponName());
-					couponListDto.setEndtime(DateUtils.date2DateStr2(coupList.getEndtime()));
+					couponListDto.setStarttime(DateUtils.date2DateStr(coupList.getBegintime()));
+					couponListDto.setEndtime(DateUtils.date2DateStr(coupList.getEndtime()));
 					couponListDto.setIsUsable(CoupListReqTypeEnum.USABLE.getId());
 					couponListDto.setCouponRange(generateCouponRange(coupRule));
 					couponListDtos.add(couponListDto);
@@ -209,7 +209,8 @@ public class CouponOperationProcessor {
 					couponListDto.setCouponName(couponName);
 					couponListDto.setMoney(coupList.getMoney());
 					couponListDto.setCouponMsg(coupRule.getCouponName());
-					couponListDto.setEndtime(DateUtils.date2DateStr2(coupList.getEndtime()));
+					couponListDto.setStarttime(DateUtils.date2DateStr(coupList.getBegintime()));
+					couponListDto.setEndtime(DateUtils.date2DateStr(coupList.getEndtime()));
 					couponListDto.setIsUsable(CoupListReqTypeEnum.USABLE.getId());
 					couponListDto.setCouponRange(generateCouponRange(coupRule));
 					couponListDtos.add(couponListDto);
@@ -232,7 +233,8 @@ public class CouponOperationProcessor {
 					couponListDto.setCouponName(couponName);
 					couponListDto.setMoney(coupList.getMoney());
 					couponListDto.setCouponMsg(coupRule.getCouponName());
-					couponListDto.setEndtime(DateUtils.date2DateStr2(coupList.getEndtime()));
+					couponListDto.setStarttime(DateUtils.date2DateStr(coupList.getBegintime()));
+					couponListDto.setEndtime(DateUtils.date2DateStr(coupList.getEndtime()));
 					couponListDto.setIsUsable(CoupListReqTypeEnum.ALL.getId());
 					couponListDto.setCouponRange(generateCouponRange(coupRule));
 					couponListDtos.add(couponListDto);
