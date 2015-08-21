@@ -4,8 +4,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -17,7 +19,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -25,6 +29,7 @@ import org.springframework.util.CollectionUtils;
 import com.loukou.order.service.api.BkOrderService;
 import com.loukou.order.service.constants.BaseDtoIsOrderType;
 import com.loukou.order.service.constants.BaseDtoType;
+import com.loukou.order.service.constants.FlagType;
 import com.loukou.order.service.constants.OrderStateReturn;
 import com.loukou.order.service.constants.ShippingMsgDesc;
 import com.loukou.order.service.dao.ExpressDao;
@@ -38,7 +43,9 @@ import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderExtm;
 import com.loukou.order.service.entity.OrderGoods;
+import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Store;
+import com.loukou.order.service.enums.BkOrderSourceEnum;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
 import com.loukou.order.service.enums.OrderPayTypeEnum;
 import com.loukou.order.service.enums.OrderSourceEnum;
@@ -47,6 +54,7 @@ import com.loukou.order.service.enums.OrderTypeEnums;
 import com.loukou.order.service.enums.PayStatusEnum;
 import com.loukou.order.service.enums.ReturnStatusEnum;
 import com.loukou.order.service.req.dto.CssOrderReqDto;
+import com.loukou.order.service.resp.dto.BkOrderListBaseDto;
 import com.loukou.order.service.resp.dto.BkOrderListDto;
 import com.loukou.order.service.resp.dto.BkOrderListResultDto;
 import com.loukou.order.service.resp.dto.CssOrderRespDto;
@@ -54,6 +62,7 @@ import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
 import com.loukou.order.service.resp.dto.OrderListBaseDto;
 import com.loukou.order.service.resp.dto.OrderListDto;
+import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderListRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.ShippingListDto;
@@ -492,5 +501,84 @@ public class BkOrderServiceImpl implements BkOrderService{
 		resp.setCode(200);
 		resp.setInnerCode(0);//内部调用需要 FIXME
 		return resp;
+	}
+
+	@Override
+	public BkOrderListRespDto queryBkOrderList(int pageNum, int pageSize, final CssOrderReqDto cssOrderReqDto) {
+		BkOrderListRespDto resp = new BkOrderListRespDto(200, "");
+		
+		Page<Order> orderPageList = null;
+		List<Order> orderList = new ArrayList<Order>();
+		Sort sort = new Sort(Direction.DESC, "orderId");
+		Pageable pageable = new PageRequest(pageNum, pageSize, sort);
+		orderPageList = orderDao.findAll(new Specification<Order>(){
+			@Override
+			public Predicate toPredicate(Root<Order> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+				Integer startTime = null;
+				if(StringUtils.isNoneBlank(cssOrderReqDto.getStartTime())){
+					startTime = (int)(DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
+				}
+				Integer endTime = null;
+				if(StringUtils.isNoneBlank(cssOrderReqDto.getEndTime())){
+					endTime = (int)(DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
+				}
+				List<Predicate> predicate = new ArrayList<>();
+				if(StringUtils.isNoneBlank(cssOrderReqDto.getOrderSnMain())){
+					predicate.add(cb.equal(root.get("orderSnMain").as(String.class), cssOrderReqDto.getOrderSnMain()));
+				}
+				if(cssOrderReqDto.getStatus()!=null){
+					predicate.add(cb.equal(root.get("status").as(Integer.class), cssOrderReqDto.getStatus()));
+				}
+				if(StringUtils.isNoneBlank(cssOrderReqDto.getStartTime())){
+					predicate.add(cb.greaterThanOrEqualTo(root.get("addTime").as(Integer.class), startTime));
+				}
+				if(StringUtils.isNoneBlank(cssOrderReqDto.getEndTime())){
+					predicate.add(cb.lessThanOrEqualTo(root.get("addTime").as(Integer.class), endTime));
+				}
+				Predicate[] pre = new Predicate[predicate.size()];
+				return query.where(predicate.toArray(pre)).getRestriction();
+			}
+		}, pageable);
+		orderList.addAll(orderPageList.getContent());
+		if(CollectionUtils.isEmpty(orderList)) {
+			resp.setMessage("订单列表为空");
+			return resp;
+		}
+		List<BkOrderListDto> bkOrderList = new ArrayList<BkOrderListDto>();
+		for(Order order : orderList) {
+			BkOrderListDto orderListDto = new BkOrderListDto();
+			BkOrderListBaseDto baseDto = createBkOrderBaseDto(order);
+			orderListDto.setBase(baseDto);
+			bkOrderList.add(orderListDto);
+		}
+		BkOrderListResultDto resultDto = new BkOrderListResultDto();
+		resultDto.setOrderCount((int)orderPageList.getTotalElements());
+		resultDto.setOrderList(bkOrderList);
+		resp.setResult(resultDto);
+		return resp;
+	}
+	private BkOrderListBaseDto createBkOrderBaseDto(Order order){
+		BkOrderListBaseDto baseDto = new BkOrderListBaseDto();
+		baseDto.setOrderId(order.getOrderId());
+		baseDto.setOrderSn(order.getOrderSn());
+		baseDto.setOrderSnMain(order.getOrderSnMain());
+		baseDto.setSourceName(BkOrderSourceEnum.parseSource(order.getSource()).getSource());
+		baseDto.setNeedShipTime(DateUtils.date2DateStr(order.getNeedShiptime())+" "+order.getNeedShiptimeSlot());
+		baseDto.setStatus(order.getStatus());
+		baseDto.setNeedInvoice(order.getNeedInvoice());
+		baseDto.setInvoiceNo(order.getInvoiceNo());
+		baseDto.setInvoiceHeader(order.getInvoiceHeader());
+		baseDto.setBuyerName(order.getBuyerName());
+		baseDto.setPayType(order.getPayType());
+		baseDto.setOrderAmount(order.getOrderAmount());
+		baseDto.setGoodsAmount(order.getGoodsAmount());
+		baseDto.setOrderPaid(order.getOrderPayed());
+		baseDto.setOrderNotPaid(order.getOrderAmount()-order.getOrderPayed());
+		baseDto.setPrinted(order.getPrinted());
+		baseDto.setPayStatus(order.getPayStatus());
+		baseDto.setFinishedTimeStr(DateUtils.dateTimeToStr(order.getFinishedTime()));
+		baseDto.setAddTimeStr(DateUtils.dateTimeToStr(order.getAddTime()));
+		baseDto.setPayMessage(order.getPayMessage());
+		return baseDto;
 	}
 }

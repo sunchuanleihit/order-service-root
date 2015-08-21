@@ -19,6 +19,7 @@ public class BkOrderListBaseDto implements Serializable {
 	private String buyerName;
 	private Integer status;
 	private Integer addTime;
+	private String addTimeStr;
 	private Integer payType;
 	private Integer payId;
 	private String payName;
@@ -66,6 +67,12 @@ public class BkOrderListBaseDto implements Serializable {
 	private String sellSite;
 	private String receiveNo;
 	
+	public String getAddTimeStr() {
+		return addTimeStr;
+	}
+	public void setAddTimeStr(String addTimeStr) {
+		this.addTimeStr = addTimeStr;
+	}
 	public String getFinishedTimeStr() {
 		return finishedTimeStr;
 	}
