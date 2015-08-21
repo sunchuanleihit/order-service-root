@@ -13,7 +13,7 @@ public class BkOrderListDto implements Serializable {
 	private BkOrderListBaseDto base = new BkOrderListBaseDto();
 	private ShippingMsgDto shippingmsg = new ShippingMsgDto();
 	private List<GoodsListDto> goodsList = new ArrayList<GoodsListDto>();
-	private ExtmMsgDto extmMsg = new ExtmMsgDto();
+	private BkExtmMsgDto extmMsg = new BkExtmMsgDto();
 
 	
 	public BkOrderListBaseDto getBase() {
@@ -32,19 +32,13 @@ public class BkOrderListDto implements Serializable {
 		this.shippingmsg = shippingmsg;
 	}
 
-	public ExtmMsgDto getExtmMsg() {
+    public BkExtmMsgDto getExtmMsg() {
 		return extmMsg;
 	}
 
-	public void setExtmMsg(ExtmMsgDto extmMsg) {
+	public void setExtmMsg(BkExtmMsgDto extmMsg) {
 		this.extmMsg = extmMsg;
 	}
-
-    @Override
-    public String toString() {
-        return "OrderInfoDto [base=" + base + ", shippingmsg=" + shippingmsg + ", goodsList=" + goodsList
-                + ", extmMsg=" + extmMsg + "]";
-    }
 
 	public List<GoodsListDto> getGoodsList() {
 		return goodsList;

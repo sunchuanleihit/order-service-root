@@ -2,7 +2,6 @@ package com.loukou.order.service.impl;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,12 +46,12 @@ import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.enums.OrderTypeEnums;
 import com.loukou.order.service.enums.PayStatusEnum;
 import com.loukou.order.service.req.dto.CssOrderReqDto;
+import com.loukou.order.service.resp.dto.BkExtmMsgDto;
 import com.loukou.order.service.resp.dto.BkOrderListBaseDto;
 import com.loukou.order.service.resp.dto.BkOrderListDto;
 import com.loukou.order.service.resp.dto.BkOrderListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderListResultDto;
 import com.loukou.order.service.resp.dto.CssOrderRespDto;
-import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
 import com.loukou.order.service.resp.dto.ShippingListDto;
 import com.loukou.order.service.resp.dto.ShippingListResultDto;
@@ -128,7 +127,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 			resultList.add(cssOrderRespDto); 
 		}
 		return resultList;
-		
 /*		
 		List<CssOrderRespDto> resultList = new ArrayList<CssOrderRespDto>();
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
@@ -202,7 +200,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			
 			//收货信息
 			List<OrderExtm> extmList = orderExtmDao.findByOrderSnMain(orderSnMain);
-			ExtmMsgDto extmMsgDto = new ExtmMsgDto();
+			BkExtmMsgDto extmMsgDto = new BkExtmMsgDto();
 			if(!CollectionUtils.isEmpty(extmList)) {
 				OrderExtm extm = extmList.get(0);
 				extmMsgDto.setAddress(trimall(extm.getAddress()));
@@ -500,7 +498,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 	@Override
 	public BkOrderListRespDto queryBkOrderList(int pageNum, int pageSize, final CssOrderReqDto cssOrderReqDto) {
 		BkOrderListRespDto resp = new BkOrderListRespDto(200, "");
-		
 		Page<Order> orderPageList = null;
 		List<Order> orderList = new ArrayList<Order>();
 		Sort sort = new Sort(Direction.DESC, "orderId");
@@ -554,10 +551,10 @@ public class BkOrderServiceImpl implements BkOrderService{
 		for(Order order : orderList) {
 			BkOrderListDto orderListDto = new BkOrderListDto();
 			BkOrderListBaseDto baseDto = createBkOrderBaseDto(order);
-			orderListDto.setBase(baseDto);
 			OrderExtm orderExtm = orderExtmMap.get(baseDto.getOrderSnMain());
-			
-			
+			BkExtmMsgDto bkOrderExtm = createExtmMsg(orderExtm);
+			orderListDto.setExtmMsg(bkOrderExtm);
+			orderListDto.setBase(baseDto);
 			bkOrderList.add(orderListDto);
 		}
 		BkOrderListResultDto resultDto = new BkOrderListResultDto();
@@ -566,6 +563,15 @@ public class BkOrderServiceImpl implements BkOrderService{
 		resp.setResult(resultDto);
 		return resp;
 	}
+	private BkExtmMsgDto createExtmMsg(OrderExtm orderExtm) {
+		BkExtmMsgDto dto = new BkExtmMsgDto();
+		dto.setAddress(orderExtm.getAddress());
+		dto.setConsignee(orderExtm.getConsignee());
+		dto.setPhoneMob(orderExtm.getPhoneMob());
+		dto.setRegionName(orderExtm.getRegionName());
+		return dto;
+	}
+
 	private BkOrderListBaseDto createBkOrderBaseDto(Order order){
 		BkOrderListBaseDto baseDto = new BkOrderListBaseDto();
 		baseDto.setOrderId(order.getOrderId());
@@ -574,6 +580,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		baseDto.setSourceName(BkOrderSourceEnum.parseSource(order.getSource()).getSource());
 		baseDto.setNeedShipTime(DateUtils.date2DateStr(order.getNeedShiptime())+" "+order.getNeedShiptimeSlot());
 		baseDto.setStatus(order.getStatus());
+		baseDto.setStatusName(BkOrderSourceEnum.parseSource(order.getStatus()).getSource());
 		baseDto.setNeedInvoice(order.getNeedInvoice());
 		baseDto.setInvoiceNo(order.getInvoiceNo());
 		baseDto.setInvoiceHeader(order.getInvoiceHeader());

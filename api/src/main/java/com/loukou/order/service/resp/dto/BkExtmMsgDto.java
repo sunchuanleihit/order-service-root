@@ -1,6 +1,12 @@
 package com.loukou.order.service.resp.dto;
 
-public class BkExtmMsgDto {
+import java.io.Serializable;
+
+public class BkExtmMsgDto implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 7774184732882824128L;
 	private Integer id;
 	private Integer orderId;
 	private String orderSnMain;
