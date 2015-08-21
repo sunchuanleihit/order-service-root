@@ -30,6 +30,7 @@ public class BkOrderListBaseDto implements Serializable {
 	private Integer invoiceStatus;
 	private Integer invoiceTime;
 	private Integer finishedTime;
+	private String finishedTimeStr;
 	private Double goodsAmount;
 	private Double orderAmount;
 	private Double orderPaid;
@@ -65,6 +66,12 @@ public class BkOrderListBaseDto implements Serializable {
 	private String sellSite;
 	private String receiveNo;
 	
+	public String getFinishedTimeStr() {
+		return finishedTimeStr;
+	}
+	public void setFinishedTimeStr(String finishedTimeStr) {
+		this.finishedTimeStr = finishedTimeStr;
+	}
 	public Double getOrderNotPaid() {
 		return orderNotPaid;
 	}
