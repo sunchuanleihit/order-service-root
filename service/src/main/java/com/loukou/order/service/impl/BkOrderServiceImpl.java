@@ -61,7 +61,7 @@ import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.util.DateUtils;
 import com.loukou.order.service.util.DoubleUtils;
 
-@Service("cssOrderService")
+@Service("bkOrderService")
 public class BkOrderServiceImpl implements BkOrderService{
     @Autowired
     private OrderDao orderDao;
