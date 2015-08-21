@@ -57,7 +57,8 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 
 	List<CoupList> findByOpenid(String openId);
 
-	List<CoupList> findByCouponId(int couponId);
+	@Query("SELECT count(id) FROM CoupList WHERE couponId=?1")
+	Integer countCouponId(int couponId);
 	
 	@Transactional
 	@Modifying

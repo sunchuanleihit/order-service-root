@@ -610,11 +610,10 @@ public class CouponOperationProcessor {
         	}
         	// 赋值优惠券规则ID
         	couponId = coupRule.getId();
-        	List<CoupList> coupList = coupListDao.findByCouponId(couponId);
+        	Integer alreadySend = coupListDao.countCouponId(couponId);
         	 // 判断最大发放量
-        	int alreadySend = CollectionUtils.size(coupList);
         	
-        	if(coupRule.getMaxnum() > 0 && coupRule.getMaxnum() <= alreadySend) {
+        	if(alreadySend != null && coupRule.getMaxnum() > 0 && coupRule.getMaxnum() <= alreadySend) {
         		dto.setResult(ActivateCouponMessage.FINISHED.getCode());
         		dto.setCouponId(coupRule.getId());
         		return dto;
