@@ -388,7 +388,7 @@ public class OrderServiceImpl implements OrderService {
 				orderList = orderPageList.getContent();
 			}
 		}
-	
+		
 		if(CollectionUtils.isEmpty(orderList)) {
 			resp.setMessage("订单列表为空");
 			return resp;
@@ -408,7 +408,7 @@ public class OrderServiceImpl implements OrderService {
 			OrderListDto orderListDto = new OrderListDto();
 			OrderListBaseDto baseDto = createBaseDto(order, BaseDtoType.LIST);
 			orderListDto.setBase(baseDto);
-	
+			
 			List<GoodsListDto> goodsListDtoList = new ArrayList<GoodsListDto>();
 			
 			for(OrderGoods og : orderGoodsList) {

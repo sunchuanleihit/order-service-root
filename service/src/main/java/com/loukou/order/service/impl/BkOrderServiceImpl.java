@@ -99,11 +99,11 @@ public class BkOrderServiceImpl implements BkOrderService{
 			public Predicate toPredicate(Root<Order> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
 				Integer startTime = null;
 				if(StringUtils.isNoneBlank(cssOrderReqDto.getStartTime())){
-					startTime = (int) (new Date(cssOrderReqDto.getStartTime()).getTime()/1000);
+					startTime = (int) (DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
 				}
 				Integer endTime = null;
 				if(StringUtils.isNoneBlank(cssOrderReqDto.getEndTime())){
-					endTime = (int) (new Date(cssOrderReqDto.getEndTime()).getTime()/1000);
+					endTime = (int) (DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
 				}
 				List<Predicate> predicate = new ArrayList<>();
 				if(StringUtils.isNoneBlank(cssOrderReqDto.getOrderSnMain())){
@@ -544,11 +544,26 @@ public class BkOrderServiceImpl implements BkOrderService{
 			resp.setMessage("订单列表为空");
 			return resp;
 		}
+		
+		List<String> orderSnMains = new ArrayList<String>();
+		for(Order order: orderList){
+			orderSnMains.add(order.getOrderSnMain());
+		}
+		
+		List<OrderExtm> orderExtmList = orderExtmDao.findByOrderSnMainIn(orderSnMains);
+		Map<String, OrderExtm> orderExtmMap = new HashMap<String, OrderExtm>();
+		for(OrderExtm orderExtm: orderExtmList){
+			orderExtmMap.put(orderExtm.getOrderSnMain(), orderExtm);
+		}
+		
 		List<BkOrderListDto> bkOrderList = new ArrayList<BkOrderListDto>();
 		for(Order order : orderList) {
 			BkOrderListDto orderListDto = new BkOrderListDto();
 			BkOrderListBaseDto baseDto = createBkOrderBaseDto(order);
 			orderListDto.setBase(baseDto);
+			OrderExtm orderExtm = orderExtmMap.get(baseDto.getOrderSnMain());
+			
+			
 			bkOrderList.add(orderListDto);
 		}
 		BkOrderListResultDto resultDto = new BkOrderListResultDto();
@@ -573,7 +588,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		baseDto.setOrderAmount(order.getOrderAmount());
 		baseDto.setGoodsAmount(order.getGoodsAmount());
 		baseDto.setOrderPaid(order.getOrderPayed());
-		baseDto.setOrderNotPaid(order.getOrderAmount()-order.getOrderPayed());
+		baseDto.setOrderNotPaid(order.getOrderAmount()+order.getShippingFee()-order.getOrderPayed());
 		baseDto.setPrinted(order.getPrinted());
 		baseDto.setPayStatus(order.getPayStatus());
 		baseDto.setFinishedTimeStr(DateUtils.dateTimeToStr(order.getFinishedTime()));
