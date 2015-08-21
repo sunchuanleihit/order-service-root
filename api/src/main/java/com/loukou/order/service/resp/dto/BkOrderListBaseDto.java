@@ -18,21 +18,26 @@ public class BkOrderListBaseDto implements Serializable {
 	private Integer buyerId;
 	private String buyerName;
 	private Integer status;
+	private String statusName;
 	private Integer addTime;
 	private String addTimeStr;
 	private Integer payType;
+	private String payTypeToString;
 	private Integer payId;
 	private String payName;
 	private Integer payStatus;
 	private Integer payTime;
+	private String payTimeToString;
 	private String payMessage;
 	private Integer shipTime;
+	private String shipTimeToString;
 	private String invoiceNo;
 	private Integer invoiceStatus;
 	private Integer invoiceTime;
 	private Integer finishedTime;
 	private String finishedTimeStr;
 	private Double goodsAmount;
+	private Double discount;
 	private Double orderAmount;
 	private Double orderPaid;
 	private Double orderNotPaid;
@@ -51,6 +56,7 @@ public class BkOrderListBaseDto implements Serializable {
 	private Integer source;
 	private String sourceName;
 	private Integer shippingId;
+	private String shipping;
 	private Double shippingFee;
 	private String useCouponNo;
 	private Double useCouponValue;
@@ -85,6 +91,11 @@ public class BkOrderListBaseDto implements Serializable {
 	public void setOrderNotPaid(Double orderNotPaid) {
 		this.orderNotPaid = orderNotPaid;
 	}
+
+	private double totalPrice = 0;
+	private double needPayPrice = 0;
+	private String shippingType;
+
 	public Integer getOrderId() {
 		return orderId;
 	}
@@ -420,6 +431,60 @@ public class BkOrderListBaseDto implements Serializable {
 	}
 	public void setReceiveNo(String receiveNo) {
 		this.receiveNo = receiveNo;
+	}
+	public String getPayTimeToString() {
+		return payTimeToString;
+	}
+	public void setPayTimeToString(String payTimeToString) {
+		this.payTimeToString = payTimeToString;
+	}
+	public String getShipTimeToString() {
+		return shipTimeToString;
+	}
+	public void setShipTimeToString(String shipTimeToString) {
+		this.shipTimeToString = shipTimeToString;
+	}
+	public double getTotalPrice() {
+		return totalPrice;
+	}
+	public void setTotalPrice(double totalPrice) {
+		this.totalPrice = totalPrice;
+	}
+	public double getNeedPayPrice() {
+		return needPayPrice;
+	}
+	public void setNeedPayPrice(double needPayPrice) {
+		this.needPayPrice = needPayPrice;
+	}
+	public String getStatusName() {
+		return statusName;
+	}
+	public void setStatusName(String statusName) {
+		this.statusName = statusName;
+	}
+	public String getShipping() {
+		return shipping;
+	}
+	public void setShipping(String shipping) {
+		this.shipping = shipping;
+	}
+	public Double getDiscount() {
+		return discount;
+	}
+	public void setDiscount(Double discount) {
+		this.discount = discount;
+	}
+	public String getShippingType() {
+		return shippingType;
+	}
+	public void setShippingType(String shippingType) {
+		this.shippingType = shippingType;
+	}
+	public String getPayTypeToString() {
+		return payTypeToString;
+	}
+	public void setPayTypeToString(String payTypeToString) {
+		this.payTypeToString = payTypeToString;
 	}
 	
 

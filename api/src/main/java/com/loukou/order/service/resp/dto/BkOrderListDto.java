@@ -12,7 +12,7 @@ public class BkOrderListDto implements Serializable {
 	private static final long serialVersionUID = 5016662529411604501L;
 	private BkOrderListBaseDto base = new BkOrderListBaseDto();
 	private ShippingMsgDto shippingmsg = new ShippingMsgDto();
-	private List<BkPackageInfoDto> packageList = new ArrayList<BkPackageInfoDto>();
+	private List<GoodsListDto> goodsList = new ArrayList<GoodsListDto>();
 	private ExtmMsgDto extmMsg = new ExtmMsgDto();
 
 	
@@ -32,14 +32,6 @@ public class BkOrderListDto implements Serializable {
 		this.shippingmsg = shippingmsg;
 	}
 
-	public List<BkPackageInfoDto> getGoodsList() {
-		return packageList;
-	}
-
-	public void setGoodsList(List<BkPackageInfoDto> packageList) {
-		this.packageList = packageList;
-	}
-
 	public ExtmMsgDto getExtmMsg() {
 		return extmMsg;
 	}
@@ -50,8 +42,16 @@ public class BkOrderListDto implements Serializable {
 
     @Override
     public String toString() {
-        return "OrderInfoDto [base=" + base + ", shippingmsg=" + shippingmsg + ", packageList=" + packageList
+        return "OrderInfoDto [base=" + base + ", shippingmsg=" + shippingmsg + ", goodsList=" + goodsList
                 + ", extmMsg=" + extmMsg + "]";
     }
+
+	public List<GoodsListDto> getGoodsList() {
+		return goodsList;
+	}
+
+	public void setGoodsList(List<GoodsListDto> goodsList) {
+		this.goodsList = goodsList;
+	}
 
 }

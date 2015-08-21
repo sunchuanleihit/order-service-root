@@ -4,10 +4,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -27,9 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.loukou.order.service.api.BkOrderService;
-import com.loukou.order.service.constants.BaseDtoIsOrderType;
 import com.loukou.order.service.constants.BaseDtoType;
-import com.loukou.order.service.constants.FlagType;
 import com.loukou.order.service.constants.OrderStateReturn;
 import com.loukou.order.service.constants.ShippingMsgDesc;
 import com.loukou.order.service.dao.ExpressDao;
@@ -43,28 +39,21 @@ import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderExtm;
 import com.loukou.order.service.entity.OrderGoods;
-import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Store;
 import com.loukou.order.service.enums.BkOrderSourceEnum;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
 import com.loukou.order.service.enums.OrderPayTypeEnum;
-import com.loukou.order.service.enums.OrderSourceEnum;
 import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.enums.OrderTypeEnums;
 import com.loukou.order.service.enums.PayStatusEnum;
-import com.loukou.order.service.enums.ReturnStatusEnum;
 import com.loukou.order.service.req.dto.CssOrderReqDto;
 import com.loukou.order.service.resp.dto.BkOrderListBaseDto;
 import com.loukou.order.service.resp.dto.BkOrderListDto;
+import com.loukou.order.service.resp.dto.BkOrderListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderListResultDto;
 import com.loukou.order.service.resp.dto.CssOrderRespDto;
 import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
-import com.loukou.order.service.resp.dto.OrderListBaseDto;
-import com.loukou.order.service.resp.dto.OrderListDto;
-import com.loukou.order.service.resp.dto.OrderListRespDto;
-import com.loukou.order.service.resp.dto.BkOrderListRespDto;
-import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.ShippingListDto;
 import com.loukou.order.service.resp.dto.ShippingListResultDto;
 import com.loukou.order.service.resp.dto.ShippingMsgDto;
@@ -163,6 +152,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		*/
 	}
 	
+	//订单详情
 	@Override
 	public BkOrderListRespDto orderDetail(String orderSnMain) {
 		BkOrderListRespDto resp = new BkOrderListRespDto(200, "");//创建返回
@@ -180,24 +170,27 @@ public class BkOrderServiceImpl implements BkOrderService{
 			return resp;
 		}
 		
-		BkOrderListResultDto resultDto = new BkOrderListResultDto();//创建订单列表返回
-		List<BkOrderListDto> orderListResult = new ArrayList<BkOrderListDto>();
+		BkOrderListResultDto resultDto = new BkOrderListResultDto();//创建订单返回
+		List<BkOrderListDto> orderListResult = new ArrayList<BkOrderListDto>();//创建订单列表返回
 		List<Integer> orderIds = new ArrayList<Integer>();
 		for(Order order : orderList) {
 			orderIds.add(order.getOrderId());
 		}
-		List<OrderGoods> orderGoodsList = orderGoodsDao.findByOrderIdIn(orderIds);
+		List<OrderGoods> orderGoodsList = orderGoodsDao.findByOrderIdIn(orderIds);//获取订单商品列表
 		
-		Map<String, OrderListDto> orderListMap = new HashMap<String, OrderListDto>();
+		//HASH
+		Map<String, BkOrderListDto> orderListMap = new HashMap<String, BkOrderListDto>();
+
 		for(Order order : orderList) {
-			//orderListDto
-			//baseDto
-			OrderListDto orderListDto = new OrderListDto();
-			OrderListBaseDto baseDto = createBaseDto(order, BaseDtoType.INFO);
-			orderListDto.setBase(baseDto);
-			//goodslistDto
-			List<GoodsListDto> goodsListDtoList = new ArrayList<GoodsListDto>();
+			BkOrderListDto bkOrderListDto = new BkOrderListDto();
 			
+			//基础信息
+			BkOrderListBaseDto baseDto = new BkOrderListBaseDto();
+			BeanUtils.copyProperties(order, baseDto);
+			bkOrderListDto.setBase(baseDto);
+			
+			//商品信息
+			List<GoodsListDto> goodsListDtoList = new ArrayList<GoodsListDto>();
 			for(OrderGoods og : orderGoodsList) {
 				if(og.getOrderId() == order.getOrderId()) {
 					GoodsListDto goodsListDto = new GoodsListDto();
@@ -205,7 +198,8 @@ public class BkOrderServiceImpl implements BkOrderService{
 					goodsListDtoList.add(goodsListDto);
 				}
 			}
-			orderListDto.setGoodsList(goodsListDtoList);
+			bkOrderListDto.setGoodsList(goodsListDtoList);
+			
 			//收货信息
 			List<OrderExtm> extmList = orderExtmDao.findByOrderSnMain(orderSnMain);
 			ExtmMsgDto extmMsgDto = new ExtmMsgDto();
@@ -220,21 +214,21 @@ public class BkOrderServiceImpl implements BkOrderService{
 					extmMsgDto.setPhoneMob(trimall(extm.getPhoneMob()));
 				}
 			}
-			orderListDto.setExtmMsg(extmMsgDto);
+			bkOrderListDto.setExtmMsg(extmMsgDto);
 			//物流信息
 			if(order.getStatus() >= OrderStatusEnum.STATUS_REVIEWED.getId()
 					|| (order.getStatus() == OrderStatusEnum.STATUS_NEW.getId() 
 						&& order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId())) {
-				getLogistics(order, orderListDto);
+				getLogistics(order, bkOrderListDto);
 			}
 			
-			orderListMap.put(order.getTaoOrderSn(), orderListDto);
+			orderListMap.put(order.getTaoOrderSn(), bkOrderListDto);
 		}
 		
 		if(orderListMap.isEmpty()) {
 			return resp;
 		} else {
-//			orderListResult.addAll(orderListMap.values());
+			orderListResult.addAll(orderListMap.values());
 			resultDto.setOrderList(orderListResult);
 			resultDto.setOrderCount(1);
 			
@@ -244,30 +238,30 @@ public class BkOrderServiceImpl implements BkOrderService{
 		return resp;
 	}
 	
-	/**
-	 * 判断是否显示 确认收货
-	 *
-	 * 返回 1 显示 ==商家已发货 且 没有回单(商家自己配送的) 0 不显示 2 显示等待收货==审单通过且商家未发货
-	 *
-	 * status : ok
-	 */
-	private int getReciveStatus(Order order) {
-//		Order order = orderDao.findByTaoOrderSn(taoOrderSn);
-		if (null == order) {
-			return 0;
-		}
-
-		if (order.getStatus() >= OrderStatusEnum.STATUS_REVIEWED.getId() && 
-				order.getStatus() <= OrderStatusEnum.STATUS_DELIVERIED.getId()) {// 审核通过 未发货
-			return 2;
-		} else if (order.getStatus() >= OrderStatusEnum.STATUS_14.getId() 
-				&& order.getStatus() < OrderStatusEnum.STATUS_FINISHED.getId()
-				&& order.getShippingId() == 1) {
-			// 商家已发货 且 没有回单(商家自己配送的)
-			return 1;
-		}
-		return 0;
-	}
+//	/**
+//	 * 判断是否显示 确认收货
+//	 *
+//	 * 返回 1 显示 ==商家已发货 且 没有回单(商家自己配送的) 0 不显示 2 显示等待收货==审单通过且商家未发货
+//	 *
+//	 * status : ok
+//	 */
+//	private int getReciveStatus(Order order) {
+////		Order order = orderDao.findByTaoOrderSn(taoOrderSn);
+//		if (null == order) {
+//			return 0;
+//		}
+//
+//		if (order.getStatus() >= OrderStatusEnum.STATUS_REVIEWED.getId() && 
+//				order.getStatus() <= OrderStatusEnum.STATUS_DELIVERIED.getId()) {// 审核通过 未发货
+//			return 2;
+//		} else if (order.getStatus() >= OrderStatusEnum.STATUS_14.getId() 
+//				&& order.getStatus() < OrderStatusEnum.STATUS_FINISHED.getId()
+//				&& order.getShippingId() == 1) {
+//			// 商家已发货 且 没有回单(商家自己配送的)
+//			return 1;
+//		}
+//		return 0;
+//	}
 	
 	/**
 	 * 默认taoOrderSn传入“”
@@ -294,60 +288,60 @@ public class BkOrderServiceImpl implements BkOrderService{
 		return StringUtils.removeEnd(shippingMsg.toString(), "、");
 	}
 	
-	private OrderListBaseDto createBaseDto(Order order, int type) {
-		OrderListBaseDto baseDto = new OrderListBaseDto();
+	private BkOrderListBaseDto createBaseDto(Order order, int type) {
+		BkOrderListBaseDto baseDto = new BkOrderListBaseDto();
 		baseDto.setOrderId(order.getOrderId());
 		baseDto.setOrderSnMain(order.getOrderSnMain());
 		baseDto.setSellerId(order.getSellerId());
-		baseDto.setSource(OrderSourceEnum.parseSource(order.getSource()).getSource());
+		baseDto.setSourceName(BkOrderSourceEnum.parseSource(order.getSource()).getSource());
 		if (order.getAddTime() != null && order.getAddTime() != 0) {
 			String addTime = DateUtils.dateTimeToStr(order.getAddTime());
-			baseDto.setAddTime(addTime);
+			baseDto.setAddTimeStr(addTime);
 		}
 		if (order.getPayTime() != null && order.getPayTime() != 0) {
 			String payTime = DateUtils.dateTimeToStr(order.getPayTime());
-			baseDto.setPayTime(payTime);
+			baseDto.setPayTimeToString(payTime);
 		}
 		if (order.getShipTime() != null && order.getShipTime() != 0) {
 			String shipTime = DateUtils.dateTimeToStr(order.getShipTime());
-			baseDto.setShipTime(shipTime);
+			baseDto.setShipTimeToString(shipTime);
 		}
 		baseDto.setPayStatus(order.getPayStatus());
 		baseDto.setStatus(order.getStatus());
 		baseDto.setTaoOrderSn(order.getTaoOrderSn());
-		baseDto.setIsshouhuo(getReciveStatus(order));// 确认收货的判断
+//		baseDto.setIsshouhuo(getReciveStatus(order));// 确认收货的判断
 		double totalPrice = DoubleUtils.add(order.getGoodsAmount(), order.getShippingFee());
 		baseDto.setTotalPrice(totalPrice);
 		double needToPay = DoubleUtils.sub(totalPrice, order.getOrderPayed());
 		baseDto.setNeedPayPrice(needToPay);// 还需支付金额
 		
-		baseDto.setState(createState(order));
+		baseDto.setStatusName(createState(order));
 		
 		baseDto.setShippingFee(order.getShippingFee());// 订单运费
-		baseDto.setPackageStatus(ReturnStatusEnum.parseType(order.getStatus()).getComment());// 包裹的状态
+//		baseDto.setPackageStatus(ReturnStatusEnum.parseType(order.getStatus()).getComment());// 包裹的状态
 		baseDto.setShipping(getShippingMsg(order));
 		if(order.getShippingNo() == null) {
-			baseDto.setArrivalCode("");
+			baseDto.setShippingNo("");
 		} else {
-			baseDto.setArrivalCode(order.getShippingNo());
+			baseDto.setShippingNo(order.getShippingNo());
 		}
 		
 		baseDto.setDiscount(order.getDiscount());
-		baseDto.setIsOrder(BaseDtoIsOrderType.NO);
-		String owerphone = "";
+//		baseDto.setIsOrder(BaseDtoIsOrderType.NO);
+//		String owerphone = "";
 		if(type == BaseDtoType.INFO) {
 			Store store = storeDao.findOne(order.getSellerId());
-			if(store != null) {
-				if (StringUtils.isBlank(store.getOwnerMob())) {
-					if (StringUtils.isNotBlank(store.getOwnerTel())) {
-						store.setOwnerMob(store.getOwnerTel());
-					}
-				} else {
-					owerphone = store.getOwnerMob();
-				}
-			}
-			baseDto.setStorePhone(owerphone);
-			baseDto.setRefundStatus("");//TODO线上是否需要
+//			if(store != null) {
+//				if (StringUtils.isBlank(store.getOwnerMob())) {
+//					if (StringUtils.isNotBlank(store.getOwnerTel())) {
+//						store.setOwnerMob(store.getOwnerTel());
+//					}
+//				} else {
+//					owerphone = store.getOwnerMob();
+//				}
+//			}
+//			baseDto.setStorePhone(owerphone);
+//			baseDto.setRefundStatus("");//TODO线上是否需要
 			int freight = 0;
 			if(store == null) {
 				freight = 0;
@@ -360,8 +354,8 @@ public class BkOrderServiceImpl implements BkOrderService{
 				freight = 1;
 				shippingtype = "第三方配送";
 			}
-			baseDto.setShippingtype(shippingtype);
-			baseDto.setPayType(OrderPayTypeEnum.parseType(order.getPayType()).getType());
+			baseDto.setShippingType(shippingtype);
+			baseDto.setPayTypeToString(OrderPayTypeEnum.parseType(order.getPayType()).getType());
 			baseDto.setInvoiceHeader(order.getInvoiceHeader());
 			baseDto.setPostscript(order.getPostscript());
 		}
@@ -378,7 +372,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 	}
 	
 	//获取物流信息
-	private void getLogistics(Order order, OrderListDto orderListDto) {
+	private void getLogistics(Order order, BkOrderListDto bkOrderListDto) {
 		ShippingMsgRespDto shippingDto = getShippingResult(order.getTaoOrderSn());
 		ShippingMsgDto shippingMsgDto = new ShippingMsgDto();
 		if(shippingDto.getInnerCode() == 0) {
@@ -406,7 +400,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			}
 			
 		} 
-		orderListDto.setShippingmsg(shippingMsgDto);
+		bkOrderListDto.setShippingmsg(shippingMsgDto);
 	}
 	
 	//生成订单返回状态state
