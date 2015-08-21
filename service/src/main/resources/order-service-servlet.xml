@@ -24,7 +24,7 @@
 	<!-- 声明需要暴露的服务接口 -->
 	<dubbo:service ref="orderService" interface="com.loukou.order.service.api.OrderService" retries="0" timeout="5000"  />
 	<dubbo:service ref="payService" interface="com.loukou.order.service.api.PayService" retries="0" timeout="5000"  />
-	<dubbo:service ref="cssOrderService" interface="com.loukou.order.service.api.CssOrderService" retries="0" timeout="5000"  />
+	<dubbo:service ref="cssOrderService" interface="com.loukou.order.service.api.BkOrderService" retries="0" timeout="5000"  />
 	
 	<!-- 引用的服务 -->
 	<dubbo:reference id="userService" interface="com.serverstarted.user.api.UserService" retries="0" timeout="5000" />

@@ -22,7 +22,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import com.loukou.order.service.api.CssOrderService;
+import com.loukou.order.service.api.BkOrderService;
 import com.loukou.order.service.constants.BaseDtoIsOrderType;
 import com.loukou.order.service.constants.BaseDtoType;
 import com.loukou.order.service.constants.OrderStateReturn;
@@ -62,7 +62,7 @@ import com.loukou.order.service.util.DateUtils;
 import com.loukou.order.service.util.DoubleUtils;
 
 @Service("cssOrderService")
-public class CssOrderServiceImpl implements CssOrderService{
+public class BkOrderServiceImpl implements BkOrderService{
     @Autowired
     private OrderDao orderDao;
     

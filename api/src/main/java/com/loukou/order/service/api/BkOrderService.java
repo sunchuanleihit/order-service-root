@@ -11,7 +11,7 @@ import com.loukou.order.service.resp.dto.OrderListRespDto;
  * @author sunchuanlei
  *
  */
-public interface CssOrderService {
+public interface BkOrderService {
 	public List<CssOrderRespDto> queryOrderList(int page, int rows, CssOrderReqDto cssOrderReqDto);
 	
 	public OrderListRespDto orderDetail(String orderSnMain);
