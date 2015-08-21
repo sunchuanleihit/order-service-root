@@ -33,6 +33,7 @@ public class BkOrderListBaseDto implements Serializable {
 	private Double goodsAmount;
 	private Double orderAmount;
 	private Double orderPaid;
+	private Double orderNotPaid;
 	private Integer needInvoice;
 	private Integer invoiceType;
 	private String invoiceHeader;
@@ -63,6 +64,13 @@ public class BkOrderListBaseDto implements Serializable {
 	private Integer remindTime;
 	private String sellSite;
 	private String receiveNo;
+	
+	public Double getOrderNotPaid() {
+		return orderNotPaid;
+	}
+	public void setOrderNotPaid(Double orderNotPaid) {
+		this.orderNotPaid = orderNotPaid;
+	}
 	public Integer getOrderId() {
 		return orderId;
 	}
