@@ -62,6 +62,7 @@ import com.loukou.order.service.dao.OrderPayDao;
 import com.loukou.order.service.dao.OrderPayRDao;
 import com.loukou.order.service.dao.OrderRefuseDao;
 import com.loukou.order.service.dao.OrderReturnDao;
+import com.loukou.order.service.dao.OrderShareNewUserDao;
 import com.loukou.order.service.dao.OrderUserDao;
 import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.SiteDao;
@@ -85,6 +86,7 @@ import com.loukou.order.service.entity.OrderLnglat;
 import com.loukou.order.service.entity.OrderPay;
 import com.loukou.order.service.entity.OrderPayR;
 import com.loukou.order.service.entity.OrderReturn;
+import com.loukou.order.service.entity.OrderShareNewUser;
 import com.loukou.order.service.entity.OrderUser;
 import com.loukou.order.service.entity.Site;
 import com.loukou.order.service.entity.Store;
@@ -261,6 +263,8 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired
 	private OrderRefuseDao orderRefuseDao;
 	
+	@Autowired
+	private OrderShareNewUserDao orderShareNewUserDao;
 	
 	@Autowired
 	private OrderOperationProcessor orderOperationProcessor;
@@ -2152,4 +2156,14 @@ public class OrderServiceImpl implements OrderService {
 	    		 num, openId, money);
 	}
 	
+	@Override
+	public void sendNewUserRegisterCoupon(int userId, String phone)
+	{
+		List<OrderShareNewUser> results = orderShareNewUserDao.findByPhoneMobAndStatus(phone, 0);
+		for(OrderShareNewUser i : results)
+		{
+			couponOperationProcessor.createCouponCode(userId, 1, 1, false, 
+		    		 0, "", i.getMoney());
+		}
+	}
 }
