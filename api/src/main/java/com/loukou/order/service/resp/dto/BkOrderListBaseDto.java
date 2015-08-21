@@ -46,6 +46,7 @@ public class BkOrderListBaseDto implements Serializable {
 	private Integer mtFlg;
 	private Integer statementStatus;
 	private Integer source;
+	private String sourceName;
 	private Integer shippingId;
 	private Double shippingFee;
 	private String useCouponNo;
@@ -295,6 +296,12 @@ public class BkOrderListBaseDto implements Serializable {
 	}
 	public void setSource(Integer source) {
 		this.source = source;
+	}
+	public String getSourceName() {
+		return sourceName;
+	}
+	public void setSourceName(String sourceName) {
+		this.sourceName = sourceName;
 	}
 	public Integer getShippingId() {
 		return shippingId;
