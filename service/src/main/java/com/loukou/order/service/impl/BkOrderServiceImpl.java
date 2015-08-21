@@ -47,12 +47,14 @@ import com.loukou.order.service.enums.OrderTypeEnums;
 import com.loukou.order.service.enums.PayStatusEnum;
 import com.loukou.order.service.enums.ReturnStatusEnum;
 import com.loukou.order.service.req.dto.CssOrderReqDto;
+import com.loukou.order.service.resp.dto.BkOrderListDto;
+import com.loukou.order.service.resp.dto.BkOrderListResultDto;
 import com.loukou.order.service.resp.dto.CssOrderRespDto;
 import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
 import com.loukou.order.service.resp.dto.OrderListBaseDto;
 import com.loukou.order.service.resp.dto.OrderListDto;
-import com.loukou.order.service.resp.dto.OrderListRespDto;
+import com.loukou.order.service.resp.dto.BkOrderListRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.ShippingListDto;
 import com.loukou.order.service.resp.dto.ShippingListResultDto;
@@ -153,8 +155,8 @@ public class BkOrderServiceImpl implements BkOrderService{
 	}
 	
 	@Override
-	public OrderListRespDto orderDetail(String orderSnMain) {
-		OrderListRespDto resp = new OrderListRespDto(200, "");
+	public BkOrderListRespDto orderDetail(String orderSnMain) {
+		BkOrderListRespDto resp = new BkOrderListRespDto(200, "");//创建返回
 		
 		if (StringUtils.isEmpty(orderSnMain)) {
 			resp.setCode(400);
@@ -162,15 +164,15 @@ public class BkOrderServiceImpl implements BkOrderService{
 			return resp;
 		}
 		
-		List<Order> orderList = orderDao.findByOrderSnMain(orderSnMain);
+		List<Order> orderList = orderDao.findByOrderSnMain(orderSnMain);//获取订单列表信息
 		if (CollectionUtils.isEmpty(orderList)) {
 			resp.setCode(400);
 			resp.setMessage("订单为空");
 			return resp;
 		}
 		
-		OrderListResultDto resultDto = new OrderListResultDto();
-		List<OrderListDto> orderListResult = new ArrayList<OrderListDto>();
+		BkOrderListResultDto resultDto = new BkOrderListResultDto();//创建订单列表返回
+		List<BkOrderListDto> orderListResult = new ArrayList<BkOrderListDto>();
 		List<Integer> orderIds = new ArrayList<Integer>();
 		for(Order order : orderList) {
 			orderIds.add(order.getOrderId());
@@ -223,7 +225,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		if(orderListMap.isEmpty()) {
 			return resp;
 		} else {
-			orderListResult.addAll(orderListMap.values());
+//			orderListResult.addAll(orderListMap.values());
 			resultDto.setOrderList(orderListResult);
 			resultDto.setOrderCount(1);
 			
