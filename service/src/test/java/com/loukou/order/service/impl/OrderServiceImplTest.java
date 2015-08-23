@@ -134,16 +134,21 @@ public class OrderServiceImplTest extends AbstractTestObject {
 	
 	@Test
 	public void createCouponCode() {
+		// 新人券
 		int userId = 1156390;
 		int couponId = 932;
+		boolean resp = true;;
+//		resp = orderService.createCouponCode(userId, couponId, 1, false, 1, "openId", 0);
+//		System.out.println(resp);
+//		
+//		couponId = 933;
+//		resp = orderService.createCouponCode(userId, couponId, 1, false, 1, "openId", 0);
+//		System.out.println(resp);
 		
-		boolean resp = orderService.createCouponCode(userId, couponId, 1, false, 1, "openId", 0);
+		// 微信红包
+		resp = orderService.createCouponCode(userId, 1, 1, false, 
+	    		 0, "", 1);
 		System.out.println(resp);
 		
-		
-		couponId = 933;
-		
-		resp = orderService.createCouponCode(userId, couponId, 1, false, 1, "openId", 0);
-		System.out.println(resp);
 	}
 }

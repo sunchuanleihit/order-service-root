@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -171,7 +172,7 @@ public class CouponOperationProcessor {
 			Date now = new Date();
 			Date start = DateUtils.getStartofDate(now);
 			int count = coupListDao.getUsedCoupNumber(userId, start);
-			if (count > LIMIT_COUPON_PER_DAY) {
+			if (count >= LIMIT_COUPON_PER_DAY) {
 				// 一天最多只能用2张券
 				canUse = 0;
 			}
@@ -254,7 +255,7 @@ public class CouponOperationProcessor {
 		if (coupList == null || coupRule == null || cart == null) {
 			return false;
 		}
-		
+				
 		if (cart.getTotalPrice() < coupList.getMinprice()) {
 			// 商品金额不足优惠券最小金额
 			return false;
@@ -483,10 +484,7 @@ public class CouponOperationProcessor {
     	String code = null;
     	if(type == 1) {//私有券
     		String pre = coupRule.getPrefix();
-    		String mtime = StringUtils.substring(String.valueOf((long)new Date().getTime()), 7, 13);
-    		//随机生成券号
-    		String rcode = String.valueOf(Math.random() * (99999 - 10000) + 10000);
-    		code = mkCode(pre, mtime, rcode);
+    		code = mkCode(pre);
     	} else {//公有券
     		// 公用券领取，生成规则是当前公用券领取的次数code0001
     		String replaceCode = coupRule.getCommoncode().concat("N");
@@ -537,15 +535,15 @@ public class CouponOperationProcessor {
     /**
      * 生成随机券码
      */
-    private String mkCode(String pre, String mtime, String rcode){
+    private String mkCode(String pre){
+		String mtime = StringUtils.substring(String.valueOf((long)new Date().getTime()), 7);
+		//随机生成券号
+		String rcode = String.valueOf(new Random().nextInt(89999) + 10000);
     	
-    	String code = pre.concat(mtime).concat(rcode);
+    	String code = pre + mtime + rcode;
     	CoupList coupList = coupListDao.findByCommoncode(code);
     	if(coupList != null) {
-    		String mtime2 = StringUtils.substring(String.valueOf((long)new Date().getTime()), 7, 13);
-    		//随机生成券号
-    		String rcode2 = String.valueOf(Math.random() * (99999 - 10000) + 10000);
-    		code = mkCode(pre, mtime2, rcode2);
+    		code = mkCode(pre);
     	}
     	return code;
     }

@@ -72,6 +72,7 @@ import com.loukou.order.service.dao.WeiCangGoodsStoreDao;
 import com.loukou.order.service.entity.Address;
 import com.loukou.order.service.entity.AsyncTask;
 import com.loukou.order.service.entity.CoupList;
+import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.Express;
 import com.loukou.order.service.entity.LKWhStockIn;
 import com.loukou.order.service.entity.LKWhStockInGoods;
@@ -373,6 +374,7 @@ public class OrderServiceImpl implements OrderService {
 			statusList.add(OrderStatusEnum.STATUS_ALLOCATED.getId());
 			statusList.add(OrderStatusEnum.STATUS_PACKAGED.getId());
 			statusList.add(OrderStatusEnum.STATUS_DELIVERIED.getId());
+			statusList.add(OrderStatusEnum.STATUS_14.getId());
 			statusList.add(OrderStatusEnum.STATUS_NEW.getId());
 			orderPageList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusIn(userId, 0, 
 					PayStatusEnum.STATUS_PAYED.getId(),statusList, pageable);
@@ -826,14 +828,16 @@ public class OrderServiceImpl implements OrderService {
 		if (couponId > 0) {
 			coupList = coupListDao.getValidCoupList(req.getUserId(), couponId);
 			if (coupList == null) {
-				return new SubmitOrderRespDto(400, "优惠券不可用");
+				return new SubmitOrderRespDto(400, "优惠券不可用，请重新选择");
 			}
+			CoupRule coupRule = coupRuleDao.findOne(coupList.getCouponId());
 
 			// 校验优惠券是否可用
-			if (coupList.getMinprice() > cartRespDto.getTotalPrice()) {
-				return new SubmitOrderRespDto(400, String.format(
-						"使用优惠券最小金额为%.2f. 优惠券不可用", coupList.getMinprice()));
+			boolean isCouponUsable = couponOperationProcessor.verifyCoup(req.getUserId(), req.getOpenId(), req.getCityId(), req.getStoreId(), coupList, cartRespDto, coupRule);
+			if (!isCouponUsable) {
+				return new SubmitOrderRespDto(400, "优惠券不可用，请重新选择");
 			}
+
 			// 更新优惠券状态为已使用
 			boolean used = coupListService.useCoupon(req.getUserId(), couponId);
 			if (!used) {
@@ -1746,16 +1750,24 @@ public class OrderServiceImpl implements OrderService {
 			int cityId, int storeId, int couponId) {
 
 		double couponMoney = 0.0;
+		// 购物车
+		CartRespDto cart = cartService.getCart(userId, openId, cityId, storeId);
 		if (couponId > 0) {
 			CoupList coupList = coupListDao.getValidCoupList(userId, couponId);
 			if (coupList == null) {
-				return new PayBeforeRespDto(400, "无效的优惠券");
+				return new PayBeforeRespDto(400, "优惠券不可用，请重新选择");
+			}
+			CoupRule coupRule = coupRuleDao.findOne(coupList.getCouponId());
+
+			// 校验优惠券是否可用
+			boolean isCouponUsable = couponOperationProcessor.verifyCoup(userId, openId, cityId, storeId, coupList, cart, coupRule);
+			if (!isCouponUsable) {
+				return new PayBeforeRespDto(400, "优惠券不可用，请重新选择");
 			}
 			couponMoney = coupList.getMoney();
 		}
 
-		// 购物车
-		CartRespDto cart = cartService.getCart(userId, openId, cityId, storeId);
+		
 		ResponseCodeDto validateCart = validateCart(cart);
 		if (validateCart.getCode() != 200) {
 			return new PayBeforeRespDto(validateCart.getCode(), validateCart.getMessage());
