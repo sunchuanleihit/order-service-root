@@ -168,4 +168,6 @@ public interface OrderService {
 
 	public boolean createCouponCode(int userId, int couponId, int type, boolean check,
 			int num, String openId, double money);
+	
+	public void sendNewUserRegisterCoupon(int userId, String phone);
 }
