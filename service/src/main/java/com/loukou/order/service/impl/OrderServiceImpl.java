@@ -850,6 +850,9 @@ public class OrderServiceImpl implements OrderService {
 			}
 			needPay = DoubleUtils.sub(needPay, coupList.getMoney());
 		}
+		if (needPay < 0) {
+			needPay = 0;
+		}
 
 		// 新建订单
 		final String orderSnMain = generateOrderSnMain();
