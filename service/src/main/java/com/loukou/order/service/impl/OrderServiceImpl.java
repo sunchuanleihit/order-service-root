@@ -848,7 +848,7 @@ public class OrderServiceImpl implements OrderService {
 				LOGGER.error(msg);
 				throw new RuntimeException(msg);
 			}
-			needPay = DoubleUtils.mul(needPay, coupList.getMoney(), 2);
+			needPay = DoubleUtils.sub(needPay, coupList.getMoney());
 		}
 
 		// 新建订单
