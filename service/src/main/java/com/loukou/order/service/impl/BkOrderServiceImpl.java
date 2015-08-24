@@ -514,6 +514,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		BkOrderListRespDto resp = new BkOrderListRespDto(200, "");
 		List<Order> orderList = new ArrayList<Order>();
 		//先从收货人中查出所有相关的订单
+		String cityCode = "";
 		List<OrderExtm> orderExtmResultList = null;
 		final Set<String> orderSnMainSet = new HashSet<String>();
 		if(StringUtils.isNoneBlank(cssOrderReqDto.getQueryContent()) && StringUtils.isNoneBlank(cssOrderReqDto.getQueryType())){
@@ -533,7 +534,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 				return resp;
 			}
 		}
-		
 		pageNum = pageNum-1;
 		//获取所有的城市
 		Iterator<SiteCity> siteCityInterator = siteCityDao.findAll().iterator();
@@ -541,7 +541,11 @@ public class BkOrderServiceImpl implements BkOrderService{
 		while(siteCityInterator.hasNext()){
 			SiteCity siteCity = siteCityInterator.next();
 			cityMap.put(siteCity.getSiteCityId(), siteCity.getSiteCityName());
+			if("city".equals(cssOrderReqDto.getQueryType()) && siteCity.getSiteCityName().equals(cssOrderReqDto.getQueryContent())){
+				cityCode = siteCity.getSiteCityId();
+			}
 		}
+		final String cityCodeFinal = cityCode;
 		Page<Order> orderPageList = null;
 		
 		Sort pageSort = new Sort(Sort.Direction.DESC, "orderId");
@@ -583,6 +587,9 @@ public class BkOrderServiceImpl implements BkOrderService{
 				}
 				if(StringUtils.isNoneBlank(cssOrderReqDto.getBuyerName())){
 					predicate.add(cb.equal(root.get("buyerName").as(String.class), cssOrderReqDto.getBuyerName()));
+				}
+				if(StringUtils.isNoneBlank(cityCodeFinal) && StringUtils.isNoneBlank(cssOrderReqDto.getQueryContent())){
+					predicate.add(cb.equal(root.get("sellSite").as(String.class), cssOrderReqDto.getQueryContent()));
 				}
 				if(orderSnMainSet.size()>0){
 					In in = cb.in(root.get("orderSnMain"));
