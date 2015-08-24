@@ -16,5 +16,5 @@ public interface BkOrderService {
 	
 	public BkOrderListRespDto orderDetail(String orderSnMain);
 	
-	public BkOrderListRespDto queryBkOrderList(int pageNum, int pageSize, CssOrderReqDto cssOrderReqDto);
+	public BkOrderListRespDto queryBkOrderList(String sort,String order,int pageNum, int pageSize, CssOrderReqDto cssOrderReqDto);
 }

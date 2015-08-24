@@ -10,8 +10,23 @@ public class CssOrderReqDto implements Serializable{
 	private String startTime;
 	private String endTime;
 	private Integer status;
+	private Integer payStatus;
 	private String queryType;
 	private String queryContent;
+	private String buyerName;
+	
+	public String getBuyerName() {
+		return buyerName;
+	}
+	public void setBuyerName(String buyerName) {
+		this.buyerName = buyerName;
+	}
+	public Integer getPayStatus() {
+		return payStatus;
+	}
+	public void setPayStatus(Integer payStatus) {
+		this.payStatus = payStatus;
+	}
 	public String getOrderSnMain() {
 		return orderSnMain;
 	}

@@ -3,10 +3,15 @@ package com.loukou.order.service.impl;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import javax.management.Query;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaBuilder.In;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -32,14 +37,19 @@ import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
 import com.loukou.order.service.dao.OrderExtmDao;
 import com.loukou.order.service.dao.OrderGoodsDao;
+import com.loukou.order.service.dao.SiteCityDao;
+import com.loukou.order.service.dao.SiteDao;
 import com.loukou.order.service.dao.StoreDao;
 import com.loukou.order.service.entity.Express;
 import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderExtm;
 import com.loukou.order.service.entity.OrderGoods;
+import com.loukou.order.service.entity.Site;
+import com.loukou.order.service.entity.SiteCity;
 import com.loukou.order.service.entity.Store;
 import com.loukou.order.service.enums.BkOrderSourceEnum;
+import com.loukou.order.service.enums.BkOrderStatusEnum;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
 import com.loukou.order.service.enums.OrderPayTypeEnum;
 import com.loukou.order.service.enums.OrderStatusEnum;
@@ -80,8 +90,12 @@ public class BkOrderServiceImpl implements BkOrderService{
     @Autowired
 	private OrderActionDao orderActionDao;
     
+    @Autowired
+    private SiteCityDao siteCityDao;
+    
 	@Override
 	public List<CssOrderRespDto> queryOrderList(int page, int rows, final CssOrderReqDto cssOrderReqDto) {
+		
 		Page<Order> orderPage = orderDao.findAll(new Specification<Order>(){
 			@Override
 			public Predicate toPredicate(Root<Order> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
@@ -496,36 +510,88 @@ public class BkOrderServiceImpl implements BkOrderService{
 	}
 
 	@Override
-	public BkOrderListRespDto queryBkOrderList(int pageNum, int pageSize, final CssOrderReqDto cssOrderReqDto) {
+	public BkOrderListRespDto queryBkOrderList(String sort,String order,int pageNum, int pageSize, final CssOrderReqDto cssOrderReqDto) {
 		BkOrderListRespDto resp = new BkOrderListRespDto(200, "");
-		Page<Order> orderPageList = null;
 		List<Order> orderList = new ArrayList<Order>();
-		Sort sort = new Sort(Direction.DESC, "orderId");
-		Pageable pageable = new PageRequest(pageNum, pageSize, sort);
+		//先从收货人中查出所有相关的订单
+		List<OrderExtm> orderExtmResultList = null;
+		final Set<String> orderSnMainSet = new HashSet<String>();
+		if(StringUtils.isNoneBlank(cssOrderReqDto.getQueryContent()) && StringUtils.isNoneBlank(cssOrderReqDto.getQueryType())){
+			if(cssOrderReqDto.getQueryType().equals("consignee")){
+				orderExtmResultList = orderExtmDao.findByConsignee(cssOrderReqDto.getQueryContent());
+			}else if(cssOrderReqDto.getQueryType().equals("phoneMob")){
+				orderExtmResultList = orderExtmDao.findByPhoneMob(cssOrderReqDto.getQueryContent());
+			}else if(cssOrderReqDto.getQueryType().equals("phoneTel")){
+				orderExtmResultList = orderExtmDao.findByPhoneTel(cssOrderReqDto.getQueryContent());
+			}
+			if(orderExtmResultList != null && orderExtmResultList.size() > 0){
+				for(OrderExtm tmp: orderExtmResultList){
+					orderSnMainSet.add(tmp.getOrderSnMain());
+				}
+			}else{
+				//如果根据收货人没查到则订单也没有
+				return resp;
+			}
+		}
+		
+		pageNum = pageNum-1;
+		//获取所有的城市
+		Iterator<SiteCity> siteCityInterator = siteCityDao.findAll().iterator();
+		Map<String,String> cityMap = new HashMap<String,String>();
+		while(siteCityInterator.hasNext()){
+			SiteCity siteCity = siteCityInterator.next();
+			cityMap.put(siteCity.getSiteCityId(), siteCity.getSiteCityName());
+		}
+		Page<Order> orderPageList = null;
+		
+		Sort pageSort = new Sort(Sort.Direction.DESC, "orderId");
+		if(StringUtils.isNoneBlank(sort) && StringUtils.isNoneBlank(order)){
+			if(order.equals("asc")){
+				pageSort = new Sort(Sort.Direction.ASC, sort);
+			}else{
+				pageSort = new Sort(Sort.Direction.DESC, sort);
+			}
+		}
+		
+		Pageable pageable = new PageRequest(pageNum, pageSize, pageSort);
 		orderPageList = orderDao.findAll(new Specification<Order>(){
 			@Override
 			public Predicate toPredicate(Root<Order> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
 				Integer startTime = null;
-				if(StringUtils.isNoneBlank(cssOrderReqDto.getStartTime())){
+				if(StringUtils.isNotBlank(cssOrderReqDto.getStartTime())){
 					startTime = (int)(DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
 				}
 				Integer endTime = null;
-				if(StringUtils.isNoneBlank(cssOrderReqDto.getEndTime())){
+				if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
 					endTime = (int)(DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
 				}
 				List<Predicate> predicate = new ArrayList<>();
-				if(StringUtils.isNoneBlank(cssOrderReqDto.getOrderSnMain())){
+				if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
 					predicate.add(cb.equal(root.get("orderSnMain").as(String.class), cssOrderReqDto.getOrderSnMain()));
 				}
 				if(cssOrderReqDto.getStatus()!=null){
 					predicate.add(cb.equal(root.get("status").as(Integer.class), cssOrderReqDto.getStatus()));
 				}
-				if(StringUtils.isNoneBlank(cssOrderReqDto.getStartTime())){
+				if(StringUtils.isNotBlank(cssOrderReqDto.getStartTime())){
 					predicate.add(cb.greaterThanOrEqualTo(root.get("addTime").as(Integer.class), startTime));
 				}
-				if(StringUtils.isNoneBlank(cssOrderReqDto.getEndTime())){
+				if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
 					predicate.add(cb.lessThanOrEqualTo(root.get("addTime").as(Integer.class), endTime));
 				}
+				if(cssOrderReqDto.getPayStatus()!=null){
+					predicate.add(cb.equal(root.get("payStatus").as(Integer.class), cssOrderReqDto.getPayStatus()));
+				}
+				if(StringUtils.isNoneBlank(cssOrderReqDto.getBuyerName())){
+					predicate.add(cb.equal(root.get("buyerName").as(String.class), cssOrderReqDto.getBuyerName()));
+				}
+				if(orderSnMainSet.size()>0){
+					In in = cb.in(root.get("orderSnMain"));
+					for(String tmp: orderSnMainSet){
+						in.value(tmp);
+					}
+					predicate.add(in);
+				}
+				predicate.add(cb.equal(root.get("isDel").as(Integer.class), 0));
 				Predicate[] pre = new Predicate[predicate.size()];
 				return query.where(predicate.toArray(pre)).getRestriction();
 			}
@@ -537,10 +603,9 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		
 		List<String> orderSnMains = new ArrayList<String>();
-		for(Order order: orderList){
-			orderSnMains.add(order.getOrderSnMain());
+		for(Order tmp: orderList){
+			orderSnMains.add(tmp.getOrderSnMain());
 		}
-		
 		List<OrderExtm> orderExtmList = orderExtmDao.findByOrderSnMainIn(orderSnMains);
 		Map<String, OrderExtm> orderExtmMap = new HashMap<String, OrderExtm>();
 		for(OrderExtm orderExtm: orderExtmList){
@@ -548,11 +613,12 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		
 		List<BkOrderListDto> bkOrderList = new ArrayList<BkOrderListDto>();
-		for(Order order : orderList) {
+		for(Order tmp : orderList) {
 			BkOrderListDto orderListDto = new BkOrderListDto();
-			BkOrderListBaseDto baseDto = createBkOrderBaseDto(order);
+			BkOrderListBaseDto baseDto = createBkOrderBaseDto(tmp);
 			OrderExtm orderExtm = orderExtmMap.get(baseDto.getOrderSnMain());
 			BkExtmMsgDto bkOrderExtm = createExtmMsg(orderExtm);
+			baseDto.setSellSite(cityMap.get(tmp.getSellSite()));//城市
 			orderListDto.setExtmMsg(bkOrderExtm);
 			orderListDto.setBase(baseDto);
 			bkOrderList.add(orderListDto);
@@ -565,10 +631,12 @@ public class BkOrderServiceImpl implements BkOrderService{
 	}
 	private BkExtmMsgDto createExtmMsg(OrderExtm orderExtm) {
 		BkExtmMsgDto dto = new BkExtmMsgDto();
-		dto.setAddress(orderExtm.getAddress());
-		dto.setConsignee(orderExtm.getConsignee());
-		dto.setPhoneMob(orderExtm.getPhoneMob());
-		dto.setRegionName(orderExtm.getRegionName());
+		if(orderExtm!=null){
+			dto.setAddress(orderExtm.getAddress());
+			dto.setConsignee(orderExtm.getConsignee());
+			dto.setPhoneMob(orderExtm.getPhoneMob());
+			dto.setRegionName(orderExtm.getRegionName());
+		}
 		return dto;
 	}
 
@@ -578,9 +646,16 @@ public class BkOrderServiceImpl implements BkOrderService{
 		baseDto.setOrderSn(order.getOrderSn());
 		baseDto.setOrderSnMain(order.getOrderSnMain());
 		baseDto.setSourceName(BkOrderSourceEnum.parseSource(order.getSource()).getSource());
-		baseDto.setNeedShipTime(DateUtils.date2DateStr(order.getNeedShiptime())+" "+order.getNeedShiptimeSlot());
+		String needShipTime = "";
+		if(order.getNeedShiptime()!=null){
+			needShipTime += DateUtils.date2DateStr(order.getNeedShiptime());
+		}
+		if(StringUtils.isNoneBlank(order.getNeedShiptimeSlot())){
+			needShipTime += " "+order.getNeedShiptimeSlot();
+		}
+		baseDto.setNeedShipTime(needShipTime);
 		baseDto.setStatus(order.getStatus());
-		baseDto.setStatusName(BkOrderSourceEnum.parseSource(order.getStatus()).getSource());
+		baseDto.setStatusName(BkOrderStatusEnum.pasrseStatus(order.getStatus()).getStatus());
 		baseDto.setNeedInvoice(order.getNeedInvoice());
 		baseDto.setInvoiceNo(order.getInvoiceNo());
 		baseDto.setInvoiceHeader(order.getInvoiceHeader());
@@ -589,10 +664,12 @@ public class BkOrderServiceImpl implements BkOrderService{
 		baseDto.setOrderAmount(order.getOrderAmount());
 		baseDto.setGoodsAmount(order.getGoodsAmount());
 		baseDto.setOrderPaid(order.getOrderPayed());
-		baseDto.setOrderNotPaid(order.getOrderAmount()+order.getShippingFee()-order.getOrderPayed());
+		baseDto.setOrderNotPaid(order.getGoodsAmount()+order.getShippingFee()-order.getOrderPayed());
 		baseDto.setPrinted(order.getPrinted());
 		baseDto.setPayStatus(order.getPayStatus());
-		baseDto.setFinishedTimeStr(DateUtils.dateTimeToStr(order.getFinishedTime()));
+		if(order.getFinishedTime()>0){
+			baseDto.setFinishedTimeStr(DateUtils.dateTimeToStr(order.getFinishedTime()));
+		}
 		baseDto.setAddTimeStr(DateUtils.dateTimeToStr(order.getAddTime()));
 		baseDto.setPayMessage(order.getPayMessage());
 		return baseDto;
