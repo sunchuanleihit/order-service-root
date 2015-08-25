@@ -94,6 +94,7 @@ import com.loukou.order.service.entity.Store;
 import com.loukou.order.service.entity.WeiCangGoodsStore;
 import com.loukou.order.service.enums.AsyncTaskActionEnum;
 import com.loukou.order.service.enums.AsyncTaskStatusEnum;
+import com.loukou.order.service.enums.CoupListReqTypeEnum;
 import com.loukou.order.service.enums.OpearteTypeEnum;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
 import com.loukou.order.service.enums.OrderPayTypeEnum;
@@ -113,7 +114,9 @@ import com.loukou.order.service.req.dto.ReturnStorageGoodsReqDto;
 import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.req.dto.SpecShippingTime;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
+import com.loukou.order.service.resp.dto.CouponListDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
+import com.loukou.order.service.resp.dto.CouponListResultDto;
 import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
 import com.loukou.order.service.resp.dto.LkStatusItemDto;
@@ -127,6 +130,7 @@ import com.loukou.order.service.resp.dto.OrderListInfoDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
+import com.loukou.order.service.resp.dto.PayOrderGoodsListDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgRespDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
@@ -1249,6 +1253,9 @@ public class OrderServiceImpl implements OrderService {
 		result.setVcount(vCountValue);
 		PayOrderMsgRespDto payOrderMsgRespDto = new PayOrderMsgRespDto();
 		payOrderMsgRespDto.setOrderMsg(result);
+		//TODO 设置推荐优惠券和 购物清单
+		//payOrderMsgRespDto.setRecommend(getRecommendCoupon(cityId, userId, storeId, openId));
+		//payOrderMsgRespDto.setGoodsList(getGoodsListByCart(cart));
 		resp.setResult(payOrderMsgRespDto);
 
 		return resp;
@@ -1815,9 +1822,65 @@ public class OrderServiceImpl implements OrderService {
 		orderMsgDto.setTotal(total);
 		orderMsgDto.setTxkNum(txkNum);
 		orderMsgDto.setVcount(vcount);
-
+		
+		resp.getResult().setRecommend(getRecommendCoupon(cityId, userId, storeId, openId));
+		resp.getResult().setGoodsList(getGoodsListByCart(cart));
+		
 		return resp;
 	}
+	
+	/**
+	 * 获取用户推荐优惠券
+	 * @param cityId
+	 * @param userId
+	 * @param storeId
+	 * @param openId
+	 * @return
+	 */
+	private CouponListDto getRecommendCoupon(int cityId, int userId, int storeId,
+			String openId)
+	{
+		CouponListDto dto = new CouponListDto();
+		//添加 推荐优惠券，默认金额最大可用的
+		CouponListRespDto couponListRespDto = couponOperationProcessor.getCouponList(cityId, userId, storeId, openId, CoupListReqTypeEnum.USABLE.getId());
+		if(couponListRespDto != null && couponListRespDto.getResult() != null )
+		{
+			List<CouponListDto> recommend = couponListRespDto.getResult().getRecommend();
+			if(!CollectionUtils.isEmpty(recommend))
+			{
+				dto = recommend.get(0);
+			}
+		}
+		return dto;
+	}
+	
+	/**
+	 * 获取购物车商品集合
+	 * @param cart
+	 * @return
+	 */
+	private List<PayOrderGoodsListDto> getGoodsListByCart(CartRespDto cart)
+	{
+		List<PayOrderGoodsListDto> goodsList = new ArrayList<PayOrderGoodsListDto>();
+		if(cart != null)
+		{
+			List<PackageRespDto> packages = cart.getPackageList();
+			for(PackageRespDto pack : packages)
+			{
+				List<CartGoodsRespDto> cartGoods = pack.getGoodsList();
+				for(CartGoodsRespDto goods : cartGoods)
+				{
+					PayOrderGoodsListDto orderGoods = new PayOrderGoodsListDto();
+					orderGoods.setAmount(goods.getAmount());
+					orderGoods.setGoodsName(goods.getGoodsName());
+					orderGoods.setPrice(DoubleUtils.mul(goods.getAmount(), goods.getPrice()));
+					goodsList.add(orderGoods);
+				}
+			}
+		}
+		return goodsList;
+	}
+	
 	
 	/**
 	 * 订单详情
