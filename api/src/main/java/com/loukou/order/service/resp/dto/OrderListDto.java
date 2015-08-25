@@ -14,7 +14,7 @@ public class OrderListDto implements Serializable {
 	private ShippingMsgDto shippingmsg = new ShippingMsgDto();
 	private List<GoodsListDto> goodsList = new ArrayList<GoodsListDto>();
 	private ExtmMsgDto extmMsg = new ExtmMsgDto();
-
+	private ShareDto share = new ShareDto();
 	
 	public OrderListBaseDto getBase() {
 		return base;
@@ -53,5 +53,13 @@ public class OrderListDto implements Serializable {
         return "OrderListDto [base=" + base + ", shippingmsg=" + shippingmsg + ", goodsList=" + goodsList
                 + ", extmMsg=" + extmMsg + "]";
     }
+
+	public ShareDto getShare() {
+		return share;
+	}
+
+	public void setShare(ShareDto share) {
+		this.share = share;
+	}
 
 }

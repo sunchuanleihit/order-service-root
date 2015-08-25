@@ -422,7 +422,8 @@ public class OrderServiceImpl implements OrderService {
 				}
 			}
 			orderListDto.setGoodsList(goodsListDtoList);
-			
+			ShareDto shareDto = getShareDto(order.getOrderSnMain());
+			orderListDto.setShare(shareDto);
 			//物流信息
 			if(order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
 				getLogistics(order, orderListDto);
@@ -669,6 +670,9 @@ public class OrderServiceImpl implements OrderService {
 				}
 			}
 			orderListDto.setExtmMsg(extmMsgDto);
+			
+			ShareDto shareDto = getShareDto(orderSnMain);
+			orderListDto.setShare(shareDto);
 			//物流信息
 			if(order.getStatus() >= OrderStatusEnum.STATUS_REVIEWED.getId()
 					|| (order.getStatus() == OrderStatusEnum.STATUS_NEW.getId() 
@@ -707,7 +711,31 @@ public class OrderServiceImpl implements OrderService {
 		}
 		return resp;
 	}
-
+	/**
+	 * 
+	 * @param orderSnMain
+	 * @return
+	 */
+	private ShareDto getShareDto(String orderSnMain)
+	{
+		StringBuilder md5time = new StringBuilder();
+		md5time.append("share").append(orderSnMain)
+				.append(new Date().getTime() / 1000).append("friend");
+		StringBuilder shareUrl = new StringBuilder();
+		shareUrl.append(
+				"http://wap.loukou.com/weixin.wxact-sharefriend.html?time=")
+				.append(new Date().getTime() / 1000)
+				.append("&order_id=")
+				.append(orderSnMain)
+				.append("&scode=")
+				.append(DigestUtils.md5DigestAsHex(md5time.toString()
+						.getBytes()));
+		ShareDto shareDto = new ShareDto();
+		shareDto.setContent("楼口全场代金券来啊，速抢");
+		shareDto.setIcon("");
+		shareDto.setUrl(shareUrl.toString());
+		return shareDto;
+	}
 	//获取物流信息
 	private void getLogistics(Order order, OrderListDto orderListDto) {
 		ShippingMsgRespDto shippingDto = getShippingResult(order.getTaoOrderSn());
@@ -1710,24 +1738,7 @@ public class OrderServiceImpl implements OrderService {
 			resp.setMessage("参数有误");
 			return resp;
 		}
-		StringBuilder md5time = new StringBuilder();
-		md5time.append("share").append(orderSnMain)
-				.append(new Date().getTime() / 1000).append("friend");
-
-		StringBuilder shareUrl = new StringBuilder();
-		shareUrl.append(
-				"http://wap.loukou.com/weixin.wxact-sharefriend.html?time=")
-				.append(new Date().getTime() / 1000)
-				.append("&order_id=")
-				.append(orderSnMain)
-				.append("&scode=")
-				.append(DigestUtils.md5DigestAsHex(md5time.toString()
-						.getBytes()));
-		ShareDto shareDto = new ShareDto();
-		shareDto.setContent("楼口全场代金券来啊，速抢");
-		shareDto.setIcon("");
-		shareDto.setUrl(shareUrl.toString());
-
+		ShareDto shareDto = getShareDto(orderSnMain);
 		List<Order> orders = orderDao.findByOrderSnMain(orderSnMain);
 		int count = orders.size();
 
