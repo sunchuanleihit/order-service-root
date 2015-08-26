@@ -14,6 +14,8 @@ public class GoodsListDto implements Serializable {
 	private int quantity = 0;
 	private int specId = 0;
 	private int goodsId = 0;
+	private String bn = "";
+	private String taosku = "";
 
 	public String getGoodsImage() {
 		return goodsImage;
@@ -77,5 +79,20 @@ public class GoodsListDto implements Serializable {
                 + specification + ", pricePurchase=" + pricePurchase + ", quantity=" + quantity + ", specId=" + specId
                 + ", goodsId=" + goodsId + "]";
     }
-	
+
+	public String getBn() {
+		return bn;
+	}
+
+	public void setBn(String bn) {
+		this.bn = bn;
+	}
+
+	public String getTaosku() {
+		return taosku;
+	}
+
+	public void setTaosku(String taosku) {
+		this.taosku = taosku;
+	}
 }

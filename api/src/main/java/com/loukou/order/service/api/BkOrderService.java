@@ -6,6 +6,7 @@ import com.loukou.order.service.req.dto.CssOrderReqDto;
 import com.loukou.order.service.resp.dto.BkOrderListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderReturnListRespDto;
 import com.loukou.order.service.resp.dto.CssOrderRespDto;
+import com.loukou.order.service.resp.dto.GoodsListDto;
 
 /**
  * 客服系统用到的订单服务
@@ -55,4 +56,7 @@ public interface BkOrderService {
 	 * @return
 	 */
 	public String cancelOrderReturn(Integer orderIdR);
+
+	public List<GoodsListDto> getOrderGoodsList(int orderId);
+
 }

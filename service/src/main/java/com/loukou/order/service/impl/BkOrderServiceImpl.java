@@ -23,7 +23,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -39,7 +38,6 @@ import com.loukou.order.service.dao.OrderExtmDao;
 import com.loukou.order.service.dao.OrderGoodsDao;
 import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.SiteCityDao;
-import com.loukou.order.service.dao.SiteDao;
 import com.loukou.order.service.dao.StoreDao;
 import com.loukou.order.service.entity.Express;
 import com.loukou.order.service.entity.Order;
@@ -47,7 +45,6 @@ import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderExtm;
 import com.loukou.order.service.entity.OrderGoods;
 import com.loukou.order.service.entity.OrderReturn;
-import com.loukou.order.service.entity.Site;
 import com.loukou.order.service.entity.SiteCity;
 import com.loukou.order.service.entity.Store;
 import com.loukou.order.service.enums.BkOrderSourceEnum;
@@ -206,6 +203,30 @@ public class BkOrderServiceImpl implements BkOrderService{
 			
 			//基础信息
 			BkOrderListBaseDto baseDto = new BkOrderListBaseDto();
+			baseDto.setStatusName(createState(order));
+			baseDto.setAddTimeStr(DateUtils.dateTimeToStr(order.getAddTime()));
+			String shippingtype = "淘常州自送";
+			if (order.getShippingId() != 0) {
+				shippingtype = "第三方配送";
+			}
+			baseDto.setShippingType(shippingtype);
+			baseDto.setPayTypeToString(OrderPayTypeEnum.parseType(order.getPayType()).getType());
+			String payStatus = "未支付";
+			if (order.getShippingId() != 0) {
+				payStatus = "已支付";
+			}
+			baseDto.setPayStatusToString(payStatus);
+			baseDto.setNeedShipTime(DateUtils.date2DateStr(order.getNeedShiptime()));
+			baseDto.setNeedShipTimeSlot(order.getNeedShiptimeSlot());
+			
+			Store storeMsg = storeDao.findOne(order.getSellerId());
+			String taxApply = "商家";
+			if(storeMsg.getTaxApply()==1){
+				taxApply = "淘常州";
+			}
+			baseDto.setTaxApply(taxApply);
+			baseDto.setSourceName(BkOrderSourceEnum.parseSource(order.getSource()).getSource());
+			baseDto.setOrderPaid(order.getOrderPayed());
 			BeanUtils.copyProperties(order, baseDto);
 			bkOrderListDto.setBase(baseDto);
 			
@@ -258,30 +279,17 @@ public class BkOrderServiceImpl implements BkOrderService{
 		return resp;
 	}
 	
-//	/**
-//	 * 判断是否显示 确认收货
-//	 *
-//	 * 返回 1 显示 ==商家已发货 且 没有回单(商家自己配送的) 0 不显示 2 显示等待收货==审单通过且商家未发货
-//	 *
-//	 * status : ok
-//	 */
-//	private int getReciveStatus(Order order) {
-////		Order order = orderDao.findByTaoOrderSn(taoOrderSn);
-//		if (null == order) {
-//			return 0;
-//		}
-//
-//		if (order.getStatus() >= OrderStatusEnum.STATUS_REVIEWED.getId() && 
-//				order.getStatus() <= OrderStatusEnum.STATUS_DELIVERIED.getId()) {// 审核通过 未发货
-//			return 2;
-//		} else if (order.getStatus() >= OrderStatusEnum.STATUS_14.getId() 
-//				&& order.getStatus() < OrderStatusEnum.STATUS_FINISHED.getId()
-//				&& order.getShippingId() == 1) {
-//			// 商家已发货 且 没有回单(商家自己配送的)
-//			return 1;
-//		}
-//		return 0;
-//	}
+	//获取包裹商品列表
+	public List<GoodsListDto> getOrderGoodsList(int orderId){
+		List<OrderGoods> orderGoodsList = orderGoodsDao.findByOrderId(orderId);//获取订单商品列表
+		List<GoodsListDto> resp = new ArrayList<GoodsListDto>();
+		for(OrderGoods og : orderGoodsList) {
+			GoodsListDto goodsListDto = new GoodsListDto();
+			BeanUtils.copyProperties(og, goodsListDto);
+			resp.add(goodsListDto);
+		}
+		return resp;
+	}
 	
 	/**
 	 * 默认taoOrderSn传入“”

@@ -26,6 +26,7 @@ public class BkOrderListBaseDto implements Serializable {
 	private Integer payId;
 	private String payName;
 	private Integer payStatus;
+	private String payStatusToString;
 	private Integer payTime;
 	private String payTimeToString;
 	private String payMessage;
@@ -72,6 +73,7 @@ public class BkOrderListBaseDto implements Serializable {
 	private Integer remindTime;
 	private String sellSite;
 	private String receiveNo;
+	private String taxApply;
 	
 	public String getAddTimeStr() {
 		return addTimeStr;
@@ -485,6 +487,18 @@ public class BkOrderListBaseDto implements Serializable {
 	}
 	public void setPayTypeToString(String payTypeToString) {
 		this.payTypeToString = payTypeToString;
+	}
+	public String getPayStatusToString() {
+		return payStatusToString;
+	}
+	public void setPayStatusToString(String payStatusToString) {
+		this.payStatusToString = payStatusToString;
+	}
+	public String getTaxApply() {
+		return taxApply;
+	}
+	public void setTaxApply(String taxApply) {
+		this.taxApply = taxApply;
 	}
 	
 
