@@ -37,6 +37,7 @@ import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
 import com.loukou.order.service.dao.OrderExtmDao;
 import com.loukou.order.service.dao.OrderGoodsDao;
+import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.SiteCityDao;
 import com.loukou.order.service.dao.SiteDao;
 import com.loukou.order.service.dao.StoreDao;
@@ -45,6 +46,7 @@ import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderExtm;
 import com.loukou.order.service.entity.OrderGoods;
+import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Site;
 import com.loukou.order.service.entity.SiteCity;
 import com.loukou.order.service.entity.Store;
@@ -61,6 +63,9 @@ import com.loukou.order.service.resp.dto.BkOrderListBaseDto;
 import com.loukou.order.service.resp.dto.BkOrderListDto;
 import com.loukou.order.service.resp.dto.BkOrderListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderListResultDto;
+import com.loukou.order.service.resp.dto.BkOrderReturnDto;
+import com.loukou.order.service.resp.dto.BkOrderReturnListDto;
+import com.loukou.order.service.resp.dto.BkOrderReturnListRespDto;
 import com.loukou.order.service.resp.dto.CssOrderRespDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
 import com.loukou.order.service.resp.dto.ShippingListDto;
@@ -92,6 +97,9 @@ public class BkOrderServiceImpl implements BkOrderService{
     
     @Autowired
     private SiteCityDao siteCityDao;
+    
+    @Autowired
+    private OrderReturnDao orderReturnDao;
     
 	@Override
 	public List<CssOrderRespDto> queryOrderList(int page, int rows, final CssOrderReqDto cssOrderReqDto) {
@@ -371,7 +379,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 			baseDto.setInvoiceHeader(order.getInvoiceHeader());
 			baseDto.setPostscript(order.getPostscript());
 		}
-
 		return baseDto;
 	}
 	
@@ -646,7 +653,11 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		return dto;
 	}
-
+	/**
+	 * 根据原始订单信息返回处理后的订单信息
+	 * @param order
+	 * @return
+	 */
 	private BkOrderListBaseDto createBkOrderBaseDto(Order order){
 		BkOrderListBaseDto baseDto = new BkOrderListBaseDto();
 		baseDto.setOrderId(order.getOrderId());
@@ -674,11 +685,182 @@ public class BkOrderServiceImpl implements BkOrderService{
 		baseDto.setOrderNotPaid(order.getGoodsAmount()+order.getShippingFee()-order.getOrderPayed());
 		baseDto.setPrinted(order.getPrinted());
 		baseDto.setPayStatus(order.getPayStatus());
+		baseDto.setSellerName(order.getSellerName());
+		baseDto.setShippingFee(order.getShippingFee());
 		if(order.getFinishedTime()>0){
 			baseDto.setFinishedTimeStr(DateUtils.dateTimeToStr(order.getFinishedTime()));
 		}
 		baseDto.setAddTimeStr(DateUtils.dateTimeToStr(order.getAddTime()));
 		baseDto.setPayMessage(order.getPayMessage());
 		return baseDto;
+	}
+	/**
+	 * 查找未生成退款单
+	 */
+	@Override
+	public BkOrderListRespDto queryBkOrderNoReturnList(String sort, String order, int pageNum, int pageSize,
+			final CssOrderReqDto cssOrderReqDto) {
+		BkOrderListRespDto resp = new BkOrderListRespDto(200, "");
+		
+		Sort pageSort = new Sort(Sort.Direction.DESC,"orderId");
+		if(StringUtils.isNotBlank(sort) && StringUtils.isNotBlank(order)){
+			if(order.toLowerCase().equals("asc")){
+				pageSort = new Sort(Sort.Direction.ASC,sort);
+			}else if(order.toLowerCase().equals("desc")){
+				pageSort = new Sort(Sort.Direction.DESC,sort);
+			}
+		}
+		pageNum--;
+		Pageable pageable = new PageRequest(pageNum, pageSize, pageSort);
+		Page<Order> noreturnOrderPage = orderDao.findAll(new Specification<Order>(){
+			@Override
+			public Predicate toPredicate(Root<Order> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+				List<Predicate> predicate = new ArrayList<>();
+				Integer lastTime = getLastFourMonth();
+				predicate.add(cb.greaterThan(root.get("addTime").as(Integer.class), lastTime));
+				
+				if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
+					predicate.add(cb.equal(root.get("orderSnMain"), cssOrderReqDto.getOrderSnMain()));
+				}
+				if(StringUtils.isNotBlank(cssOrderReqDto.getBuyerName())){
+					predicate.add(cb.equal(root.get("buyerName").as(String.class), cssOrderReqDto.getBuyerName()));
+				}
+				if(StringUtils.isNotBlank(cssOrderReqDto.getSellerName())){
+					predicate.add(cb.equal(root.get("sellerName"), cssOrderReqDto.getSellerName()));
+				}
+				
+				Integer startTime = null;
+				if(StringUtils.isNotBlank(cssOrderReqDto.getStartTime())){
+					startTime = (int)(DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
+				}
+				Integer endTime = null;
+				if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
+					endTime = (int)(DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
+				}
+				if(StringUtils.isNotBlank(cssOrderReqDto.getStartTime())){
+					predicate.add(cb.greaterThanOrEqualTo(root.get("addTime").as(Integer.class), startTime));
+				}
+				if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
+					predicate.add(cb.lessThanOrEqualTo(root.get("addTime").as(Integer.class), endTime));
+				}
+				predicate.add(cb.equal(root.get("isDel"), 0));
+				predicate.add(cb.greaterThan(root.<Double>get("orderPayed"), 0.0));
+				
+				Predicate payedMoreThanDisaccount = cb.greaterThan(root.<Double>get("orderPayed"), root.<Double>get("discount"));
+				Predicate statusCancel = cb.equal(root.get("status"), BkOrderStatusEnum.STATUS_CANCEL.getId());
+				Predicate statusInvalid = cb.equal(root.get("status"), BkOrderStatusEnum.STATUS_INVALID.getId());
+				Predicate payedMoreThanAmount = cb.greaterThan(root.<Double>get("orderPayed"), 
+						cb.sum(root.<Double>get("goodsAmount"), root.<Double>get("shippingFee")));
+				Predicate noreturnPredicate = cb.or(cb.and(payedMoreThanDisaccount,cb.or(statusCancel,statusInvalid)),payedMoreThanAmount);
+				
+				predicate.add(noreturnPredicate);
+				Predicate[] pre = new Predicate[predicate.size()];
+				return query.where(predicate.toArray(pre)).getRestriction();
+			}
+		}, pageable);
+		List<Order> orderList = new ArrayList<Order>();
+		orderList.addAll(noreturnOrderPage.getContent());
+		if(CollectionUtils.isEmpty(orderList)) {
+			resp.setMessage("订单列表为空");
+			return resp;
+		}
+		
+		List<BkOrderListDto> bkOrderList = new ArrayList<BkOrderListDto>();
+		for(Order tmp : orderList) {
+			BkOrderListDto orderListDto = new BkOrderListDto();
+			BkOrderListBaseDto baseDto = createBkOrderBaseDto(tmp);
+			orderListDto.setBase(baseDto);
+			bkOrderList.add(orderListDto);
+		}
+		BkOrderListResultDto resultDto = new BkOrderListResultDto();
+		resultDto.setOrderCount((int)noreturnOrderPage.getTotalElements());
+		resultDto.setOrderList(bkOrderList);
+		resp.setResult(resultDto);
+		return resp;
+	}
+	
+	private Integer getLastFourMonth(){
+		return DateUtils.getTime()-10368000;//返回120天前的时间戳
+	}
+
+	@Override
+	public BkOrderReturnListRespDto queryBkOrderToReturn(String sort, String order, int pageNum, int pageSize,
+			final CssOrderReqDto cssOrderReqDto) {
+		BkOrderReturnListRespDto resp = new BkOrderReturnListRespDto(200, "");
+		Sort pageSort = new Sort(Sort.Direction.DESC,"orderId");
+		if(StringUtils.isNotBlank(sort) && StringUtils.isNotBlank(order)){
+			if(order.toLowerCase().equals("asc")){
+				pageSort = new Sort(Sort.Direction.ASC,sort);
+			}else if(order.toLowerCase().equals("desc")){
+				pageSort = new Sort(Sort.Direction.DESC,sort);
+			}
+		}
+		pageNum--;
+		Pageable pageable = new PageRequest(pageNum, pageSize, pageSort);
+		Page<OrderReturn> page = orderReturnDao.findAll(new Specification<OrderReturn>(){
+			@Override
+			public Predicate toPredicate(Root<OrderReturn> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+				List<Predicate> predicate = new ArrayList<>();
+				predicate.add(cb.equal(root.get("orderStatus"), 0));
+				if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
+					predicate.add(cb.equal(root.get("orderSnMain").as(String.class), cssOrderReqDto.getOrderSnMain()));
+				}
+				if(StringUtils.isNotBlank(cssOrderReqDto.getStartTime())){
+					predicate.add(cb.greaterThanOrEqualTo(root.get("addTime").as(String.class), cssOrderReqDto.getStartTime()));
+				}
+				if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
+					predicate.add(cb.lessThanOrEqualTo(root.get("addTime").as(String.class), cssOrderReqDto.getEndTime()));
+				}
+				if(StringUtils.isNotBlank(cssOrderReqDto.getQueryType())){
+					predicate.add(cb.equal(root.get("orderType"), cssOrderReqDto.getQueryType()));
+				}
+				if(cssOrderReqDto.getStatus() != null ){
+					predicate.add(cb.equal(root.get("orderStatus"), cssOrderReqDto.getStatus()));
+				}
+				if(cssOrderReqDto.getRefundStatus()!=null){
+					predicate.add(cb.equal(root.get("refundStatus"), cssOrderReqDto.getRefundStatus()));
+				}
+				Predicate[] pre = new Predicate[predicate.size()];
+				return query.where(predicate.toArray(pre)).getRestriction();
+			}
+		},pageable);
+		List<OrderReturn> orderReturnList = page.getContent();
+		BkOrderReturnListDto bkOrderReturnListDto = new BkOrderReturnListDto();
+		bkOrderReturnListDto.setCount((int)page.getTotalElements());
+		List<BkOrderReturnDto> returnList = new ArrayList<BkOrderReturnDto>();
+		for(OrderReturn tmp: orderReturnList){
+			BkOrderReturnDto dto = new BkOrderReturnDto();
+			dto.setOrderIdR(tmp.getOrderIdR());
+			dto.setOrderSnMain(tmp.getOrderSnMain());
+			dto.setOrderId(tmp.getOrderId());
+			dto.setBuyerId(tmp.getBuyerId());
+			dto.setSellerId(tmp.getSellerId());
+			dto.setReturnAmount(tmp.getReturnAmount());
+			dto.setAddTime(tmp.getAddTime());
+			dto.setGoodsType(tmp.getGoodsType());
+			dto.setOrderStatus(tmp.getOrderStatus());
+			dto.setOrderType(tmp.getOrderType());
+			dto.setGoodsStatus(tmp.getGoodsStatus());
+			dto.setRefundStatus(tmp.getRefundStatus());
+			dto.setStatementStatus(tmp.getStatementStatus());
+			dto.setPostscript(tmp.getPostscript());
+			returnList.add(dto);
+		}
+		bkOrderReturnListDto.setOrderReturnList(returnList);
+		resp.setResult(bkOrderReturnListDto);
+		return resp;
+	}
+
+	@Override
+	public String cancelOrderReturn(Integer orderIdR) {
+		OrderReturn orderReturn = orderReturnDao.findOne(orderIdR);
+		if(orderReturn.getRefundStatus()==1){
+			return "has_refund";
+		}
+		int count = orderReturnDao.updateOrderStatusByOrderIdR(orderIdR, 1);
+		if(count>0){
+			return "cancel_success"; 
+		}
+		return "cancel_fail";
 	}
 }

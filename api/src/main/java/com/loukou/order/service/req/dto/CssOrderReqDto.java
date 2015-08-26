@@ -5,16 +5,30 @@ import java.io.Serializable;
 public class CssOrderReqDto implements Serializable{
 
 	private static final long serialVersionUID = 2490198179879567763L;
-	private String orderSnMain;
-	private String consignee;
-	private String startTime;
-	private String endTime;
-	private Integer status;
-	private Integer payStatus;
-	private String queryType;
-	private String queryContent;
-	private String buyerName;
+	private String orderSnMain;//订单编号
+	private String consignee;//收货人
+	private String startTime;//开始时间
+	private String sellerName;//商家名
+	private String endTime;//结束时间
+	private Integer status;//订单状态
+	private Integer payStatus;//支付状态
+	private String queryType;//查询类型
+	private String queryContent;//查询内容
+	private String buyerName;//买家姓名
+	private Integer refundStatus;//退款状态
 	
+	public Integer getRefundStatus() {
+		return refundStatus;
+	}
+	public void setRefundStatus(Integer refundStatus) {
+		this.refundStatus = refundStatus;
+	}
+	public String getSellerName() {
+		return sellerName;
+	}
+	public void setSellerName(String sellerName) {
+		this.sellerName = sellerName;
+	}
 	public String getBuyerName() {
 		return buyerName;
 	}

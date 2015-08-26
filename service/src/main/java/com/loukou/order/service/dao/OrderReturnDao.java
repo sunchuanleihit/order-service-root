@@ -3,6 +3,7 @@ package com.loukou.order.service.dao;
 
 import java.util.List;
 
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.domain.Page;
@@ -13,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.loukou.order.service.entity.OrderReturn;
 
 
-public interface OrderReturnDao extends PagingAndSortingRepository<OrderReturn, Integer>{
+public interface OrderReturnDao extends PagingAndSortingRepository<OrderReturn, Integer>, JpaSpecificationExecutor<OrderReturn>{
 
 	List<OrderReturn> findByOrderSnMainAndOrderStatus(String orderSnMain, int orderStatus);
 
@@ -37,6 +38,11 @@ public interface OrderReturnDao extends PagingAndSortingRepository<OrderReturn, 
 	@Modifying
 	@Query("UPDATE OrderReturn set goodsStatus = ?3 where orderSnMain = ?1 AND sellerId = ?2")
 	int updateGoodsStatusByOrderSnMainAndSellerId(String orderSnMain,int sellerId,int status);
+	
+	@Transactional(value="transactionManagerMall")
+	@Modifying
+	@Query("UPDATE OrderReturn set orderStatus = ?2 where orderIdR = ?1")
+	int updateOrderStatusByOrderIdR(int orderIdR, int orderStatus);
 	
 	List<OrderReturn> findByOrderId(int orderId);
 	
