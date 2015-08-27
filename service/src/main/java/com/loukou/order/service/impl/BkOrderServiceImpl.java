@@ -1,6 +1,8 @@
 package com.loukou.order.service.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -224,111 +226,10 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		return resp;
 	}
-	
-	/**
-	 * 默认taoOrderSn传入“”
-	 */
-	private String getShippingMsg(Order order) {
-//		List<Order> orders = new ArrayList<Order>();
-		StringBuilder shippingMsg = new StringBuilder();
-		
-		if(order != null) {
-			if (StringUtils.equals(order.getType(), OrderTypeEnums.TYPE_BOOKING.getType())) {
-				shippingMsg.append("预售商品").append(DateUtils.date2DateStr(order.getNeedShiptime()))
-						.append(" ").append(order.getNeedShiptimeSlot())
-						.append("、");
-			} else if (StringUtils.equals(order.getType(), OrderTypeEnums.TYPE_WEI_WH.getType())
-					|| StringUtils.equals(order.getType(), OrderTypeEnums.TYPE_WEI_SELF.getType())) {
-				shippingMsg.append("普通商品").append(DateUtils.date2DateStr(order.getNeedShiptime()))
-						.append(" ").append(order.getNeedShiptimeSlot())
-						.append("、");
-			} else if (StringUtils.equals(order.getType(), OrderTypeEnums.TYPE_SELF_SALES.getType())) {
-				shippingMsg.append("配送单预计1-3日内送达  、");
-			}
-		}
-
-		return StringUtils.removeEnd(shippingMsg.toString(), "、");
-	}
-	
-	private BkOrderListBaseDto createBaseDto(Order order, int type) {
-		BkOrderListBaseDto baseDto = new BkOrderListBaseDto();
-		baseDto.setOrderId(order.getOrderId());
-		baseDto.setOrderSnMain(order.getOrderSnMain());
-		baseDto.setSellerId(order.getSellerId());
-		baseDto.setSourceName(BkOrderSourceEnum.parseSource(order.getSource()).getSource());
-		if (order.getAddTime() != null && order.getAddTime() != 0) {
-			String addTime = DateUtils.dateTimeToStr(order.getAddTime());
-			baseDto.setAddTimeStr(addTime);
-		}
-		if (order.getPayTime() != null && order.getPayTime() != 0) {
-			String payTime = DateUtils.dateTimeToStr(order.getPayTime());
-			baseDto.setPayTimeToString(payTime);
-		}
-		if (order.getShipTime() != null && order.getShipTime() != 0) {
-			String shipTime = DateUtils.dateTimeToStr(order.getShipTime());
-			baseDto.setShipTimeToString(shipTime);
-		}
-		baseDto.setPayStatus(order.getPayStatus());
-		baseDto.setStatus(order.getStatus());
-		baseDto.setTaoOrderSn(order.getTaoOrderSn());
-//		baseDto.setIsshouhuo(getReciveStatus(order));// 确认收货的判断
-		double totalPrice = DoubleUtils.add(order.getGoodsAmount(), order.getShippingFee());
-		baseDto.setTotalPrice(totalPrice);
-		double needToPay = DoubleUtils.sub(totalPrice, order.getOrderPayed());
-		baseDto.setNeedPayPrice(needToPay);// 还需支付金额
-		
-		baseDto.setStatusName(createState(order));
-		
-		baseDto.setShippingFee(order.getShippingFee());// 订单运费
-//		baseDto.setPackageStatus(ReturnStatusEnum.parseType(order.getStatus()).getComment());// 包裹的状态
-		baseDto.setShipping(getShippingMsg(order));
-		if(order.getShippingNo() == null) {
-			baseDto.setShippingNo("");
-		} else {
-			baseDto.setShippingNo(order.getShippingNo());
-		}
-		
-		baseDto.setDiscount(order.getDiscount());
-//		baseDto.setIsOrder(BaseDtoIsOrderType.NO);
-//		String owerphone = "";
-		if(type == BaseDtoType.INFO) {
-			Store store = storeDao.findOne(order.getSellerId());
-//			if(store != null) {
-//				if (StringUtils.isBlank(store.getOwnerMob())) {
-//					if (StringUtils.isNotBlank(store.getOwnerTel())) {
-//						store.setOwnerMob(store.getOwnerTel());
-//					}
-//				} else {
-//					owerphone = store.getOwnerMob();
-//				}
-//			}
-//			baseDto.setStorePhone(owerphone);
-//			baseDto.setRefundStatus("");//TODO线上是否需要
-			int freight = 0;
-			if(store == null) {
-				freight = 0;
-			} else {
-				freight = store.getFreight();
-			}
-			String shippingtype = "淘常州自送";
-
-			if (freight != 0) {
-				freight = 1;
-				shippingtype = "第三方配送";
-			}
-			baseDto.setShippingType(shippingtype);
-			baseDto.setPayTypeToString(OrderPayTypeEnum.parseType(order.getPayType()).getType());
-			baseDto.setInvoiceHeader(order.getInvoiceHeader());
-			baseDto.setPostscript(order.getPostscript());
-		}
-		return baseDto;
-	}
-	
 	private String trimall(String str)// 删除空格
 	{
 		String[] searchList = { " ", "  ", "\t", "\n", "\r" };
 		String[] replacementList = { "", "", "", "", "" };
-
 		return StringUtils.replaceEach(str, searchList, replacementList);
 	}
 	
@@ -773,21 +674,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		bkOrderReturnListDto.setCount((int)page.getTotalElements());
 		List<BkOrderReturnDto> returnList = new ArrayList<BkOrderReturnDto>();
 		for(OrderReturn tmp: orderReturnList){
-			BkOrderReturnDto dto = new BkOrderReturnDto();
-			dto.setOrderIdR(tmp.getOrderIdR());
-			dto.setOrderSnMain(tmp.getOrderSnMain());
-			dto.setOrderId(tmp.getOrderId());
-			dto.setBuyerId(tmp.getBuyerId());
-			dto.setSellerId(tmp.getSellerId());
-			dto.setReturnAmount(tmp.getReturnAmount());
-			dto.setAddTime(tmp.getAddTime());
-			dto.setGoodsType(tmp.getGoodsType());
-			dto.setOrderStatus(tmp.getOrderStatus());
-			dto.setOrderType(tmp.getOrderType());
-			dto.setGoodsStatus(tmp.getGoodsStatus());
-			dto.setRefundStatus(tmp.getRefundStatus());
-			dto.setStatementStatus(tmp.getStatementStatus());
-			dto.setPostscript(tmp.getPostscript());
+			BkOrderReturnDto dto = createBkOrderReturn(tmp);
 			returnList.add(dto);
 		}
 		bkOrderReturnListDto.setOrderReturnList(returnList);
@@ -806,5 +693,39 @@ public class BkOrderServiceImpl implements BkOrderService{
 			return "cancel_success"; 
 		}
 		return "cancel_fail";
+	}
+
+	@Override
+	public List<BkOrderReturnDto> getOrderReturnsByIds(List<Integer> ids) {
+		List<OrderReturn> orderReturns = orderReturnDao.findByOrderIdRIn(ids);
+		List<BkOrderReturnDto> resultList = new ArrayList<BkOrderReturnDto>();
+		for(OrderReturn tmp: orderReturns){
+			resultList.add(createBkOrderReturn(tmp));
+		}
+		Collections.sort(resultList,new Comparator<BkOrderReturnDto>(){
+			@Override
+			public int compare(BkOrderReturnDto o1, BkOrderReturnDto o2) {
+				return o2.getOrderIdR() - o1.getOrderIdR();
+			}
+		});
+		return resultList;
+	}
+	private BkOrderReturnDto createBkOrderReturn(OrderReturn orderReturn){
+		BkOrderReturnDto dto = new BkOrderReturnDto();
+		dto.setOrderIdR(orderReturn.getOrderIdR());
+		dto.setOrderSnMain(orderReturn.getOrderSnMain());
+		dto.setOrderId(orderReturn.getOrderId());
+		dto.setBuyerId(orderReturn.getBuyerId());
+		dto.setSellerId(orderReturn.getSellerId());
+		dto.setReturnAmount(orderReturn.getReturnAmount());
+		dto.setAddTime(orderReturn.getAddTime());
+		dto.setGoodsType(orderReturn.getGoodsType());
+		dto.setOrderStatus(orderReturn.getOrderStatus());
+		dto.setOrderType(orderReturn.getOrderType());
+		dto.setGoodsStatus(orderReturn.getGoodsStatus());
+		dto.setRefundStatus(orderReturn.getRefundStatus());
+		dto.setStatementStatus(orderReturn.getStatementStatus());
+		dto.setPostscript(orderReturn.getPostscript());
+		return dto;
 	}
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.loukou.order.service.req.dto.CssOrderReqDto;
 import com.loukou.order.service.resp.dto.BkOrderListRespDto;
+import com.loukou.order.service.resp.dto.BkOrderReturnDto;
 import com.loukou.order.service.resp.dto.BkOrderReturnListRespDto;
 import com.loukou.order.service.resp.dto.CssOrderRespDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
@@ -57,5 +58,7 @@ public interface BkOrderService {
 	public String cancelOrderReturn(Integer orderIdR);
 
 	public List<GoodsListDto> getOrderGoodsList(int orderId);
+	
+	public List<BkOrderReturnDto>  getOrderReturnsByIds(List<Integer> ids);
 
 }
