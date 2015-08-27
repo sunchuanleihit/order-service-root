@@ -350,7 +350,7 @@ public class CouponOperationProcessor {
 		 
 		 if(userId <= 0 || StringUtils.isBlank(openId) || StringUtils.isBlank(commoncode)) {
 			 resp.setCode(400);
-			 resp.setMessage("参数有误");
+			 resp.setMessage("请输入正确的优惠券/激活码");
 			 return resp;
 		 }
 		Member user = memberDao.findOne(userId);
