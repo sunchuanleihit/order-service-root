@@ -1235,6 +1235,7 @@ public class OrderServiceImpl implements OrderService {
 		double orderTotal = 0;
 		double shippingFee = 0;
 		String useCouponNo = "";
+		String postscript = "";
 		List<Integer> orderIds = new ArrayList<Integer>();
 		for (Order o : orders) {
 			orderTotal = DoubleUtils.add(orderTotal, o.getGoodsAmount());
@@ -1242,6 +1243,7 @@ public class OrderServiceImpl implements OrderService {
 			shippingFee = DoubleUtils.add(shippingFee, o.getShippingFee());
 			useCouponNo = o.getUseCouponNo();
 			orderIds.add(o.getOrderId());
+			postscript = o.getPostscript();
 		}
 
 		Double payedMoney = orderPayDao
@@ -1261,6 +1263,7 @@ public class OrderServiceImpl implements OrderService {
 		result.setTotal(DoubleUtils.sub(orderTotal, payedMoney));
 		result.setTxkNum(txkValue);
 		result.setVcount(vCountValue);
+		result.setPostscript(postscript);
 		PayOrderMsgRespDto payOrderMsgRespDto = new PayOrderMsgRespDto();
 		payOrderMsgRespDto.setOrderMsg(result);
 		
