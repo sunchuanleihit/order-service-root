@@ -108,6 +108,7 @@ import com.loukou.order.service.enums.ReturnGoodsStatus;
 import com.loukou.order.service.enums.ReturnOrderStatus;
 import com.loukou.order.service.enums.ReturnStatusEnum;
 import com.loukou.order.service.enums.WeiCangGoodsStoreStatusEnum;
+import com.loukou.order.service.req.dto.InviteInfoReqdto;
 import com.loukou.order.service.req.dto.OrderListParamDto;
 import com.loukou.order.service.req.dto.ReturnStorageGoodsReqDto;
 import com.loukou.order.service.req.dto.ReturnStorageReqDto;
@@ -116,6 +117,7 @@ import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
+import com.loukou.order.service.resp.dto.InviteInfoRespDto;
 import com.loukou.order.service.resp.dto.LkStatusItemDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderBonusRespDto;
@@ -299,6 +301,7 @@ public class OrderServiceImpl implements OrderService {
 	
 	@Autowired
 	private OrderUserDao orderUserDao;
+
 	
 	@Override
 	public UserOrderNumRespDto getOrderNum(int userId) {
@@ -2181,4 +2184,6 @@ public class OrderServiceImpl implements OrderService {
 		    		 0, "", i.getMoney());
 		}
 	}
+	
+
 }

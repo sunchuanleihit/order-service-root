@@ -355,10 +355,10 @@ public class CouponOperationProcessor {
 		CheckCouponDto dto = new CheckCouponDto();
 		
 		if(StringUtils.equals(prefix, "LK")) { // 公用券码
-			dto = checkCoupon(0, commoncode, CouponFormType.PUBLIC, userId, openId);
+			dto = checkCoupon(0, commoncode, CouponFormType.PRIVATE, userId, openId);
 			checkCode = dto.getResult();
 		} else {
-			dto = checkCoupon(0, commoncode, CouponFormType.PRIVATE, userId, openId);
+			dto = checkCoupon(0, commoncode, CouponFormType.PUBLIC, userId, openId);
 			checkCode = dto.getResult();
 		}
 		if(checkCode != ActivateCouponMessage.SUCCESS.getCode()) {
@@ -591,7 +591,7 @@ public class CouponOperationProcessor {
     private CheckCouponDto checkCoupon(int couponId, String commoncode, int type, int userId, String openId) {
     	CheckCouponDto dto = new CheckCouponDto();
     	Date listEndTime = null;
-        if(type == CouponFormType.PUBLIC) {
+        if(type == CouponFormType.PRIVATE) {
 
         	CoupRule coupRule = null;
         	if (couponId > 0) {
