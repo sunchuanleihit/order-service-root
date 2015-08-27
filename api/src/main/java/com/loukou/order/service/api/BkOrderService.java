@@ -14,7 +14,6 @@ import com.loukou.order.service.resp.dto.GoodsListDto;
  *
  */
 public interface BkOrderService {
-	public List<CssOrderRespDto> queryOrderList(int page, int rows, CssOrderReqDto cssOrderReqDto);
 	
 	public BkOrderListRespDto orderDetail(String orderSnMain);
 	/**

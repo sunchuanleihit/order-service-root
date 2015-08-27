@@ -51,6 +51,8 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 	int updateShippingNo(String shippingNo,int orderId);
 
 	Page<Order> findByOrderSnMainIn(Iterable<String> orderSnMains, Pageable pageable);
+	
+	List<Order> findByOrderSnMainIn(List<String> orderSnMains);
 
 	List<Order> findByshippingNoIn(List<String> shippingNo);
 
@@ -99,7 +101,5 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 	@Transactional
 	void updateStatusAndFinishedTime(int status,int finishedTime,int orderId);
 
-    
-	
 }
 

@@ -1,6 +1,5 @@
 package com.loukou.order.service.impl;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,12 +8,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.management.Query;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaBuilder.In;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Selection;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -24,6 +26,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -63,7 +66,6 @@ import com.loukou.order.service.resp.dto.BkOrderListResultDto;
 import com.loukou.order.service.resp.dto.BkOrderReturnDto;
 import com.loukou.order.service.resp.dto.BkOrderReturnListDto;
 import com.loukou.order.service.resp.dto.BkOrderReturnListRespDto;
-import com.loukou.order.service.resp.dto.CssOrderRespDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
 import com.loukou.order.service.resp.dto.ShippingListDto;
 import com.loukou.order.service.resp.dto.ShippingListResultDto;
@@ -98,77 +100,9 @@ public class BkOrderServiceImpl implements BkOrderService{
     @Autowired
     private OrderReturnDao orderReturnDao;
     
-	@Override
-	public List<CssOrderRespDto> queryOrderList(int page, int rows, final CssOrderReqDto cssOrderReqDto) {
-		
-		Page<Order> orderPage = orderDao.findAll(new Specification<Order>(){
-			@Override
-			public Predicate toPredicate(Root<Order> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
-				Integer startTime = null;
-				if(StringUtils.isNoneBlank(cssOrderReqDto.getStartTime())){
-					startTime = (int) (DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
-				}
-				Integer endTime = null;
-				if(StringUtils.isNoneBlank(cssOrderReqDto.getEndTime())){
-					endTime = (int) (DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
-				}
-				List<Predicate> predicate = new ArrayList<>();
-				if(StringUtils.isNoneBlank(cssOrderReqDto.getOrderSnMain())){
-					predicate.add(cb.equal(root.get("orderSnMain").as(String.class), cssOrderReqDto.getOrderSnMain()));
-				}
-				if(cssOrderReqDto.getStatus()!=null){
-					predicate.add(cb.equal(root.get("status").as(Integer.class), cssOrderReqDto.getStatus()));
-				}
-				if(StringUtils.isNoneBlank(cssOrderReqDto.getStartTime())){
-					predicate.add(cb.greaterThanOrEqualTo(root.get("addTime").as(Integer.class), startTime));
-				}
-				if(StringUtils.isNoneBlank(cssOrderReqDto.getEndTime())){
-					predicate.add(cb.lessThanOrEqualTo(root.get("addTime").as(Integer.class), endTime));
-				}
-				Predicate[] pre = new Predicate[predicate.size()];
-				return query.where(predicate.toArray(pre)).getRestriction();
-			}
-		}, new PageRequest(0, 10, Sort.Direction.DESC, "addTime"));
-		List<CssOrderRespDto> resultList = new ArrayList<CssOrderRespDto>();
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		for(Order order: orderPage){
-			CssOrderRespDto cssOrderRespDto = new CssOrderRespDto();
-			cssOrderRespDto.setOrderId(order.getOrderId());
-			cssOrderRespDto.setOrderSnMain(order.getOrderSnMain());
-			cssOrderRespDto.setSource(order.getSource());
-			if(order.getNeedShiptime()!=null){
-				cssOrderRespDto.setNeedShiptime(dateFormat.format(order.getNeedShiptime()) + " " + order.getNeedShiptimeSlot());
-			}
-			cssOrderRespDto.setStatus(order.getStatus());
-			cssOrderRespDto.setNeedInvoice(order.getNeedInvoice());
-			cssOrderRespDto.setInvoiceNo(order.getInvoiceNo());
-			cssOrderRespDto.setBuyerName(order.getBuyerName());
-			resultList.add(cssOrderRespDto); 
-		}
-		return resultList;
-/*		
-		List<CssOrderRespDto> resultList = new ArrayList<CssOrderRespDto>();
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		if(orderList!=null){
-			for(Order order: orderList){
-				CssOrderRespDto cssOrderRespDto = new CssOrderRespDto();
-				cssOrderRespDto.setOrderId(order.getOrderId());
-				cssOrderRespDto.setOrderSnMain(order.getOrderSnMain());
-				cssOrderRespDto.setSource(order.getSource());
-				if(order.getNeedShiptime()!=null){
-					cssOrderRespDto.setNeedShiptime(dateFormat.format(order.getNeedShiptime()) + " " + order.getNeedShiptimeSlot());
-				}
-				cssOrderRespDto.setStatus(order.getStatus());
-				cssOrderRespDto.setNeedInvoice(order.getNeedInvoice());
-				cssOrderRespDto.setInvoiceNo(order.getInvoiceNo());
-				cssOrderRespDto.setBuyerName(order.getBuyerName());
-				resultList.add(cssOrderRespDto); 
-			}
-		}
-		return resultList;
-		*/
-	}
-	
+    @Autowired
+    private EntityManagerFactory entityManagerFactory;
+    
 	//订单详情
 	@Override
 	public BkOrderListRespDto orderDetail(String orderSnMain) {
@@ -544,7 +478,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 				for(OrderExtm tmp: orderExtmResultList){
 					orderSnMainSet.add(tmp.getOrderSnMain());
 				}
-			}else{
+			}else if(!cssOrderReqDto.getQueryType().equals("city")){
 				//如果根据收货人没查到则订单也没有
 				return resp;
 			}
@@ -561,70 +495,72 @@ public class BkOrderServiceImpl implements BkOrderService{
 			}
 		}
 		final String cityCodeFinal = cityCode;
-		Page<Order> orderPageList = null;
+		int fourMonthTime = this.getLastFourMonth();
+		//不好意思了，这么写也是醉了
+		String qlStr = "select distinct(orderSnMain) from Order o where o.isDel = 0 and o.addTime > "+fourMonthTime ;
+		if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
+			qlStr += " and o.orderSnMain = '"+cssOrderReqDto.getOrderSnMain()+"'";
+		}
+		if(StringUtils.isNoneBlank(cssOrderReqDto.getBuyerName())){
+			qlStr += " and o.buyerName = '"+cssOrderReqDto.getBuyerName()+"'";
+		}
+		if(StringUtils.isNotBlank(cssOrderReqDto.getStartTime())){
+			qlStr += " and o.addTime >= "+(int)(DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
+		}
+		if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
+			qlStr += " and o.addTime <= "+(int)(DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
+		}
+		if(cssOrderReqDto.getStatus()!=null){
+			qlStr += " and o.status = "+cssOrderReqDto.getStatus();
+		}
+		if(cssOrderReqDto.getPayStatus()!=null){
+			qlStr += " and o.payStatus = " + cssOrderReqDto.getPayStatus();
+		}
+		if(StringUtils.isNotBlank(cityCodeFinal) && StringUtils.isNotBlank(cssOrderReqDto.getQueryContent())){
+			qlStr += " and o.sellSite = '"+cityCodeFinal+"'";
+		}
+		if(orderSnMainSet.size()>0){
+			String orderSns = "";
+			for(String str : orderSnMainSet){
+				orderSns += ",'"+str+"'";
+			}
+			orderSns = orderSns.substring(1);
+			qlStr += " and o.orderSnMain in ("+orderSns+")";
+		}
+		qlStr += " order by o.orderId desc";
 		
-		Sort pageSort = new Sort(Sort.Direction.DESC, "orderId");
-		if(StringUtils.isNoneBlank(sort) && StringUtils.isNoneBlank(order)){
-			if(order.equals("asc")){
-				pageSort = new Sort(Sort.Direction.ASC, sort);
-			}else{
-				pageSort = new Sort(Sort.Direction.DESC, sort);
+		EntityManager em = entityManagerFactory.createEntityManager();
+		Query query = em.createQuery(qlStr);
+		List<String> orderSnMainAll = query.getResultList();
+		List<String> orderSnMains = new ArrayList<String>();
+		for(int i=pageNum*pageSize; i<(pageNum+1)*pageSize; i++){
+			if(i<orderSnMainAll.size()){
+				orderSnMains.add(orderSnMainAll.get(i));
 			}
 		}
-		
-		Pageable pageable = new PageRequest(pageNum, pageSize, pageSort);
-		orderPageList = orderDao.findAll(new Specification<Order>(){
-			@Override
-			public Predicate toPredicate(Root<Order> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
-				Integer startTime = null;
-				if(StringUtils.isNotBlank(cssOrderReqDto.getStartTime())){
-					startTime = (int)(DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
-				}
-				Integer endTime = null;
-				if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
-					endTime = (int)(DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
-				}
-				List<Predicate> predicate = new ArrayList<>();
-				if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
-					predicate.add(cb.equal(root.get("orderSnMain").as(String.class), cssOrderReqDto.getOrderSnMain()));
-				}
-				if(cssOrderReqDto.getStatus()!=null){
-					predicate.add(cb.equal(root.get("status").as(Integer.class), cssOrderReqDto.getStatus()));
-				}
-				if(StringUtils.isNotBlank(cssOrderReqDto.getStartTime())){
-					predicate.add(cb.greaterThanOrEqualTo(root.get("addTime").as(Integer.class), startTime));
-				}
-				if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
-					predicate.add(cb.lessThanOrEqualTo(root.get("addTime").as(Integer.class), endTime));
-				}
-				if(cssOrderReqDto.getPayStatus()!=null){
-					predicate.add(cb.equal(root.get("payStatus").as(Integer.class), cssOrderReqDto.getPayStatus()));
-				}
-				if(StringUtils.isNoneBlank(cssOrderReqDto.getBuyerName())){
-					predicate.add(cb.equal(root.get("buyerName").as(String.class), cssOrderReqDto.getBuyerName()));
-				}
-				if(StringUtils.isNoneBlank(cityCodeFinal) && StringUtils.isNoneBlank(cssOrderReqDto.getQueryContent())){
-					predicate.add(cb.equal(root.get("sellSite").as(String.class), cssOrderReqDto.getQueryContent()));
-				}
-				if(orderSnMainSet.size()>0){
-					In in = cb.in(root.get("orderSnMain"));
-					for(String tmp: orderSnMainSet){
-						in.value(tmp);
-					}
-					predicate.add(in);
-				}
-				predicate.add(cb.equal(root.get("isDel").as(Integer.class), 0));
-				Predicate[] pre = new Predicate[predicate.size()];
-				return query.where(predicate.toArray(pre)).getRestriction();
+		List<Order> orderListAll = orderDao.findByOrderSnMainIn(orderSnMains);
+		Map<String, Order> orderMap = new HashMap<String, Order>();
+		for(Order tmp: orderListAll){
+			Order orderTmp = orderMap.get(tmp.getOrderSnMain());
+			if(orderTmp == null){
+				orderMap.put(tmp.getOrderSnMain(), tmp);
+			}else{
+				orderTmp.setOrderAmount(orderTmp.getOrderAmount() + tmp.getOrderAmount());
+				orderTmp.setGoodsAmount(orderTmp.getGoodsAmount() + tmp.getGoodsAmount());
+				orderTmp.setOrderPayed(orderTmp.getOrderPayed() + tmp.getOrderPayed());
+				orderTmp.setShippingFee(orderTmp.getShippingFee() + tmp.getShippingFee());
 			}
-		}, pageable);
-		orderList.addAll(orderPageList.getContent());
+		}
+		for(String tmp: orderSnMains){
+			Order orderTmp = orderMap.get(tmp);
+			if(orderTmp!=null){
+				orderList.add(orderTmp);
+			}
+		}
 		if(CollectionUtils.isEmpty(orderList)) {
 			resp.setMessage("订单列表为空");
 			return resp;
 		}
-		
-		List<String> orderSnMains = new ArrayList<String>();
 		for(Order tmp: orderList){
 			orderSnMains.add(tmp.getOrderSnMain());
 		}
@@ -646,7 +582,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			bkOrderList.add(orderListDto);
 		}
 		BkOrderListResultDto resultDto = new BkOrderListResultDto();
-		resultDto.setOrderCount((int)orderPageList.getTotalElements());
+		resultDto.setOrderCount(orderSnMainAll.size());
 		resultDto.setOrderList(bkOrderList);
 		resp.setResult(resultDto);
 		return resp;
@@ -795,7 +731,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 	public BkOrderReturnListRespDto queryBkOrderToReturn(String sort, String order, int pageNum, int pageSize,
 			final CssOrderReqDto cssOrderReqDto) {
 		BkOrderReturnListRespDto resp = new BkOrderReturnListRespDto(200, "");
-		Sort pageSort = new Sort(Sort.Direction.DESC,"orderId");
+		Sort pageSort = new Sort(Sort.Direction.DESC,"orderIdR");
 		if(StringUtils.isNotBlank(sort) && StringUtils.isNotBlank(order)){
 			if(order.toLowerCase().equals("asc")){
 				pageSort = new Sort(Sort.Direction.ASC,sort);
