@@ -202,7 +202,25 @@ public class CouponOperationProcessor {
 	
 		return resp;
 	}
-		
+	
+	public CouponListDto getCouponListDtoByUseCouponNo(String useCouponNo)
+	{
+		CouponListDto dto = new CouponListDto();
+		if(StringUtils.isNotBlank(useCouponNo))
+		{
+			CoupList coupList = coupListDao.findByCommoncode(useCouponNo);
+			if(coupList != null)
+			{
+				CoupRule coupRule = coupRuleDao.findByCommoncode(useCouponNo);
+				if(coupRule != null)
+				{
+					dto = assembleDto(coupList, coupRule, 1);
+				}
+			}
+		}
+		return dto;
+	}
+	
 	private CouponListDto assembleDto(CoupList coupList, CoupRule coupRule, int isUsable) {
 		String couponName = "";
 		if (coupRule.getCoupontypeid() == 1) {

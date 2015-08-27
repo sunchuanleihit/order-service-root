@@ -36,6 +36,7 @@ import com.loukou.order.service.constants.FlagType;
 import com.loukou.order.service.constants.OS;
 import com.loukou.order.service.constants.OrderPayType;
 import com.loukou.order.service.constants.OrderStateReturn;
+import com.loukou.order.service.constants.RedPaperStatus;
 import com.loukou.order.service.constants.ReturnGoodsType;
 import com.loukou.order.service.constants.ShippingMsgDesc;
 import com.loukou.order.service.dao.AddressDao;
@@ -558,6 +559,11 @@ public class OrderServiceImpl implements OrderService {
 			baseDto.setShipTime(shipTime);
 		}
 		baseDto.setPayStatus(order.getPayStatus());
+		//已支付订单，可以发送红包
+		if(order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId())
+		{
+			baseDto.setIsCanPostRedPaper(RedPaperStatus.YES);
+		}
 		baseDto.setStatus(order.getStatus());
 		baseDto.setTaoOrderSn(order.getTaoOrderSn());
 		baseDto.setIsshouhuo(getReciveStatus(order));// 确认收货的判断
@@ -1228,10 +1234,14 @@ public class OrderServiceImpl implements OrderService {
 
 		double orderTotal = 0;
 		double shippingFee = 0;
+		String useCouponNo = "";
+		List<Integer> orderIds = new ArrayList<Integer>();
 		for (Order o : orders) {
 			orderTotal = DoubleUtils.add(orderTotal, o.getGoodsAmount());
 			orderTotal = DoubleUtils.add(orderTotal, o.getShippingFee());
 			shippingFee = DoubleUtils.add(shippingFee, o.getShippingFee());
+			useCouponNo = o.getUseCouponNo();
+			orderIds.add(o.getOrderId());
 		}
 
 		Double payedMoney = orderPayDao
@@ -1253,13 +1263,30 @@ public class OrderServiceImpl implements OrderService {
 		result.setVcount(vCountValue);
 		PayOrderMsgRespDto payOrderMsgRespDto = new PayOrderMsgRespDto();
 		payOrderMsgRespDto.setOrderMsg(result);
+		
 		//TODO 设置推荐优惠券和 购物清单
-		//payOrderMsgRespDto.setRecommend(getRecommendCoupon(cityId, userId, storeId, openId));
-		//payOrderMsgRespDto.setGoodsList(getGoodsListByCart(cart));
+		CouponListDto couponListDto  = couponOperationProcessor.getCouponListDtoByUseCouponNo(useCouponNo);
+		payOrderMsgRespDto.setRecommend(couponListDto);
+		payOrderMsgRespDto.setGoodsList(getPayOrderGoodsListDtoByOrderIdIn(orderIds));
 		resp.setResult(payOrderMsgRespDto);
 
 		return resp;
 
+	}
+	
+	private List<PayOrderGoodsListDto> getPayOrderGoodsListDtoByOrderIdIn(List<Integer> orderIds)
+	{
+		List<PayOrderGoodsListDto> goodsList = new ArrayList<PayOrderGoodsListDto>();
+		List<OrderGoods> orderGoodsList = orderGoodsDao.findByOrderIdIn(orderIds);
+		for(OrderGoods og : orderGoodsList)
+		{
+			PayOrderGoodsListDto goods = new PayOrderGoodsListDto();
+			goods.setAmount(og.getQuantity());
+			goods.setGoodsName(og.getGoodsName());
+			goods.setPrice(DoubleUtils.mul(og.getPricePurchase(), og.getQuantity()));
+			goodsList.add(goods);
+		}
+		return goodsList;
 	}
 	
 	private String trimall(String str)// 删除空格

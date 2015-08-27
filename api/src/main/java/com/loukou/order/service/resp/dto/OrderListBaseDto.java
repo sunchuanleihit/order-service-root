@@ -34,7 +34,8 @@ public class OrderListBaseDto implements Serializable {
 	private String invoiceHeader = "";
 	private String postscript = "";
 	private int isOrder = 1;
-
+	private int isCanPostRedPaper = 0;
+	
 	public int getOrderId() {
 		return orderId;
 	}
@@ -265,5 +266,13 @@ public class OrderListBaseDto implements Serializable {
                 + shippingtype + ", payType=" + payType + ", invoiceHeader=" + invoiceHeader + ", postscript="
                 + postscript + ", isOrder=" + isOrder + "]";
     }
+
+	public int getIsCanPostRedPaper() {
+		return isCanPostRedPaper;
+	}
+
+	public void setIsCanPostRedPaper(int isCanPostRedPaper) {
+		this.isCanPostRedPaper = isCanPostRedPaper;
+	}
 
 }
