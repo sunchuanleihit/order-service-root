@@ -99,6 +99,9 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	void updateStatusAndFinishedTime(int status,int finishedTime,int orderId);
 
 	List<Order> findByBuyerIdAndStatusNotIn(int userId, List<Integer> statusList);
+	
+	@Query("SELECT 1 FROM Order WHERE buyerId=?1")
+	String IfExistOrder(int buyerId);
 
 }
 

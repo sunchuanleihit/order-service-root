@@ -27,7 +27,7 @@ public class InviteServiceImpl implements InviteService {
 	}
 	
 	/**
-	 * 通邀请码获取优惠券
+	 * 通过微信端邀请码获取优惠券
 	 * @param req
 	 * @return
 	 */
@@ -45,6 +45,6 @@ public class InviteServiceImpl implements InviteService {
 	@Override
 	public boolean checkAndCreateCoupon(String phoneNumber, int userId) {
 		
-		return false;
+		return inviteProcessor.checkAndCreateCoupon(phoneNumber, userId);
 	}
 }

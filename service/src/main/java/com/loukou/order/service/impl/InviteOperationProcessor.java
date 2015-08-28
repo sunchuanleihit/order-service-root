@@ -1,5 +1,6 @@
 package com.loukou.order.service.impl;
 
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,15 +9,20 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.loukou.order.service.api.OrderService;
 import com.loukou.order.service.constants.CouponFormType;
 import com.loukou.order.service.constants.InviteConstans;
+import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.InviteCodeDao;
 import com.loukou.order.service.dao.InviteInfoDao;
 import com.loukou.order.service.dao.MemberDao;
+import com.loukou.order.service.dao.OrderDao;
+import com.loukou.order.service.dao.OrderUserDao;
+import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.InviteCode;
 import com.loukou.order.service.entity.InviteList;
@@ -26,6 +32,8 @@ import com.loukou.order.service.req.dto.InviteValidateReqDto;
 import com.loukou.order.service.resp.dto.InviteInfoRespDto;
 import com.loukou.order.service.resp.dto.InviteListDto;
 import com.loukou.order.service.resp.dto.InviteValidateRespDto;
+import com.loukou.order.service.resp.dto.ResponseDto;
+import com.loukou.sms.sdk.client.SingletonSmsClient;
 import com.serverstarted.user.api.PhoneVeriCodeService;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -52,6 +60,14 @@ public class InviteOperationProcessor {
 	
 	@Autowired
 	private CoupRuleDao coupRuleDao;
+	
+	@Autowired
+	private CoupListDao coupListDao;
+	
+	@Autowired
+	private OrderUserDao orderUserDao ;
+	@Autowired
+	private OrderDao orderDao;
 	
 	public InviteInfoRespDto getInviteInfo(InviteInfoReqdto req) {
 		
@@ -116,16 +132,17 @@ public class InviteOperationProcessor {
 			resp.setIsOver(1);
 		}
 	
-		resp.setCode(0);
+		resp.setCode(200);
 		return resp;
 		
 	}
 	
 	/**
-	 * 通邀请码获取优惠券
+	 * 通过微信端邀请码获取优惠券
 	 * @param req
 	 * @return
 	 */
+	@Transactional
 	public InviteValidateRespDto getCouponByInvite(InviteValidateReqDto req){
 		InviteValidateRespDto response=new InviteValidateRespDto();
 		InviteList inviteList=new  InviteList();
@@ -134,23 +151,24 @@ public class InviteOperationProcessor {
 		boolean ifsuccess=false;
 		//1 验证验证码是否正确
 		if(!phoneVeriCodeService.verify(req.getPhoneNumber(), req.getValidateCode())){
-			response.setCode(10);
-			response.setMessage("验证码错误，请重新填写");
+			response.setCode(400);
+			response.setMessage("验证码错误，请重新填写。");
 			return response;
 		}
 		//2 验证邀请码
-		InviteCode inviteCode=inviteCodeDao.findByInviteCode(req.getInviteCode());
+		String lowCode=req.getInviteCode().toLowerCase();
+		InviteCode inviteCode=inviteCodeDao.findByInviteCode(lowCode);
 		//通过手机号查询用户信息
 		List<Member> member= memberDao.findByPhoneMob(req.getPhoneNumber());
 		if(null==inviteCode){
-			response.setCode(20);
+			response.setCode(400);
 			response.setMessage("抱歉，链接已失效，联系您的邀请人再试一次吧~");
 			return response;
 		}else {		
 			//验证领取状态
 			List<InviteList> list =inviteInfoDao.findByPhoneMob(req.getPhoneNumber());
 			if(list.size()>0){
-				response.setCode(30);
+				response.setCode(400);
 				response.setMessage("抱歉，您已领取过邀请券。");
 				return  response;
 			}
@@ -159,17 +177,23 @@ public class InviteOperationProcessor {
 				inviteduser=member.get(0);
 				//验证邀请码是否本人的
 				if(inviteduser.getUserId()==inviteCode.getUserId()){
-					response.setCode(40);
+					response.setCode(400);
 					response.setMessage("抱歉，您不能领取自己的邀请券。");
 					return response;
 				}
-				//createCouponCode 方法中含有验证是否是新用户
+				//createCouponCode 
+				if(orderDao.IfExistOrder(inviteduser.getUserId())!=null){
+					response.setCode(400);
+					response.setMessage("抱歉，您不是新用户，不可领取邀请券");
+					return  response;
+				}
 				ifsuccess=orderService.createCouponCode(inviteduser.getUserId(), InviteConstans.invited_CouponId,  CouponFormType.PRIVATE,false, 1,"", 0);
 				if(ifsuccess){
+					//标记已发券
 					inviteList.setIfGetcoupon(InviteConstans.get_Coupon);
 				}else{
-					response.setCode(31);
-					response.setMessage("抱歉，您已领取过邀请券。");
+					response.setCode(400);
+					response.setMessage("抱歉，您不是新用户，不可领取邀请券");
 					return  response;
 				}
 			}else{//新用户 标记未发券
@@ -183,27 +207,101 @@ public class InviteOperationProcessor {
 			if( null!=inviteInfoDao.save(inviteList)){
 				ifsuccess=true;
 			}
-		
 		}
-
-//		//如果发券成功
+		//如果发券成功
 		if(ifsuccess){
 			//查询返回优惠券信息
 			CoupRule coupRule = coupRuleDao.findOne(InviteConstans.invited_CouponId);
 			response.setMoney(coupRule.getMoney());
 			response.setPhoneNumber(req.getPhoneNumber());
-			response.setCode(0);
+			response.setCode(200);
+			String content = "";
+			String[] phones = new String[]{req.getPhoneNumber()};
+			//调用短信服务，发送短信
+			try {
+			SingletonSmsClient.getClient().sendSMS(phones,content);
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+
 		}
 	
 		return response;
 		
 	}
 	
-	public boolean checkAndCreateCoupon(String phoneNumber, int userId) {
+	public ResponseDto<String> checkAppInviteCode(int userId,String openId,String inviteCode ){
+		ResponseDto<String> resp = new ResponseDto<String>(200, "");
+		//1 检查 1.邀请码是否有效 2.是否本人
+		InviteCode incode=inviteCodeDao.findByInviteCode(inviteCode);
+		if(incode==null){
+			resp.setCode(400);
+			resp.setMessage("验证码错误，请重新填写。");
+			return resp;
+		}else if(userId==incode.getUserId()){
+			resp.setCode(400);
+			resp.setMessage("抱歉，您不能领取自己的邀请券。");
+			return resp;
+		}
+		//2 检查是否领取过邀请券 1. 邀请表 2 .优惠券表
+		Member member= memberDao.findOne(userId);
+		List<InviteList> list =inviteInfoDao.findByPhoneMob(member.getPhoneMob());
+		List<CoupList> coList=coupListDao.findByCouponIdAndOpenid(InviteConstans.invited_CouponId, openId);
+		//有数据代表发送过
+		if(list.size()>0||coList.size()>0){
+			resp.setCode(400);
+			resp.setMessage("抱歉，您已领取过邀请券。");
+			return  resp;
+		}
+		//3 是否新用户  openId是否下单      创建优惠券（手机号是否下过单）
+		if(orderUserDao.getOrderCountByOpenId(openId)>0||orderDao.IfExistOrder(userId)!=null){
+			resp.setCode(400);
+			resp.setMessage("抱歉，您不是新用户，不可领取邀请券。");
+			return  resp;
+		}else{
+			if(orderService.createCouponCode(userId, InviteConstans.invited_CouponId,  CouponFormType.PRIVATE,false, 1,"", 0)){
+				InviteList inviteList=new  InviteList();
+				inviteList.setInviteCode(inviteCode);
+				inviteList.setInviteStatus(InviteConstans.inviteStatus_registered);
+				inviteList.setRewardStatus(InviteConstans.rewardStatus_waiting);
+				inviteList.setPhoneMob(member.getPhoneMob());
+				//标记已发券
+				inviteList.setIfGetcoupon(InviteConstans.get_Coupon);
+				inviteList.setUserId(incode.getUserId());//保存邀请人用户ID
+				inviteInfoDao.save(inviteList);
+				
+				resp.setCode(200);
+				resp.setMessage("激活成功");
+				return  resp;
+			}else{
+				resp.setCode(400);
+				resp.setMessage("抱歉，您不是新用户，不可领取邀请券。");
+				return  resp;
+			}
+		}
+
 		
+	}
+	/**
+	 * 检查手机号是否在邀请列表并未发放优惠券
+	 * @param phoneNumber
+	 * @param userId
+	 * @return
+	 */
+	@Transactional
+	public boolean checkAndCreateCoupon(String phoneNumber, int userId) {
+		List<InviteList> list=inviteInfoDao.findByPhoneMobAndIfGetcoupon(phoneNumber, InviteConstans.notGet_Coupon);
+		if(list.size()>0){
+			//创建邀请券 成功并修改获取邀请状态
+			if(orderService.createCouponCode(userId, InviteConstans.invited_CouponId, CouponFormType.PRIVATE, false, 1, "", 0)){
+				inviteInfoDao.updateIfGetcouponByPhone(phoneNumber);
+				return true;
+			}
+		}
 		return false;
 		
 	}
+	
 	/**
 	 * 生成邀请码
 	 * @param userId

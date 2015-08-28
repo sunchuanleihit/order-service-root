@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import com.loukou.order.service.entity.InviteList;
@@ -24,5 +25,11 @@ public interface InviteInfoDao extends PagingAndSortingRepository<InviteList, In
 	List<InviteList> findByPhoneMob(String phoneMob);
 	
 	//根据手机号和发放查找邀请信息
-//	List<InviteList> findByPhoneMobAndifGetcoupon(String phoneMob,int ifGetcoupon);
+	List<InviteList> findByPhoneMobAndIfGetcoupon(String phoneMob,int ifGetcoupon);
+	
+	//更新邀请列表
+	@Modifying
+	@Query("update  InviteList  set ifGetcoupon=1 where  phoneMob=?1 ")
+	int  updateIfGetcouponByPhone(String phoneMob);
+	
 }

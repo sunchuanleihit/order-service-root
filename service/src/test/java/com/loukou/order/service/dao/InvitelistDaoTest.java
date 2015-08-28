@@ -30,8 +30,8 @@ public class InvitelistDaoTest extends AbstractTestObject {
 	@Test
 	public void saveInvite() {
 		InviteCode a=new InviteCode();
-		a.setUserId(24);
-		a.setInviteCode("0vzstk18");
+		a.setUserId(1032752);
+		a.setInviteCode("0kofc230");
 		System.out.println(invite.save(a));
 	}
 	@Test
@@ -41,5 +41,11 @@ public class InvitelistDaoTest extends AbstractTestObject {
                 Sort.Direction.ASC, "createdTime"));
 		Page<InviteList> pList= inviteDao.findByUserId(userId, p);
 		System.out.println(pList.getContent().size());
+	}
+	
+	@Test
+	public  void queryInviteListByMobAndifGC(){
+		System.out.println(inviteDao.findByPhoneMobAndIfGetcoupon("13401611116199", 0).size());
+		
 	}
 }
