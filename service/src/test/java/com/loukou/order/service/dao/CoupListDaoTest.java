@@ -12,6 +12,9 @@ public class CoupListDaoTest extends AbstractTestObject {
 	private CoupListDao coupListDao;
 	@Autowired 
 	private CoupRuleDao coupRuleDao;
+	@Autowired 
+	private  OrderDao orderDao;
+	
 	
 	@Test
 	public void countCouponId() {
@@ -24,7 +27,8 @@ public class CoupListDaoTest extends AbstractTestObject {
 
 	@Test
 	public void getRule() {
-		CoupRule coupRule = coupRuleDao.findOne(961);
-		System.out.println(coupRule.getMoney());
+//		CoupRule coupRule = coupRuleDao.findOne(961);
+//		System.out.println(coupRule.getMoney());
+		System.out.println("++++++++"+orderDao.IfExistOrder(1032752));
 		}
 	}

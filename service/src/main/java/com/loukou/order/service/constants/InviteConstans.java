@@ -11,7 +11,7 @@ public class InviteConstans {
 	public static final int invited_CouponId=962;
 	//已发放优惠券
 	public static final int get_Coupon =1;
-	//已发放优惠券
+	//未发放优惠券
 	public static final int notGet_Coupon =0;
 	
 	//邀请状态(1:已注册 2:已下单 3:邀请成功4:已退货)

@@ -166,7 +166,7 @@ public class OrderServiceImplTest extends AbstractTestObject {
 	@Test
 	public void getInviteCode(){
 		InviteInfoReqdto req=new InviteInfoReqdto();
-		req.setUserId(20);
+		req.setUserId(1032752);
 		req.setQueryType("code");
 		InviteInfoRespDto r  =new InviteInfoRespDto();
 		r=inviteService.getInviteInfo(req);
@@ -187,4 +187,5 @@ public class OrderServiceImplTest extends AbstractTestObject {
 			System.out.println(r.getInviteCode()+"已奖励"+r.getTotalReward());	
 		}
 	}
+	
 }
