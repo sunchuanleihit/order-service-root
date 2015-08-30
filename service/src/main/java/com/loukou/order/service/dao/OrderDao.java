@@ -53,10 +53,14 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 	Page<Order> findByOrderSnMainIn(Iterable<String> orderSnMains, Pageable pageable);
 	
 	List<Order> findByOrderSnMainIn(List<String> orderSnMains);
-
+	
+	List<Order> findByUseCouponNoIn(List<String> couponNos);
+	
 	List<Order> findByshippingNoIn(List<String> shippingNo);
 
 	Page<Order> findByBuyerIdAndIsDel(int userId, int isDel, Pageable pageable);
+	
+	Page<Order> findByBuyerId(int userId, Pageable pageable);
 
 	@Transactional
 	@Modifying

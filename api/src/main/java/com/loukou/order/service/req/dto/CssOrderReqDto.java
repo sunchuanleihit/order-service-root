@@ -15,8 +15,29 @@ public class CssOrderReqDto implements Serializable{
 	private String queryType;//查询类型
 	private String queryContent;//查询内容
 	private String buyerName;//买家姓名
+	private Integer buyerId;//买家ID
 	private Integer refundStatus;//退款状态
+	private Integer timeLimit;//时间限制
+	private Integer isDel;//是否删除
 	
+	public Integer getTimeLimit() {
+		return timeLimit;
+	}
+	public void setTimeLimit(Integer timeLimit) {
+		this.timeLimit = timeLimit;
+	}
+	public Integer getIsDel() {
+		return isDel;
+	}
+	public void setIsDel(Integer isDel) {
+		this.isDel = isDel;
+	}
+	public Integer getBuyerId() {
+		return buyerId;
+	}
+	public void setBuyerId(Integer buyerId) {
+		this.buyerId = buyerId;
+	}
 	public Integer getRefundStatus() {
 		return refundStatus;
 	}
