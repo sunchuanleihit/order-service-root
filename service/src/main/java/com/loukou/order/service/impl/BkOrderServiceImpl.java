@@ -183,9 +183,6 @@ public class BkOrderServiceImpl implements BkOrderService{
     private GoodsSpecDao goodsSpecDao;
     
     @Autowired
-    private CoupListDao coupListDao;
-    
-    @Autowired
     private GoodsDao goodsDao;
     
     @Autowired
@@ -193,13 +190,6 @@ public class BkOrderServiceImpl implements BkOrderService{
     
     @Autowired
     private TosuHandleDao tosuHandleDao;
-    
-    @Autowired
-    private OrderReturnDao orderReturnDao;
-    
-    @Autowired
-    private OrderPayDao orderPayDao;
-    
     @Autowired
     private EntityManagerFactory entityManagerFactory;
     
@@ -214,56 +204,6 @@ public class BkOrderServiceImpl implements BkOrderService{
     
     @Autowired
     private CoupRuleDao coupRuleDao;
-    
-	@Override
-	public List<CssOrderRespDto> queryOrderList(int page, int rows, final CssOrderReqDto cssOrderReqDto) {
-		
-		Page<Order> orderPage = orderDao.findAll(new Specification<Order>(){
-			@Override
-			public Predicate toPredicate(Root<Order> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
-				Integer startTime = null;
-				if(StringUtils.isNoneBlank(cssOrderReqDto.getStartTime())){
-					startTime = (int) (DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
-				}
-				Integer endTime = null;
-				if(StringUtils.isNoneBlank(cssOrderReqDto.getEndTime())){
-					endTime = (int) (DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
-				}
-				List<Predicate> predicate = new ArrayList<>();
-				if(StringUtils.isNoneBlank(cssOrderReqDto.getOrderSnMain())){
-					predicate.add(cb.equal(root.get("orderSnMain").as(String.class), cssOrderReqDto.getOrderSnMain()));
-				}
-				if(cssOrderReqDto.getStatus()!=null){
-					predicate.add(cb.equal(root.get("status").as(Integer.class), cssOrderReqDto.getStatus()));
-				}
-				if(StringUtils.isNoneBlank(cssOrderReqDto.getStartTime())){
-					predicate.add(cb.greaterThanOrEqualTo(root.get("addTime").as(Integer.class), startTime));
-				}
-				if(StringUtils.isNoneBlank(cssOrderReqDto.getEndTime())){
-					predicate.add(cb.lessThanOrEqualTo(root.get("addTime").as(Integer.class), endTime));
-				}
-				Predicate[] pre = new Predicate[predicate.size()];
-				return query.where(predicate.toArray(pre)).getRestriction();
-			}
-		}, new PageRequest(0, 10, Sort.Direction.DESC, "addTime"));
-		List<CssOrderRespDto> resultList = new ArrayList<CssOrderRespDto>();
-		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		for(Order order: orderPage){
-			CssOrderRespDto cssOrderRespDto = new CssOrderRespDto();
-			cssOrderRespDto.setOrderId(order.getOrderId());
-			cssOrderRespDto.setOrderSnMain(order.getOrderSnMain());
-			cssOrderRespDto.setSource(order.getSource());
-			if(order.getNeedShiptime()!=null){
-				cssOrderRespDto.setNeedShiptime(dateFormat.format(order.getNeedShiptime()) + " " + order.getNeedShiptimeSlot());
-			}
-			cssOrderRespDto.setStatus(order.getStatus());
-			cssOrderRespDto.setNeedInvoice(order.getNeedInvoice());
-			cssOrderRespDto.setInvoiceNo(order.getInvoiceNo());
-			cssOrderRespDto.setBuyerName(order.getBuyerName());
-			resultList.add(cssOrderRespDto); 
-		}
-		return resultList;
-	}
 	
 	//订单详情
 	@Override
