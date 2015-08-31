@@ -78,6 +78,9 @@ public class CouponOperationProcessor {
 	
 	@Autowired
 	private GCategoryNewDao gCategoryNewDao;
+	
+	@Autowired
+	private InviteOperationProcessor inviteOperationProcessor;
 
 	private static final int LIMIT_COUPON_PER_DAY = 2; // 每天限用优惠券张数
 	
@@ -373,10 +376,15 @@ public class CouponOperationProcessor {
 		CheckCouponDto dto = new CheckCouponDto();
 		
 		if(StringUtils.equals(prefix, "LK")) { // 公用券码
-			dto = checkCoupon(0, commoncode, CouponFormType.PUBLIC, userId, openId);
-			checkCode = dto.getResult();
-		} else {
 			dto = checkCoupon(0, commoncode, CouponFormType.PRIVATE, userId, openId);
+			checkCode = dto.getResult();
+		//数字开头 为邀请码 进邀请码规则 
+		}else if(Character.isDigit(commoncode.charAt(0))){
+			commoncode=commoncode.toUpperCase();
+			return inviteOperationProcessor.checkAppInviteCode(userId, openId, commoncode);
+		} 
+		else {
+			dto = checkCoupon(0, commoncode, CouponFormType.PUBLIC, userId, openId);
 			checkCode = dto.getResult();
 		}
 		if(checkCode != ActivateCouponMessage.SUCCESS.getCode()) {
@@ -609,7 +617,7 @@ public class CouponOperationProcessor {
     private CheckCouponDto checkCoupon(int couponId, String commoncode, int type, int userId, String openId) {
     	CheckCouponDto dto = new CheckCouponDto();
     	Date listEndTime = null;
-        if(type == CouponFormType.PUBLIC) {
+        if(type == CouponFormType.PRIVATE) {
 
         	CoupRule coupRule = null;
         	if (couponId > 0) {
@@ -837,13 +845,16 @@ public class CouponOperationProcessor {
      */
     private boolean checkUserNew(int userId) {
     	
-    	List<Integer> statusList = new ArrayList<Integer>();
-    	statusList.add(OrderStatusEnum.STATUS_CANCELED.getId());
-    	statusList.add(OrderStatusEnum.STATUS_INVALID.getId());
-    	List<Order> orders = orderDao.findByBuyerIdAndStatusNotIn(userId, statusList);
-    	
-    	if(CollectionUtils.isEmpty(orders)) {
-    		return true;
+//    	List<Integer> statusList = new ArrayList<Integer>();
+//    	statusList.add(OrderStatusEnum.STATUS_CANCELED.getId());
+//    	statusList.add(OrderStatusEnum.STATUS_INVALID.getId());
+//    	List<Order> orders = orderDao.findByBuyerIdAndStatusNotIn(userId, statusList);
+//    	
+//    	if(CollectionUtils.isEmpty(orders)) {
+//    		return true;
+//    	}
+    	if(orderDao.IfExistOrder(userId)!=null){
+    		 return true;
     	}
     	
         return false;
