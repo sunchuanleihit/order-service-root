@@ -1115,7 +1115,7 @@ public class OrderServiceImpl implements OrderService {
 					return new ResponseCodeDto(400, "部分预售商品预售时间已过");
 				}
 				if (!StringUtils.isEmpty(g.getErrorMsg())) {
-					return new ResponseCodeDto(400, "部分商品不能购买");
+					return new ResponseCodeDto(400, g.getErrorMsg());
 				}
 			}
 		}
