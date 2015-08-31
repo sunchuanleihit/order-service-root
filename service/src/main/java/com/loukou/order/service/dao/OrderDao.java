@@ -19,9 +19,12 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 	Order findByTaoOrderSn(String taoOrderSn);
 	
 	List<Order> findByOrderSnMain(String orderSnMain);
-
+	
 	@Query("SELECT o FROM Order o WHERE shippingId=?1 AND status=15 AND finishedTime>=?2 AND finishedTime<=?3")
 	List<Order> getCvsFininshedOrders(int cvsId, int start, int end);
+
+	@Query("SELECT o FROM Order o WHERE orderSnMain=?1 AND status=15")
+	List<Order> getFininshedOrders(String orderSnMain);
 	
 	@Query("SELECT o FROM Order o WHERE status=15 AND sellerId IN (?1) AND finishedTime >= ?2 AND finishedTime < ?3")
 	List<Order> getByStoreIdsAndFinishedTime(List<Integer> storeIds, int start, int end);
@@ -105,5 +108,14 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 	@Transactional
 	void updateStatusAndFinishedTime(int status,int finishedTime,int orderId);
 
+	@Transactional(value="transactionManagerMall")
+	@Modifying
+	@Query("UPDATE Order set status = ?3 where orderSnMain = ?1 and status != ?2")
+	int updateOrderStatusByOrderSnMainAndNotStatus(String orderSnMain, int oldStatus, int newStatus);
+	
+	@Transactional(value="transactionManagerMall")
+	@Modifying
+	@Query("UPDATE Order set status = ?2 where orderSnMain = ?1")
+	int updateStatusByOrderSnMain(String orderSnMain, int status);
 }
 
