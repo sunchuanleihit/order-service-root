@@ -2,6 +2,7 @@ package com.loukou.order.service.constants;
 
 public class InviteConstans {
 	//查询邀请详细列表
+
 	public static final String  QUERYTYPE_LIST="List";
 	//邀请上限值
 	public static final double  REWARD_LIMIT=200.0;
@@ -14,6 +15,5 @@ public class InviteConstans {
 	//未发放优惠券
 	public static final int NOTGET_COUPON =0;
 	
-	
-	
+
 }

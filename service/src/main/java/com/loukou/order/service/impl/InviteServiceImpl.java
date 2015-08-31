@@ -46,5 +46,6 @@ public class InviteServiceImpl implements InviteService {
 	public boolean checkAndCreateCoupon(String phoneNumber, int userId,String openId) {
 		
 		return inviteProcessor.checkAndCreateCoupon(phoneNumber, userId,openId);
+
 	}
 }

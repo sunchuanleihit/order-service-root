@@ -39,13 +39,14 @@ import com.loukou.sms.sdk.client.SingletonSmsClient;
 import com.serverstarted.user.api.PhoneVeriCodeService;
 
 import org.apache.commons.collections.CollectionUtils;
+
 import org.apache.log4j.Logger;
 
 @Service
 public class InviteOperationProcessor {
 	// 邀请码长度
 	private static final int LENGTH_INVITE = 8; 
-	
+
 	private static final Logger LOGGER = Logger
 			.getLogger(InviteOperationProcessor.class);
 	
@@ -81,6 +82,7 @@ public class InviteOperationProcessor {
 		String inviteCodeStr="";
 		int userId=req.getUserId();
 		//判断查询类型
+
 		if(InviteConstans.QUERYTYPE_CODE.equals(req.getQueryType())){
 			//查询邀请表中是否有数据
 			InviteCode inviteCode=inviteCodeDao.findByUserId(req.getUserId());
@@ -201,6 +203,7 @@ public class InviteOperationProcessor {
 				if(ifsuccess){
 					//标记已发券
 					inviteList.setIfGetcoupon(InviteConstans.GET_COUPON);
+
 				}else{
 					response.setCode(400);
 					response.setMessage("抱歉，您不是新用户，不可领取邀请券");
@@ -232,6 +235,7 @@ public class InviteOperationProcessor {
 			SingletonSmsClient.getClient().sendSMS(phones,content);
 			} catch (RemoteException e) {
 				LOGGER.error(e);
+
 			}
 
 		}
@@ -334,6 +338,7 @@ public class InviteOperationProcessor {
 		}
 		strBuf.append(a);
 		return strBuf.toString().toUpperCase();
+
 	}
 	
 }

@@ -147,7 +147,6 @@ public class InviteList {
 		this.createdTime = createdTime;
 	}
 
-
 	public int getInviteStatus() {
 		return inviteStatus;
 	}
@@ -163,7 +162,6 @@ public class InviteList {
 	public void setRewardStatus(int rewardStatus) {
 		this.rewardStatus = rewardStatus;
 	}
-
 
 
 	
