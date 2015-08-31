@@ -202,6 +202,9 @@ public class BkOrderServiceImpl implements BkOrderService{
     
     @Autowired
     private CoupRuleDao coupRuleDao;
+    
+    @Autowired
+    private CoupListDao coupListDao;
 	
 	//订单详情
 	@Override
