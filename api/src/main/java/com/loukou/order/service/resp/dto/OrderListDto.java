@@ -14,7 +14,7 @@ public class OrderListDto implements Serializable {
 	private ShippingMsgDto shippingmsg = new ShippingMsgDto();
 	private List<GoodsListDto> goodsList = new ArrayList<GoodsListDto>();
 	private ExtmMsgDto extmMsg = new ExtmMsgDto();
-	private ShareDto share = new ShareDto();
+	private ShareDto share;
 	
 	public OrderListBaseDto getBase() {
 		return base;

@@ -427,8 +427,12 @@ public class OrderServiceImpl implements OrderService {
 				}
 			}
 			orderListDto.setGoodsList(goodsListDtoList);
-			ShareDto shareDto = getShareDto(order.getOrderSnMain());
-			orderListDto.setShare(shareDto);
+			//已支付订单，可以发送红包
+			if(order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId())
+			{
+				ShareDto shareDto = getShareDto(order.getOrderSnMain());
+				orderListDto.setShare(shareDto);
+			}
 			//物流信息
 			if(order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
 				getLogistics(order, orderListDto);
@@ -559,11 +563,6 @@ public class OrderServiceImpl implements OrderService {
 			baseDto.setShipTime(shipTime);
 		}
 		baseDto.setPayStatus(order.getPayStatus());
-		//已支付订单，可以发送红包
-		if(order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId())
-		{
-			baseDto.setIsCanPostRedPaper(RedPaperStatus.YES);
-		}
 		baseDto.setStatus(order.getStatus());
 		baseDto.setTaoOrderSn(order.getTaoOrderSn());
 		baseDto.setIsshouhuo(getReciveStatus(order));// 确认收货的判断
@@ -680,9 +679,12 @@ public class OrderServiceImpl implements OrderService {
 				}
 			}
 			orderListDto.setExtmMsg(extmMsgDto);
-			
-			ShareDto shareDto = getShareDto(orderSnMain);
-			orderListDto.setShare(shareDto);
+			//已支付订单，可以发送红包
+			if(order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId())
+			{
+				ShareDto shareDto = getShareDto(orderSnMain);
+				orderListDto.setShare(shareDto);
+			}
 			//物流信息
 			if(order.getStatus() >= OrderStatusEnum.STATUS_REVIEWED.getId()
 					|| (order.getStatus() == OrderStatusEnum.STATUS_NEW.getId() 
