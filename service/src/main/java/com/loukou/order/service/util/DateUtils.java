@@ -7,6 +7,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 
 public class DateUtils {
+	
+	public static Date getDateAfter(Date startDate, int days) {
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTimeInMillis(startDate.getTime());
+		calendar.add(Calendar.DATE, days);//days天后的日期
+		Date result= new Date(calendar.getTimeInMillis()); //将c转换成Date
+		return result;
+	}
 
 	public static Date getEndofDate(Date date) {
 		Calendar calendar = Calendar.getInstance();

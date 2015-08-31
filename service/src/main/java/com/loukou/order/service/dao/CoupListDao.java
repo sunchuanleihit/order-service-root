@@ -50,4 +50,27 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 	
 	Page<CoupList> findByUserId(int userId, Pageable pageable);
 	
+	@Query("SELECT c FROM CoupList c WHERE userId = ?1 AND issue=1 AND ischecked=0 AND endtime<NOW()")
+	List<CoupList> getInvalidCoupLists(int userId);
+	
+	List<CoupList> findByUserIdAndCouponId(int userId, int couponId);
+
+	List<CoupList> findByCouponIdAndOpenid(int couponId, String openId);
+
+	CoupList findByCommoncode(String code);
+
+	@Query(value = "select max(floor(replace(commoncode, ?2, ''))) from tcz_coup_list where coupon_id = ?1", nativeQuery=true)
+	Integer findByCouponId(int couponId, String replaceCode);
+
+	List<CoupList> findByUserId(int userId);
+
+	List<CoupList> findByOpenid(String openId);
+
+	@Query("SELECT count(id) FROM CoupList WHERE couponId=?1")
+	Integer countCouponId(int couponId);
+	
+	@Transactional
+	@Modifying
+	@Query("UPDATE CoupList SET userId=?1, begintime = ?2, endtime=?3, openid=?4, createtime=NOW() WHERE commoncode=?5")
+	int update(int userId, Date beginTime, Date endTime, String openId, String commoncode);
 }

@@ -3,31 +3,28 @@ package com.loukou.order.service.api;
 import java.util.List;
 import java.util.Map;
 
+import com.loukou.order.service.req.dto.InviteInfoReqdto;
 import com.loukou.order.service.req.dto.OrderListParamDto;
 import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
+import com.loukou.order.service.resp.dto.InviteInfoRespDto;
+import com.loukou.order.service.resp.dto.LkStatusItemDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderBonusRespDto;
 import com.loukou.order.service.resp.dto.OrderCancelRespDto;
-import com.loukou.order.service.resp.dto.OResponseDto;
-import com.loukou.order.service.resp.dto.OrderInfoDto;
-import com.loukou.order.service.req.dto.OrderListParamDto;
-import com.loukou.order.service.resp.dto.LkStatusItemDto;
-import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderInfoDto;
 import com.loukou.order.service.resp.dto.OrderListInfoDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
+import com.loukou.order.service.resp.dto.ResponseDto;
 import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
 import com.loukou.order.service.resp.dto.ShareRespDto;
 import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
-import com.loukou.order.service.resp.dto.basic.RespDto;
-import com.loukou.order.service.resp.dto.RefuseReasonDto;
-import com.loukou.order.service.resp.dto.RefuseReasonListDto;
 import com.loukou.order.service.resp.dto.UserOrderNumRespDto;
+import com.loukou.order.service.resp.dto.basic.RespDto;
 
 public interface OrderService {
 	
@@ -49,8 +46,13 @@ public interface OrderService {
 	 * @param userId 用户ID
 	 * @param storeId 店铺ID
 	 * @param openId 唯一设备号
+	 * @param isUsable 是否可用（0: 不限——过期和不过期的优惠券；1：可用优惠券）
 	 */
-	public CouponListRespDto getCouponList(int cityId, int userId, int storeId, String openId);
+	public CouponListRespDto getCouponList(int cityId, int userId, int storeId, String openId, int isUsable);
+	
+	
+	public ResponseDto<String> activateCoupon(int userId, String openId, String commoncode);
+	
 	
 	/**
 	 * 
@@ -165,4 +167,11 @@ public interface OrderService {
 	public Map<String,List<LkStatusItemDto>> getLkStatusItemMap();
 	
 	public Map<String,Object> getLkConfigureMap();
+
+	public boolean createCouponCode(int userId, int couponId, int type, boolean check,
+			int num, String openId, double money);
+	
+	public void sendNewUserRegisterCoupon(int userId, String phone);
+	
+
 }
