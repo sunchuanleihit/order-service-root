@@ -190,14 +190,12 @@ public class BkOrderServiceImpl implements BkOrderService{
     
     @Autowired
     private TosuHandleDao tosuHandleDao;
+
     @Autowired
     private EntityManagerFactory entityManagerFactory;
     
     @Autowired
     private MemberDao memberDao;
-    
-    @Autowired
-    private CoupListDao coupListDao;
     
     @Autowired
     private CoupTypeDao coupTypeDao;
