@@ -34,7 +34,7 @@ public class OrderListBaseDto implements Serializable {
 	private String invoiceHeader = "";
 	private String postscript = "";
 	private int isOrder = 1;
-
+	
 	public int getOrderId() {
 		return orderId;
 	}

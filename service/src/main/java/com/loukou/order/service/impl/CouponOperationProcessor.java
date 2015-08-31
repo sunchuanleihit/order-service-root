@@ -202,7 +202,25 @@ public class CouponOperationProcessor {
 	
 		return resp;
 	}
-		
+	
+	public CouponListDto getCouponListDtoByUseCouponNo(String useCouponNo)
+	{
+		CouponListDto dto = new CouponListDto();
+		if(StringUtils.isNotBlank(useCouponNo))
+		{
+			CoupList coupList = coupListDao.findByCommoncode(useCouponNo);
+			if(coupList != null)
+			{
+				CoupRule coupRule = coupRuleDao.findByCommoncode(useCouponNo);
+				if(coupRule != null)
+				{
+					dto = assembleDto(coupList, coupRule, 1);
+				}
+			}
+		}
+		return dto;
+	}
+	
 	private CouponListDto assembleDto(CoupList coupList, CoupRule coupRule, int isUsable) {
 		String couponName = "";
 		if (coupRule.getCoupontypeid() == 1) {
@@ -332,7 +350,7 @@ public class CouponOperationProcessor {
 		 
 		 if(userId <= 0 || StringUtils.isBlank(openId) || StringUtils.isBlank(commoncode)) {
 			 resp.setCode(400);
-			 resp.setMessage("参数有误");
+			 resp.setMessage("请输入正确的优惠券/激活码");
 			 return resp;
 		 }
 		Member user = memberDao.findOne(userId);

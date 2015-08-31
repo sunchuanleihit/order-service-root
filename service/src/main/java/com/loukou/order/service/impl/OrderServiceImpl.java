@@ -36,6 +36,7 @@ import com.loukou.order.service.constants.FlagType;
 import com.loukou.order.service.constants.OS;
 import com.loukou.order.service.constants.OrderPayType;
 import com.loukou.order.service.constants.OrderStateReturn;
+import com.loukou.order.service.constants.RedPaperStatus;
 import com.loukou.order.service.constants.ReturnGoodsType;
 import com.loukou.order.service.constants.ShippingMsgDesc;
 import com.loukou.order.service.dao.AddressDao;
@@ -94,6 +95,7 @@ import com.loukou.order.service.entity.Store;
 import com.loukou.order.service.entity.WeiCangGoodsStore;
 import com.loukou.order.service.enums.AsyncTaskActionEnum;
 import com.loukou.order.service.enums.AsyncTaskStatusEnum;
+import com.loukou.order.service.enums.CoupListReqTypeEnum;
 import com.loukou.order.service.enums.OpearteTypeEnum;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
 import com.loukou.order.service.enums.OrderPayTypeEnum;
@@ -113,7 +115,9 @@ import com.loukou.order.service.req.dto.ReturnStorageGoodsReqDto;
 import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.req.dto.SpecShippingTime;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
+import com.loukou.order.service.resp.dto.CouponListDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
+import com.loukou.order.service.resp.dto.CouponListResultDto;
 import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
 import com.loukou.order.service.resp.dto.LkStatusItemDto;
@@ -127,6 +131,7 @@ import com.loukou.order.service.resp.dto.OrderListInfoDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
+import com.loukou.order.service.resp.dto.PayOrderGoodsListDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgRespDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
@@ -422,7 +427,12 @@ public class OrderServiceImpl implements OrderService {
 				}
 			}
 			orderListDto.setGoodsList(goodsListDtoList);
-			
+			//已支付订单，可以发送红包
+			if(order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId())
+			{
+				ShareDto shareDto = getShareDto(order.getOrderSnMain());
+				orderListDto.setShare(shareDto);
+			}
 			//物流信息
 			if(order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
 				getLogistics(order, orderListDto);
@@ -669,6 +679,12 @@ public class OrderServiceImpl implements OrderService {
 				}
 			}
 			orderListDto.setExtmMsg(extmMsgDto);
+			//已支付订单，可以发送红包
+			if(order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId())
+			{
+				ShareDto shareDto = getShareDto(orderSnMain);
+				orderListDto.setShare(shareDto);
+			}
 			//物流信息
 			if(order.getStatus() >= OrderStatusEnum.STATUS_REVIEWED.getId()
 					|| (order.getStatus() == OrderStatusEnum.STATUS_NEW.getId() 
@@ -707,7 +723,31 @@ public class OrderServiceImpl implements OrderService {
 		}
 		return resp;
 	}
-
+	/**
+	 * 
+	 * @param orderSnMain
+	 * @return
+	 */
+	private ShareDto getShareDto(String orderSnMain)
+	{
+		StringBuilder md5time = new StringBuilder();
+		md5time.append("share").append(orderSnMain)
+				.append(new Date().getTime() / 1000).append("friend");
+		StringBuilder shareUrl = new StringBuilder();
+		shareUrl.append(
+				"http://wap.loukou.com/weixin.wxact-sharefriend.html?time=")
+				.append(new Date().getTime() / 1000)
+				.append("&order_id=")
+				.append(orderSnMain)
+				.append("&scode=")
+				.append(DigestUtils.md5DigestAsHex(md5time.toString()
+						.getBytes()));
+		ShareDto shareDto = new ShareDto();
+		shareDto.setContent("楼口全场代金券来啊，速抢");
+		shareDto.setIcon("");
+		shareDto.setUrl(shareUrl.toString());
+		return shareDto;
+	}
 	//获取物流信息
 	private void getLogistics(Order order, OrderListDto orderListDto) {
 		ShippingMsgRespDto shippingDto = getShippingResult(order.getTaoOrderSn());
@@ -1196,10 +1236,16 @@ public class OrderServiceImpl implements OrderService {
 
 		double orderTotal = 0;
 		double shippingFee = 0;
+		String useCouponNo = "";
+		String postscript = "";
+		List<Integer> orderIds = new ArrayList<Integer>();
 		for (Order o : orders) {
 			orderTotal = DoubleUtils.add(orderTotal, o.getGoodsAmount());
 			orderTotal = DoubleUtils.add(orderTotal, o.getShippingFee());
 			shippingFee = DoubleUtils.add(shippingFee, o.getShippingFee());
+			useCouponNo = o.getUseCouponNo();
+			orderIds.add(o.getOrderId());
+			postscript = o.getPostscript();
 		}
 
 		Double payedMoney = orderPayDao
@@ -1219,12 +1265,33 @@ public class OrderServiceImpl implements OrderService {
 		result.setTotal(DoubleUtils.sub(orderTotal, payedMoney));
 		result.setTxkNum(txkValue);
 		result.setVcount(vCountValue);
+		result.setPostscript(postscript);
 		PayOrderMsgRespDto payOrderMsgRespDto = new PayOrderMsgRespDto();
 		payOrderMsgRespDto.setOrderMsg(result);
+		
+		//TODO 设置推荐优惠券和 购物清单
+		CouponListDto couponListDto  = couponOperationProcessor.getCouponListDtoByUseCouponNo(useCouponNo);
+		payOrderMsgRespDto.setRecommend(couponListDto);
+		payOrderMsgRespDto.setGoodsList(getPayOrderGoodsListDtoByOrderIdIn(orderIds));
 		resp.setResult(payOrderMsgRespDto);
 
 		return resp;
 
+	}
+	
+	private List<PayOrderGoodsListDto> getPayOrderGoodsListDtoByOrderIdIn(List<Integer> orderIds)
+	{
+		List<PayOrderGoodsListDto> goodsList = new ArrayList<PayOrderGoodsListDto>();
+		List<OrderGoods> orderGoodsList = orderGoodsDao.findByOrderIdIn(orderIds);
+		for(OrderGoods og : orderGoodsList)
+		{
+			PayOrderGoodsListDto goods = new PayOrderGoodsListDto();
+			goods.setAmount(og.getQuantity());
+			goods.setGoodsName(og.getGoodsName());
+			goods.setPrice(DoubleUtils.mul(og.getPricePurchase(), og.getQuantity()));
+			goodsList.add(goods);
+		}
+		return goodsList;
 	}
 	
 	private String trimall(String str)// 删除空格
@@ -1710,24 +1777,7 @@ public class OrderServiceImpl implements OrderService {
 			resp.setMessage("参数有误");
 			return resp;
 		}
-		StringBuilder md5time = new StringBuilder();
-		md5time.append("share").append(orderSnMain)
-				.append(new Date().getTime() / 1000).append("friend");
-
-		StringBuilder shareUrl = new StringBuilder();
-		shareUrl.append(
-				"http://wap.loukou.com/weixin.wxact-sharefriend.html?time=")
-				.append(new Date().getTime() / 1000)
-				.append("&order_id=")
-				.append(orderSnMain)
-				.append("&scode=")
-				.append(DigestUtils.md5DigestAsHex(md5time.toString()
-						.getBytes()));
-		ShareDto shareDto = new ShareDto();
-		shareDto.setContent("楼口全场代金券来啊，速抢");
-		shareDto.setIcon("");
-		shareDto.setUrl(shareUrl.toString());
-
+		ShareDto shareDto = getShareDto(orderSnMain);
 		List<Order> orders = orderDao.findByOrderSnMain(orderSnMain);
 		int count = orders.size();
 
@@ -1804,9 +1854,65 @@ public class OrderServiceImpl implements OrderService {
 		orderMsgDto.setTotal(total);
 		orderMsgDto.setTxkNum(txkNum);
 		orderMsgDto.setVcount(vcount);
-
+		
+		resp.getResult().setRecommend(getRecommendCoupon(cityId, userId, storeId, openId));
+		resp.getResult().setGoodsList(getGoodsListByCart(cart));
+		
 		return resp;
 	}
+	
+	/**
+	 * 获取用户推荐优惠券
+	 * @param cityId
+	 * @param userId
+	 * @param storeId
+	 * @param openId
+	 * @return
+	 */
+	private CouponListDto getRecommendCoupon(int cityId, int userId, int storeId,
+			String openId)
+	{
+		CouponListDto dto = new CouponListDto();
+		//添加 推荐优惠券，默认金额最大可用的
+		CouponListRespDto couponListRespDto = couponOperationProcessor.getCouponList(cityId, userId, storeId, openId, CoupListReqTypeEnum.USABLE.getId());
+		if(couponListRespDto != null && couponListRespDto.getResult() != null )
+		{
+			List<CouponListDto> recommend = couponListRespDto.getResult().getRecommend();
+			if(!CollectionUtils.isEmpty(recommend))
+			{
+				dto = recommend.get(0);
+			}
+		}
+		return dto;
+	}
+	
+	/**
+	 * 获取购物车商品集合
+	 * @param cart
+	 * @return
+	 */
+	private List<PayOrderGoodsListDto> getGoodsListByCart(CartRespDto cart)
+	{
+		List<PayOrderGoodsListDto> goodsList = new ArrayList<PayOrderGoodsListDto>();
+		if(cart != null)
+		{
+			List<PackageRespDto> packages = cart.getPackageList();
+			for(PackageRespDto pack : packages)
+			{
+				List<CartGoodsRespDto> cartGoods = pack.getGoodsList();
+				for(CartGoodsRespDto goods : cartGoods)
+				{
+					PayOrderGoodsListDto orderGoods = new PayOrderGoodsListDto();
+					orderGoods.setAmount(goods.getAmount());
+					orderGoods.setGoodsName(goods.getGoodsName());
+					orderGoods.setPrice(DoubleUtils.mul(goods.getAmount(), goods.getPrice()));
+					goodsList.add(orderGoods);
+				}
+			}
+		}
+		return goodsList;
+	}
+	
 	
 	/**
 	 * 订单详情

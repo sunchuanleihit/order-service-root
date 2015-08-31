@@ -14,6 +14,8 @@ public class PayOrderMsgDto implements Serializable{
 	private double discountAmount;
 	private double txkNum;
 	private double vcount;
+	private String postscript;
+	
 	public String getOrderSnMain() {
 		return orderSnMain;
 	}
@@ -55,5 +57,11 @@ public class PayOrderMsgDto implements Serializable{
 	}
 	public void setVcount(double vcount) {
 		this.vcount = vcount;
+	}
+	public String getPostscript() {
+		return postscript;
+	}
+	public void setPostscript(String postscript) {
+		this.postscript = postscript;
 	}
 }
