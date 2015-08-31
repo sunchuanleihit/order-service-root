@@ -1278,7 +1278,8 @@ public class BkOrderServiceImpl implements BkOrderService{
 			resp.setMessage("参数有误");
 			return resp;
 		}
-		Order order = orderDao.findByTaoOrderSn(taoOrderSn);
+		List<Order> orderList = orderDao.findByTaoOrderSn(taoOrderSn);
+		Order order = orderList.get(0);
 		List<ShippingListDto> shippingList = new ArrayList<ShippingListDto>();
 		
 		if(order != null) {

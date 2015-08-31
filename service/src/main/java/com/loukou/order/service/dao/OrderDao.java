@@ -13,14 +13,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.loukou.order.service.entity.Order;
 
-public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 
+public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, JpaSpecificationExecutor<Order>{
 	List<Order> findByTaoOrderSn(String taoOrderSn);
 	
 	List<Order> findByOrderSnMain(String orderSnMain);
 
 	@Query("SELECT o FROM Order o WHERE shippingId=?1 AND status=15 AND finishedTime>=?2 AND finishedTime<=?3")
-
 	List<Order> getCvsFininshedOrders(int cvsId, int start, int end);
 
 	@Query("SELECT o FROM Order o WHERE orderSnMain=?1 AND status=15")
