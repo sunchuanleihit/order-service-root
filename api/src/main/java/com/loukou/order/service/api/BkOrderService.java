@@ -2,6 +2,7 @@ package com.loukou.order.service.api;
 
 import java.util.List;
 
+import com.loukou.order.service.bo.BaseRes;
 import com.loukou.order.service.req.dto.CssOrderReqDto;
 import com.loukou.order.service.resp.dto.BkCouponListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderActionRespDto;
@@ -14,6 +15,7 @@ import com.loukou.order.service.resp.dto.BkTxkDto;
 import com.loukou.order.service.resp.dto.BkTxkRecordListRespDto;
 import com.loukou.order.service.resp.dto.BkVaccountListResultRespDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
+import com.loukou.order.service.resp.dto.BkOrderPayDto;
 import com.loukou.order.service.resp.dto.CssOrderRespDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
 
@@ -103,4 +105,33 @@ public interface BkOrderService {
 	 */
 	public BkTxkRecordListRespDto queryTxkRecordListByUserId(Integer pageNum, Integer pageSize,Integer buyerId);
 
+	public List<BkOrderPayDto> getOrderPayList(String orderSnMain);
+	
+	public List<BkOrderPayDto> getAllOrderPayList(String orderSnMain);
+
+	BkOrderListRespDto orderReturnMsg(String orderSnMain);
+	
+	public BaseRes<String> generateReturn(String actor,int orderId,String postScript,String orderSnMain,int returnType,int payId,double shippingFee,
+			int[] goodsIdList,
+			int[] specIdList,
+			int[] proTypeList,
+			int[] recIdList,
+			int[] goodsReturnNumList,
+			double[] goodsReturnAmountList,
+			int[] goodsReasonList,
+			String[] goodsNameList,
+			int[] paymentIdList,
+			double[] returnAmountList);
+	
+	public BaseRes<String> cancelOrder(String orderSnMain,String actor);
+	
+	public BaseRes<String> resetCancelOrder(String orderSnMain,String actor);
+	
+	public double getMultiplePaymentRefundMsg(String orderSnMain);
+	
+	public BaseRes<String> generatePaymentRefund(int reason,String actor,String orderSnMain,String postScript,int[] paymentIdList,double[] returnAmountList);
+	
+	public BaseRes<String> generateSpecialPaymentRefund(int reason,String actor,String orderSnMain,String postScript,int[] paymentIdList,double[] returnAmountList);
+	
+	public BaseRes<String> generateComplaint(String actor,String orderSnMain,String content1,String addTime,String userName,String mobile,int type,int status,String content2,String[] sellerNameList,String[] goodsNameList);
 }

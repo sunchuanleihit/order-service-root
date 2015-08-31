@@ -37,7 +37,7 @@ public class Payment {
 	private int sort_order = 0;
 
 	@Column(name = "payment_id_old")
-	private int paymentIdOld = 0;
+	private Integer paymentIdOld;
 
 	@Column(name = "bank_act")
 	private int bankAct = 0;// 0不参与银行专享受 1参与

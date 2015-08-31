@@ -17,7 +17,8 @@ import com.loukou.order.service.entity.OrderReturn;
 public interface OrderReturnDao extends PagingAndSortingRepository<OrderReturn, Integer>, JpaSpecificationExecutor<OrderReturn>{
 
 	List<OrderReturn> findByOrderSnMainAndOrderStatus(String orderSnMain, int orderStatus);
-
+	
+	List<OrderReturn> findByOrderIdAndOrderStatus(int orderId, int orderStatus);
 
 	@Transactional(value="transactionManagerMall")
 	@Modifying
