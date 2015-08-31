@@ -22,7 +22,7 @@ public interface InviteInfoDao extends PagingAndSortingRepository<InviteList, In
 	double sumRewardByUserId(int userId);
 	
 	//根据手机号查找邀请信息
-	List<InviteList> findByPhoneMob(String phoneMob);
+	InviteList findByPhoneMob(String phoneMob);
 	
 	//根据手机号和发放查找邀请信息
 	List<InviteList> findByPhoneMobAndIfGetcoupon(String phoneMob,int ifGetcoupon);

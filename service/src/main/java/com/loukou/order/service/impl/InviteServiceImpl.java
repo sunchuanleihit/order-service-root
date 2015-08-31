@@ -43,8 +43,8 @@ public class InviteServiceImpl implements InviteService {
 	 * @return
 	 */
 	@Override
-	public boolean checkAndCreateCoupon(String phoneNumber, int userId) {
+	public boolean checkAndCreateCoupon(String phoneNumber, int userId,String openId) {
 		
-		return inviteProcessor.checkAndCreateCoupon(phoneNumber, userId);
+		return inviteProcessor.checkAndCreateCoupon(phoneNumber, userId,openId);
 	}
 }

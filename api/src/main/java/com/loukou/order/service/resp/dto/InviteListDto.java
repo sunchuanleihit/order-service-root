@@ -11,11 +11,11 @@ public class InviteListDto implements Serializable {
 	//手机号
 	private String moblie;
 	//邀请状态
-	private int inviteStatus;
+	private String inviteStatus;
 	//奖励
 	private double reward;
 	//奖励状态
-	private int rewardStaus;
+	private String rewardStaus;
 	
 	public String getMoblie() {
 		return moblie;
@@ -24,25 +24,26 @@ public class InviteListDto implements Serializable {
 		this.moblie = moblie;
 	}
 
-	public int getInviteStatus() {
+
+	public String getInviteStatus() {
 		return inviteStatus;
 	}
-	public void setInviteStatus(int inviteStatus) {
+	public void setInviteStatus(String inviteStatus) {
 		this.inviteStatus = inviteStatus;
 	}
-
 	public double getReward() {
 		return reward;
 	}
 	public void setReward(double reward) {
 		this.reward = reward;
 	}
-	public int getRewardStaus() {
+	public String getRewardStaus() {
 		return rewardStaus;
 	}
-	public void setRewardStaus(int rewardStaus) {
+	public void setRewardStaus(String rewardStaus) {
 		this.rewardStaus = rewardStaus;
 	}
+
 
 	
 	

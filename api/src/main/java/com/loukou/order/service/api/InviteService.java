@@ -24,5 +24,5 @@ public interface InviteService {
 	 * @param ifGetcoupon
 	 * @return
 	 */
-	public boolean checkAndCreateCoupon(String phoneNumber,int userId); 
+	public boolean checkAndCreateCoupon(String phoneNumber,int userId,String openId); 
 }

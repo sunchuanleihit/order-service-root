@@ -89,14 +89,6 @@ public class InviteList {
 		this.inviteCode = inviteCode;
 	}
 
-	public int getInviteStatus() {
-		return inviteStatus;
-	}
-
-	public void setInviteStatus(int inviteStatus) {
-		this.inviteStatus = inviteStatus;
-	}
-
 	public Date getLastupdateTime() {
 		return lastupdateTime;
 	}
@@ -121,14 +113,6 @@ public class InviteList {
 		this.phoneMob = phoneMob;
 	}
 
-
-	public int getRewardStatus() {
-		return rewardStatus;
-	}
-
-	public void setRewardStatus(int rewardStatus) {
-		this.rewardStatus = rewardStatus;
-	}
 
 	public Double getReward() {
 		return reward;
@@ -163,7 +147,25 @@ public class InviteList {
 		this.createdTime = createdTime;
 	}
 
-	
+
+	public int getInviteStatus() {
+		return inviteStatus;
+	}
+
+	public void setInviteStatus(int inviteStatus) {
+		this.inviteStatus = inviteStatus;
+	}
+
+	public int getRewardStatus() {
+		return rewardStatus;
+	}
+
+	public void setRewardStatus(int rewardStatus) {
+		this.rewardStatus = rewardStatus;
+	}
+
+
+
 	
 	
 }

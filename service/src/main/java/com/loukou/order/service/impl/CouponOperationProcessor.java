@@ -380,7 +380,7 @@ public class CouponOperationProcessor {
 			checkCode = dto.getResult();
 		//数字开头 为邀请码 进邀请码规则 
 		}else if(Character.isDigit(commoncode.charAt(0))){
-			commoncode=commoncode.toLowerCase();
+			commoncode=commoncode.toUpperCase();
 			return inviteOperationProcessor.checkAppInviteCode(userId, openId, commoncode);
 		} 
 		else {

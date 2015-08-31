@@ -12,7 +12,7 @@ public class InviteValidateRespDto implements Serializable {
 	private static final long serialVersionUID = 8868040713788128720L;
 	//金额
 	private double  money; 
-	//消息编码 0开头成功
+	//消息编码 200开头成功
 	private int code;
 	//消息
 	private String message;

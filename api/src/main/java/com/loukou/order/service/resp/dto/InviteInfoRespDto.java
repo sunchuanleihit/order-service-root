@@ -18,7 +18,7 @@ public class InviteInfoRespDto implements Serializable {
 	private List<InviteListDto>  InviteList;
 	//消息code
 	private  int code;
-	//上限值
+	//是否到达上限
 	private int isOver=0;
 	
 	public String getInviteCode() {
