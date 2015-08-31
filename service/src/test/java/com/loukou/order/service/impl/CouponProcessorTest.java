@@ -1,5 +1,7 @@
 package com.loukou.order.service.impl;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -36,6 +38,7 @@ public class CouponProcessorTest extends AbstractTestObject {
 	public void generateCouponRangeTest() {
 		CoupRule coupRule = coupRuleDao.findOne(933);
 		couponOperationProcessor.generateCouponRange(coupRule);
+	
 	}
 	
 }

@@ -3,10 +3,12 @@ package com.loukou.order.service.api;
 import java.util.List;
 import java.util.Map;
 
+import com.loukou.order.service.req.dto.InviteInfoReqdto;
 import com.loukou.order.service.req.dto.OrderListParamDto;
 import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
+import com.loukou.order.service.resp.dto.InviteInfoRespDto;
 import com.loukou.order.service.resp.dto.LkStatusItemDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderBonusRespDto;
@@ -170,4 +172,6 @@ public interface OrderService {
 			int num, String openId, double money);
 	
 	public void sendNewUserRegisterCoupon(int userId, String phone);
+	
+
 }
