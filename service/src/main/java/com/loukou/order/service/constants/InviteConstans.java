@@ -9,7 +9,7 @@ public class InviteConstans {
 	//查询邀请码
 	public static final String  QUERYTYPE_CODE="code";
 	//被邀请人优惠券ID
-	public static final int INVITED_COUPONID=962;
+	public static final int INVITED_COUPONID=1135;
 	//已发放优惠券
 	public static final int GET_COUPON =1;
 	//未发放优惠券

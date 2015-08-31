@@ -228,7 +228,7 @@ public class InviteOperationProcessor {
 			response.setMoney(coupRule.getMoney());
 			response.setPhoneNumber(req.getPhoneNumber());
 			response.setCode(200);
-			String content = "";
+			String content = "亲，10元红包塞进你的账户。自从用楼口，惊喜天天有！快去查看账户钱包吧！http://t.cn/R2mStax";
 			String[] phones = new String[]{req.getPhoneNumber()};
 			//调用短信服务，发送短信
 			try {
