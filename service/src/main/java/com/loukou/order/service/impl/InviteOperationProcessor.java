@@ -199,14 +199,14 @@ public class InviteOperationProcessor {
 					response.setMessage("抱歉，您不是新用户，不可领取邀请券");
 					return  response;
 				}
-				ifsuccess=orderService.createCouponCode(inviteduser.getUserId(), InviteConstans.INVITED_COUPONID,  CouponFormType.PRIVATE,false, 1,"", 0);
+				ifsuccess=orderService.createCouponCode(inviteduser.getUserId(), InviteConstans.INVITED_COUPONID,  CouponFormType.PRIVATE,false, 2,"", 0);
 				if(ifsuccess){
 					//标记已发券
 					inviteList.setIfGetcoupon(InviteConstans.GET_COUPON);
 
 				}else{
 					response.setCode(400);
-					response.setMessage("抱歉，您不是新用户，不可领取邀请券");
+					response.setMessage("抱歉，领取失败，请稍候再试。");
 					return  response;
 				}
 			}else{//新用户 标记未发券
@@ -225,7 +225,7 @@ public class InviteOperationProcessor {
 		if(ifsuccess){
 			//查询返回优惠券信息
 			CoupRule coupRule = coupRuleDao.findOne(InviteConstans.INVITED_COUPONID);
-			response.setMoney(coupRule.getMoney());
+			response.setMoney(coupRule.getMoney()*2);//两张
 			response.setPhoneNumber(req.getPhoneNumber());
 			response.setCode(200);
 			String content = "亲，10元红包塞进你的账户。自从用楼口，惊喜天天有！快去查看账户钱包吧！http://t.cn/R2mStax";
@@ -261,7 +261,7 @@ public class InviteOperationProcessor {
 		Member member= memberDao.findOne(userId);
 		InviteList list =inviteInfoDao.findByPhoneMob(member.getPhoneMob());
 		//有数据代表发送过
-		if(list!=null||coupListDao.findByCouponIdAndOpenid(InviteConstans.INVITED_COUPONID, openId).size()>0){
+		if(list!=null||coupListDao.findByCouponIdAndOpenid(InviteConstans.INVITED_COUPONID, openId).size()>1){
 			resp.setCode(400);
 			resp.setMessage("抱歉，您已领取过邀请券。");
 			return  resp;
@@ -272,7 +272,7 @@ public class InviteOperationProcessor {
 			resp.setMessage("抱歉，您不是新用户，不可领取邀请券。");
 			return  resp;
 		}else{
-			if(orderService.createCouponCode(userId, InviteConstans.INVITED_COUPONID,  CouponFormType.PRIVATE,false, 1,"", 0)){
+			if(orderService.createCouponCode(userId, InviteConstans.INVITED_COUPONID,  CouponFormType.PRIVATE,false, 2,"", 0)){
 				InviteList inviteList=new  InviteList();
 				inviteList.setInviteCode(inviteCode);
 				inviteList.setInviteStatus(InviteStatusEnum.INVITESTATUS_REGISTERED.getId());
@@ -288,7 +288,7 @@ public class InviteOperationProcessor {
 				return  resp;
 			}else{
 				resp.setCode(400);
-				resp.setMessage("抱歉，您不是新用户，不可领取邀请券。");
+				resp.setMessage("抱歉，领取失败，请稍候再试。");
 				return  resp;
 			}
 		}
@@ -306,7 +306,7 @@ public class InviteOperationProcessor {
 		List<InviteList> list=inviteInfoDao.findByPhoneMobAndIfGetcoupon(phoneNumber, InviteConstans.NOTGET_COUPON);
 		if(list.size()>0){
 			List<CoupList> coList=coupListDao.findByCouponIdAndOpenid(InviteConstans.INVITED_COUPONID, openId);
-			if(coList.size()<1){
+			if(coList.size()<2){
 				//创建邀请券 成功并修改获取邀请状态
 				if(orderService.createCouponCode(userId, InviteConstans.INVITED_COUPONID, CouponFormType.PRIVATE, false, 1, "", 0)){
 					inviteInfoDao.updateIfGetcouponByPhone(phoneNumber);
