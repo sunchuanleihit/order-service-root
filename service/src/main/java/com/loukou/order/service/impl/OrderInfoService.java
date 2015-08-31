@@ -362,7 +362,9 @@ public class OrderInfoService {
         }
 
         try {
-            DateTime endDate = DateTime.parse((timeString + " " + timeslots.get(1)), formatter);
+        	// FIXME 这里有个trick, 数据库里有配送时间区间为23:00-24:00，24:00 解析有错，所以用前面的时间+1小时
+//        	DateTime endDate = DateTime.parse((timeString + " " + timeslots.get(1)), formatter);
+            DateTime endDate = DateTime.parse((timeString + " " + timeslots.get(0)), formatter).plusHours(1);
             DateTime finishDate = DateTime.parse(SDF.format(new Date((Long.valueOf(finishedTime) * 1000))),
                     DateTimeFormat.forPattern("yyyy-MM-dd HH:mm:ss"));
 

@@ -58,7 +58,7 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	@Transactional
 	@Modifying
 	@Query("UPDATE Order set status = ?2 where orderId = ?1")
-	void updateOrderStatus(int orderId, int status);
+	int updateOrderStatus(int orderId, int status);
 
 	Order findByOrderId(int orderId);
 	
@@ -91,12 +91,12 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	@Modifying
     @Query("UPDATE Order set status = ?2, receiveNo=?3 where orderId = ?1")
 	@Transactional
-    void updateOrderStatusAndreceiveNo(int orderId, int status, String receiveNo);
+    int updateOrderStatusAndreceiveNo(int orderId, int status, String receiveNo);
 	
 	@Modifying
     @Query("UPDATE Order set status = ?1, finishedTime=?2 where orderId = ?3")
 	@Transactional
-	void updateStatusAndFinishedTime(int status,int finishedTime,int orderId);
+	int updateStatusAndFinishedTime(int status,int finishedTime,int orderId);
 
 	List<Order> findByBuyerIdAndStatusNotIn(int userId, List<Integer> statusList);
 
