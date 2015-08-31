@@ -9,6 +9,7 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.loukou.order.service.constants.CouponFormType;
 import com.loukou.order.service.constants.CouponType;
+import com.loukou.order.service.constants.InviteConstans;
 import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupLogDao;
 import com.loukou.order.service.dao.CoupRuleDao;
@@ -522,6 +524,7 @@ public class CouponOperationProcessor {
     		}
     	}
     	
+    	
     	CoupList coupL = new CoupList();
     	
     	coupL.setCouponId(couponId);
@@ -535,10 +538,23 @@ public class CouponOperationProcessor {
     	coupL.setCreatetime(new Date());
     	coupL.setSellSite(coupRule.getSellSite());
     	coupL.setOpenid(openId);
-    	coupListDao.save(coupL);
+   
     	
     	int coupNum = coupRule.getNum() + 1;//优惠券总张数
     	int sumResiduenum = coupRule.getResiduenum() + 1;//优惠券未使用张数
+    	//邀请券发两张
+    	if(InviteConstans.INVITED_COUPONID==couponId){
+    		CoupList coupL2 =new CoupList();
+    		BeanUtils.copyProperties(coupL, coupL2);
+    		//获取新的券码
+    		coupL2.setCommoncode(mkCode(coupRule.getPrefix()));
+    		List<CoupList>	lists= Lists.newArrayList(coupL,coupL2);  
+    		coupListDao.save(lists);
+    		coupNum = coupRule.getNum() + 2;//优惠券总张数
+        	sumResiduenum = coupRule.getResiduenum() + 2;//优惠券未使用张数
+    	}else{
+    		coupListDao.save(coupL);
+    	}
     	
     	coupRuleDao.update(couponId, coupNum, sumResiduenum);
     	recordLog(userId, couponId, "[检查结果]  领取成功", 1, openId);
