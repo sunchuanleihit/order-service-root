@@ -17,8 +17,11 @@ public class BkOrderReturnDto implements Serializable {
 	private String addTime;
 	private Integer goodsType;
 	private Integer orderType;
+	private String orderTypeStr;
 	private Integer orderStatus;
+	private String orderStatusStr;
 	private Integer goodsStatus;
+	private String goodsStatusStr;
 	private Integer refundStatus;
 	private Integer statementStatus;
 	private String postscript;
@@ -27,6 +30,25 @@ public class BkOrderReturnDto implements Serializable {
 	private Integer conId;
 	private Integer reason;
 	private Integer repayWay;
+	
+	public String getOrderTypeStr() {
+		return orderTypeStr;
+	}
+	public void setOrderTypeStr(String orderTypeStr) {
+		this.orderTypeStr = orderTypeStr;
+	}
+	public String getGoodsStatusStr() {
+		return goodsStatusStr;
+	}
+	public void setGoodsStatusStr(String goodsStatusStr) {
+		this.goodsStatusStr = goodsStatusStr;
+	}
+	public String getOrderStatusStr() {
+		return orderStatusStr;
+	}
+	public void setOrderStatusStr(String orderStatusStr) {
+		this.orderStatusStr = orderStatusStr;
+	}
 	public Integer getOrderIdR() {
 		return orderIdR;
 	}
