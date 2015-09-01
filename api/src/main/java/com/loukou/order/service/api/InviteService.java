@@ -21,7 +21,6 @@ public interface InviteService {
 	/**
 	 * 新用户注册时检查是否发放邀请券
 	 * @param phoneNumber
-	 * @param ifGetcoupon
 	 * @return
 	 */
 

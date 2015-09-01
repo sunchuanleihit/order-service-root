@@ -29,12 +29,6 @@ public interface BkOrderService {
 	public BkOrderListRespDto orderDetail(String orderSnMain);
 	/**
 	 * 查找所有订单
-	 * @param sort
-	 * @param order
-	 * @param pageNum
-	 * @param pageSize
-	 * @param cssOrderReqDto
-	 * @return
 	 */
 	public BkOrderListRespDto queryBkOrderList(int pageNum, int pageSize, CssOrderReqDto cssOrderReqDto);
 	
