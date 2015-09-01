@@ -1515,6 +1515,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		baseDto.setInvoiceHeader(order.getInvoiceHeader());
 		baseDto.setBuyerName(order.getBuyerName());
 		baseDto.setPayType(order.getPayType());
+		baseDto.setPayName(BkOrderPayTypeEnum.parseType(order.getPayType()).getPayType());
 		baseDto.setOrderAmount(order.getOrderAmount());
 		baseDto.setGoodsAmount(order.getGoodsAmount());
 		baseDto.setOrderPaid(order.getOrderPayed());
