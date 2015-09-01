@@ -1,6 +1,7 @@
 
 package com.loukou.order.service.dao;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -119,6 +120,10 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 
 	@Query("SELECT 1 FROM Order WHERE buyerId=?1")
 	String IfExistOrder(int buyerId);
-
+	
+	@Transactional(value="transactionManagerMall")
+	@Modifying
+	@Query("UPDATE Order set needShiptime = ?2,needShiptimeSlot=?3 where orderSnMain = ?1")
+	int updateNeedShipTimeByOrderSnMain(String orderSnMain,Date needShiptime, String needShiptimeSlot);
 }
 

@@ -1970,4 +1970,19 @@ public class BkOrderServiceImpl implements BkOrderService{
 		respDto.setTotal(respVO.getTotal());
 		return respDto;
 	}
+	
+	
+	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot){
+		BaseRes<String> result=new BaseRes<String>();
+		Date needShiptimeDate=DateUtils.str2Date(needShiptime);
+		int orderResult=orderDao.updateNeedShipTimeByOrderSnMain(orderSnMain, needShiptimeDate, needShiptimeSlot);
+		if(orderResult<1){
+			result.setCode("400");
+			result.setMessage("取消作废失败");
+			return result;
+		}
+		result.setCode("200");
+		result.setMessage("取消作废成功");
+		return result;
+	}
 }
