@@ -2,7 +2,7 @@ package com.loukou.order.service.req.dto;
 
 import java.io.Serializable;
 
-public class BkOrderHandoverReqDto implements Serializable{
+public class BkOrderRemarkReqDto implements Serializable{
 	private static final long serialVersionUID = -4270414248914701092L;
 	private String orderSnMain;//订单编号
 	private String user;//操作人

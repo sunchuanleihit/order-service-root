@@ -46,43 +46,45 @@ import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.CoupTypeDao;
 import com.loukou.order.service.dao.ExpressDao;
-import com.loukou.order.service.dao.MemberDao;
 import com.loukou.order.service.dao.GoodsDao;
 import com.loukou.order.service.dao.GoodsSpecDao;
+import com.loukou.order.service.dao.MemberDao;
 import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
 import com.loukou.order.service.dao.OrderExtmDao;
 import com.loukou.order.service.dao.OrderGoodsDao;
-import com.loukou.order.service.dao.OrderPayDao;
-import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.OrderGoodsRDao;
+import com.loukou.order.service.dao.OrderPayDao;
 import com.loukou.order.service.dao.OrderPayRDao;
+import com.loukou.order.service.dao.OrderRemarkDao;
+import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.SiteCityDao;
 import com.loukou.order.service.dao.StoreDao;
-import com.loukou.order.service.entity.CoupList;
-import com.loukou.order.service.entity.CoupRule;
-import com.loukou.order.service.entity.CoupType;
 import com.loukou.order.service.dao.TosuDao;
 import com.loukou.order.service.dao.TosuHandleDao;
 import com.loukou.order.service.dao.WeiCangGoodsStoreDao;
+import com.loukou.order.service.entity.CoupList;
+import com.loukou.order.service.entity.CoupRule;
+import com.loukou.order.service.entity.CoupType;
 import com.loukou.order.service.entity.Express;
-import com.loukou.order.service.entity.Member;
 import com.loukou.order.service.entity.Goods;
+import com.loukou.order.service.entity.Member;
 import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderExtm;
 import com.loukou.order.service.entity.OrderGoods;
-import com.loukou.order.service.entity.OrderPay;
-import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.OrderGoodsR;
+import com.loukou.order.service.entity.OrderPay;
 import com.loukou.order.service.entity.OrderPayR;
+import com.loukou.order.service.entity.OrderRemark;
+import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Payment;
 import com.loukou.order.service.entity.SiteCity;
 import com.loukou.order.service.entity.Store;
-import com.loukou.order.service.enums.BkOrderPayTypeEnum;
 import com.loukou.order.service.entity.Tosu;
 import com.loukou.order.service.entity.TosuHandle;
+import com.loukou.order.service.enums.BkOrderPayTypeEnum;
 import com.loukou.order.service.enums.BkOrderSourceEnum;
 import com.loukou.order.service.enums.BkOrderStatusEnum;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
@@ -91,6 +93,7 @@ import com.loukou.order.service.enums.OrderReturnGoodsType;
 import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.enums.PayStatusEnum;
 import com.loukou.order.service.enums.ReturnGoodsStatus;
+import com.loukou.order.service.req.dto.BkOrderRemarkReqDto;
 import com.loukou.order.service.req.dto.CssOrderReqDto;
 import com.loukou.order.service.resp.dto.BkCouponListDto;
 import com.loukou.order.service.resp.dto.BkCouponListRespDto;
@@ -101,6 +104,9 @@ import com.loukou.order.service.resp.dto.BkOrderListBaseDto;
 import com.loukou.order.service.resp.dto.BkOrderListDto;
 import com.loukou.order.service.resp.dto.BkOrderListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderListResultDto;
+import com.loukou.order.service.resp.dto.BkOrderPayDto;
+import com.loukou.order.service.resp.dto.BkOrderRemarkDto;
+import com.loukou.order.service.resp.dto.BkOrderRemarkListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderReturnDto;
 import com.loukou.order.service.resp.dto.BkOrderReturnListDto;
 import com.loukou.order.service.resp.dto.BkOrderReturnListRespDto;
@@ -109,7 +115,6 @@ import com.loukou.order.service.resp.dto.BkTxkRecordDto;
 import com.loukou.order.service.resp.dto.BkTxkRecordListRespDto;
 import com.loukou.order.service.resp.dto.BkVaccountListResultRespDto;
 import com.loukou.order.service.resp.dto.BkVaccountRespDto;
-import com.loukou.order.service.resp.dto.BkOrderPayDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
 import com.loukou.order.service.resp.dto.ShippingListDto;
 import com.loukou.order.service.resp.dto.ShippingListResultDto;
@@ -196,6 +201,9 @@ public class BkOrderServiceImpl implements BkOrderService{
     
     @Autowired
     private CoupListDao coupListDao;
+    
+    @Autowired
+    private OrderRemarkDao orderRemarkDao;
 	
 	//订单详情
 	@Override
@@ -1984,5 +1992,71 @@ public class BkOrderServiceImpl implements BkOrderService{
 		result.setCode("200");
 		result.setMessage("取消作废成功");
 		return result;
+	}
+
+	@Override
+	public BkOrderRemarkListRespDto queryHandover(int pageNum, int pageSize, BkOrderRemarkReqDto reqDto) {
+		String orderSnMain = reqDto.getOrderSnMain();
+		String user = reqDto.getUser();
+		Integer type = reqDto.getType();
+		Integer closed = reqDto.getClosed();
+		String sql = "select distinct(o.orderSnMain) from OrderRemark o where 1=1 ";
+		if(StringUtils.isNotBlank(orderSnMain)){
+			sql += " and o.orderSnMain = '"+orderSnMain+"'";
+		}
+		if(StringUtils.isNotBlank(user)){
+			sql += " and o.user = '"+user+"'";
+		}
+		if(type != null){
+			sql += " and o.type = "+type;
+		}
+		if(closed != null){
+			sql += " and o.closed = "+closed;
+		}
+		sql += " order by o.id desc ";
+		EntityManager em = entityManagerFactory.createEntityManager();
+		Query query = em.createQuery(sql);
+		List<String> orderSnMainTotal = query.getResultList();
+		int total = orderSnMainTotal.size();
+		List<String> orderSnMains = new ArrayList<String>();
+		for(int i=(pageNum-1)*pageSize ; i < total && i< pageNum*pageSize; i++ ){
+			orderSnMains.add(orderSnMainTotal.get(i));
+		}
+		List<OrderRemark> orderRemarkAllList = orderRemarkDao.findByOrderSnMainIn(orderSnMains);
+		Map<String, OrderRemark> orderRemarkMap = new HashMap<String, OrderRemark>();
+		for(OrderRemark tmp: orderRemarkAllList){
+			OrderRemark orderRemark = orderRemarkMap.get(tmp.getOrderSnMain());
+			if(orderRemark == null){
+				orderRemarkMap.put(tmp.getOrderSnMain(), tmp);
+			}else if(tmp.getId() > orderRemark.getId()){
+				orderRemarkMap.put(tmp.getOrderSnMain(), tmp);
+			}
+		}
+		List<BkOrderRemarkDto> bkOrderRemarkList = new ArrayList<BkOrderRemarkDto>();
+		for(String tmp : orderSnMains){
+			OrderRemark orderRemark = orderRemarkMap.get(tmp);
+			BkOrderRemarkDto dto = createBkOrderRemark(orderRemark);
+			bkOrderRemarkList.add(dto);
+		}
+		
+		BkOrderRemarkListRespDto resp = new BkOrderRemarkListRespDto(200, "");
+		resp.setBkOrderRemarkList(bkOrderRemarkList);
+		resp.setTotal(total);
+		return resp;
+	}
+	private BkOrderRemarkDto createBkOrderRemark(OrderRemark orderRemark){
+		BkOrderRemarkDto dto = new BkOrderRemarkDto();
+		dto.setId(orderRemark.getId());
+		dto.setOrderSnMain(orderRemark.getOrderSnMain());
+		dto.setClosed(orderRemark.getClosed());
+		dto.setUserClosed(orderRemark.getUserClosed());
+		dto.setClosedTime(DateUtils.date2DateStr(orderRemark.getClosedTime()));
+		dto.setContent(orderRemark.getContent());
+		dto.setFinishedTime(DateUtils.date2DateStr(orderRemark.getFinishedTime()));
+		dto.setOrderSnMain(dto.getOrderSnMain());
+		dto.setTime(DateUtils.date2DateStr(orderRemark.getTime()));
+		dto.setType(orderRemark.getType());
+		dto.setUser(orderRemark.getUser());
+		return dto;
 	}
 }

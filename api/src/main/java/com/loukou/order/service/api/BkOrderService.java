@@ -3,6 +3,7 @@ package com.loukou.order.service.api;
 import java.util.List;
 
 import com.loukou.order.service.bo.BaseRes;
+import com.loukou.order.service.req.dto.BkOrderRemarkReqDto;
 import com.loukou.order.service.req.dto.CssOrderReqDto;
 import com.loukou.order.service.resp.dto.BkCouponListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderActionRespDto;
@@ -16,6 +17,7 @@ import com.loukou.order.service.resp.dto.BkTxkRecordListRespDto;
 import com.loukou.order.service.resp.dto.BkVaccountListResultRespDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderPayDto;
+import com.loukou.order.service.resp.dto.BkOrderRemarkListRespDto;
 import com.loukou.order.service.resp.dto.CssOrderRespDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
 
@@ -130,4 +132,13 @@ public interface BkOrderService {
 	public BaseRes<String> generateComplaint(String actor,String orderSnMain,String content1,String addTime,String userName,String mobile,int type,int status,String content2,String[] sellerNameList,String[] goodsNameList);
 	
 	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot);
+	
+	/**
+	 * 查询订单交接
+	 * @param page
+	 * @param rows
+	 * @param reqDto
+	 * @return
+	 */
+	public BkOrderRemarkListRespDto queryHandover(int page, int rows, BkOrderRemarkReqDto reqDto);
 }
