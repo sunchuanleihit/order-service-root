@@ -96,7 +96,6 @@ public interface OrderService {
 	
 	/**
 	 * 
-	 * @param shippingResultDto 物流详情
 	 * @param taoOrderSn 订单ID
 	 * @return 物流详情
 	 */
@@ -151,7 +150,6 @@ public interface OrderService {
 	public OResponseDto<String> confirmBookOrder(String taoOrderSn,String userName,int senderId);
 
 	/** 
-	 * @param 退货入库
 	 * @return 
 	 */
 	public ReturnStorageRespDto returnStorage(ReturnStorageReqDto returnStorageReqDto);
