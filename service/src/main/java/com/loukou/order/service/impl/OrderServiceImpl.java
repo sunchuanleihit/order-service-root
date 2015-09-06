@@ -746,7 +746,8 @@ public class OrderServiceImpl implements OrderService {
 				.append(DigestUtils.md5DigestAsHex(md5time.toString()
 						.getBytes()));
 		ShareDto shareDto = new ShareDto();
-		shareDto.setContent("楼口全场代金券来啊，速抢");
+		shareDto.setTitle("标题：“楼口”1小时送货到家，还送30元红包，下载“楼口”app，享受便利到家生活！");
+		shareDto.setContent("红包可以直接抵扣支付金额。“楼口”让您享受1小时到家生活！");
 		shareDto.setIcon("");
 		shareDto.setUrl(shareUrl.toString());
 		return shareDto;
