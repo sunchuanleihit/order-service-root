@@ -16,6 +16,6 @@ public interface OrderRemarkDao extends PagingAndSortingRepository<OrderRemark, 
 	@Query("UPDATE OrderRemark set closed = 1 , userClosed = ?1, closedTime = NOW() where id = ?2")
 	int updateOrderCloseByIdList(String userClosed, Integer id);
 	
-	@Query("SELECT o from OrderRemark o where o.type = 1 and o.orderSnMain = ?1 order by o.id ASC")
-	List<OrderRemark> getHandoverByOrderSnMain(String orderSnMain);
+	@Query("SELECT o from OrderRemark o where o.type = ?2 and o.orderSnMain = ?1 order by o.id ASC")
+	List<OrderRemark> getOrderRemark(String orderSnMain,Integer type);
 }

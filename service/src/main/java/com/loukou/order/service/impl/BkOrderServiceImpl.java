@@ -261,7 +261,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			
 			Store storeMsg = storeDao.findOne(order.getSellerId());
 			String taxApply = "商家";
-			if(storeMsg.getTaxApply()==1){
+			if(storeMsg!=null && storeMsg.getTaxApply()==1){
 				taxApply = "淘常州";
 			}
 			baseDto.setTaxApply(taxApply);
@@ -2088,15 +2088,15 @@ public class BkOrderServiceImpl implements BkOrderService{
 		orderRemark.setBumen(0);
 		orderRemark.setContent(content);
 		orderRemark.setOrderSnMain(orderSnMain);
-		orderRemark.setType(1);
+		orderRemark.setType(type);
 		orderRemark.setUser(userName);
 		orderRemark.setTime(new Date());
 		orderRemarkDao.save(orderRemark);
 	}
 
 	@Override
-	public List<BkOrderRemarkDto> queryHandoverByOrderSnMain(String orderSnMain) {
-		List<OrderRemark> remarkList = orderRemarkDao.getHandoverByOrderSnMain(orderSnMain);
+	public List<BkOrderRemarkDto> queryOrderRemark(String orderSnMain,Integer type) {
+		List<OrderRemark> remarkList = orderRemarkDao.getOrderRemark(orderSnMain,type);
 		List<BkOrderRemarkDto> resultList = new ArrayList<BkOrderRemarkDto>();
 		if(remarkList !=null && remarkList.size()>0){
 			for(OrderRemark tmp: remarkList){

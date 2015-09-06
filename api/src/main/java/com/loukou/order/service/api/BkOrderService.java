@@ -158,7 +158,7 @@ public interface BkOrderService {
 	 * @param orderSnMain
 	 * @return
 	 */
-	public List<BkOrderRemarkDto> queryHandoverByOrderSnMain(String orderSnMain);
+	public List<BkOrderRemarkDto> queryOrderRemark(String orderSnMain,Integer type);
 
 	public BaseRes<String> cancelSubOrder(int orderId,String actor);
 	
