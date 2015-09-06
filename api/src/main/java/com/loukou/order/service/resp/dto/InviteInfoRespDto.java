@@ -3,6 +3,8 @@ package com.loukou.order.service.resp.dto;
 import java.io.Serializable;
 import java.util.List;
 
+import com.google.common.collect.Lists;
+
 public class InviteInfoRespDto implements Serializable {
 
 	
@@ -11,13 +13,13 @@ public class InviteInfoRespDto implements Serializable {
 	 */
 	private static final long serialVersionUID = 4970260051198737474L;
 	//邀请码
-	private String inviteCode;
+	private String inviteCode = "";
 	//奖励总金额
-	private Double totalReward;
+	private Double totalReward = 0.0;
 	//邀请列表
-	private List<InviteListDto>  InviteList;
+	private List<InviteListDto>  InviteList = Lists.newArrayList();
 	//消息code
-	private  int code;
+	private  int code = 200;
 	//是否到达上限
 	private int isOver=0;
 	
