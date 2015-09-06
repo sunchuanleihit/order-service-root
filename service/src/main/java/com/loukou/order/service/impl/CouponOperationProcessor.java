@@ -236,7 +236,7 @@ public class CouponOperationProcessor {
 		return dto;
 	}
 	
-	private CouponListDto assembleDto(CoupList coupList, CoupRule coupRule, int isUsable) {
+	public CouponListDto assembleDto(CoupList coupList, CoupRule coupRule, int isUsable) {
 		String couponName = "";
 		if(coupRule == null)
 			return new CouponListDto();
