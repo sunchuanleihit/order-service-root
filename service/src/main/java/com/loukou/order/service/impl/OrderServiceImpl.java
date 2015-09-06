@@ -1,5 +1,6 @@
 package com.loukou.order.service.impl;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
@@ -36,7 +37,6 @@ import com.loukou.order.service.constants.FlagType;
 import com.loukou.order.service.constants.OS;
 import com.loukou.order.service.constants.OrderPayType;
 import com.loukou.order.service.constants.OrderStateReturn;
-import com.loukou.order.service.constants.RedPaperStatus;
 import com.loukou.order.service.constants.ReturnGoodsType;
 import com.loukou.order.service.constants.ShippingMsgDesc;
 import com.loukou.order.service.dao.AddressDao;
@@ -110,7 +110,6 @@ import com.loukou.order.service.enums.ReturnGoodsStatus;
 import com.loukou.order.service.enums.ReturnOrderStatus;
 import com.loukou.order.service.enums.ReturnStatusEnum;
 import com.loukou.order.service.enums.WeiCangGoodsStoreStatusEnum;
-import com.loukou.order.service.req.dto.InviteInfoReqdto;
 import com.loukou.order.service.req.dto.OrderListParamDto;
 import com.loukou.order.service.req.dto.ReturnStorageGoodsReqDto;
 import com.loukou.order.service.req.dto.ReturnStorageReqDto;
@@ -118,10 +117,8 @@ import com.loukou.order.service.req.dto.SpecShippingTime;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
-import com.loukou.order.service.resp.dto.CouponListResultDto;
 import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
-import com.loukou.order.service.resp.dto.InviteInfoRespDto;
 import com.loukou.order.service.resp.dto.LkStatusItemDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderBonusRespDto;
@@ -307,7 +304,7 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired
 	private OrderUserDao orderUserDao;
 
-	
+	private DecimalFormat decimalFormat = new DecimalFormat("#.00");
 	@Override
 	public UserOrderNumRespDto getOrderNum(int userId) {
 		UserOrderNumRespDto resp = new UserOrderNumRespDto();
@@ -663,6 +660,9 @@ public class OrderServiceImpl implements OrderService {
 				if(og.getOrderId() == order.getOrderId()) {
 					GoodsListDto goodsListDto = new GoodsListDto();
 					BeanUtils.copyProperties(og, goodsListDto);
+					//add
+					goodsListDto.setPriceDiscount(DoubleUtils.round(og.getPriceDiscount(), 2));
+					goodsListDto.setPricePurchase(DoubleUtils.round(og.getPricePurchase(), 2));
 					goodsListDtoList.add(goodsListDto);
 				}
 			}
