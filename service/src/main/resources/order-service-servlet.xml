@@ -19,7 +19,7 @@
   	<!-- 本地调试使用 
     <dubbo:registry address="zookeeper://127.0.0.1:2181" />-->
 	<dubbo:application name="order-service" />
-  	<dubbo:protocol name="dubbo" port="20880" />
+  	<dubbo:protocol name="dubbo" port="${dubbo.protocol.port.order.service}" />
 	
 	<!-- 声明需要暴露的服务接口 -->
 	<dubbo:service ref="orderService" interface="com.loukou.order.service.api.OrderService" retries="0" timeout="5000"  />
