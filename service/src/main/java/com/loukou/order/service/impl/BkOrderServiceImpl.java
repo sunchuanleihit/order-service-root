@@ -1986,11 +1986,11 @@ public class BkOrderServiceImpl implements BkOrderService{
 		int orderResult=orderDao.updateNeedShipTimeByOrderSnMain(orderSnMain, needShiptimeDate, needShiptimeSlot);
 		if(orderResult<1){
 			result.setCode("400");
-			result.setMessage("取消作废失败");
+			result.setMessage("保存失败");
 			return result;
 		}
 		result.setCode("200");
-		result.setMessage("取消作废成功");
+		result.setMessage("保存成功");
 		return result;
 	}
 
@@ -2105,5 +2105,216 @@ public class BkOrderServiceImpl implements BkOrderService{
 			}
 		}
 		return resultList;
+	}
+	
+	//作废子订单
+	public BaseRes<String> cancelSubOrder(int orderId,String actor){
+		BaseRes<String> result=new BaseRes<String>();
+		
+		Order order=orderDao.findByOrderId(orderId);
+		if(order.getStatus()==1 || order.getStatus()==2){
+			result.setCode("400");
+			result.setMessage("已作废，不可再次作废");
+			return result;
+		}
+		
+		if(order.getType()!="booking"){
+			if(order.getStatus()>=8){
+				result.setCode("400");
+				result.setMessage("子订单作废失败");
+				return result;
+			}
+		}
+		
+		if(order.getStatus()==15){
+			result.setCode("400");
+			result.setMessage("子订单已完成，不可作废");
+			return result;
+		}
+		
+		int orderResult= orderDao.updateOrderStatusByOrderIdAndNotStatus(orderId,2,2);
+		if(orderResult<1){
+			result.setCode("400");
+			result.setMessage("子订单作废失败");
+			return result;
+		}
+		
+		//取消订单返还库存
+		if(order.getType()!="booking"){
+			if(order.getStatus()!=1){//已取消订单不退库存
+				releaseFreezStock(order.getOrderId(),2);
+			}
+		}
+		
+		OrderAction orderAction=new OrderAction();
+		orderAction.setAction(2);
+		orderAction.setActionTime(new Date());
+		orderAction.setTaoOrderSn(order.getTaoOrderSn());
+		orderAction.setOrderId(order.getOrderId());
+		orderAction.setOrderSnMain(order.getOrderSnMain());
+		orderAction.setActor(actor);
+		orderAction.setNotes("子订单作废");
+		orderActionDao.save(orderAction);
+		
+		result.setCode("200");
+		result.setMessage("子订单作废成功");
+		return result;
+	}
+	
+	//取消作废子订单
+	public BaseRes<String> resetCancelSubOrder(int orderId,String actor){
+		BaseRes<String> result=new BaseRes<String>();
+		Order order=orderDao.findByOrderId(orderId);
+		if(order==null){
+			result.setCode("400");
+			result.setMessage("订单不存在");
+			return result;
+		}
+		
+		if(order.getStatus()!=1 && order.getStatus()!=2){
+			result.setCode("400");
+			result.setMessage("未作废，不可取消作废");
+			return result;
+		}
+		
+		OrderReturn orderReturn=orderReturnDao.findByOrderSnMainAndNotOrderTypeAndOrderStatus(order.getOrderSnMain(),0,0);
+		if(orderReturn !=null && orderReturn.getOrderIdR()>0){
+			result.setCode("400");
+			result.setMessage("已生成退款单，不可取消作废");
+			return result;
+		}
+		
+		String errorMessage="";
+		List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(orderId);
+		for(OrderGoods og:orderGoodsList){
+			Goods goodsMsg=goodsDao.findByGoodsId(og.getGoodsId());
+			int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),goodsMsg.getStoreId());
+			if(stock<og.getQuantity()){
+				errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
+			}
+		}
+		
+		if(errorMessage!=""){
+			errorMessage="取消作废失败，"+errorMessage;
+			result.setCode("400");
+			result.setMessage(errorMessage);
+			return result;
+		}
+		
+		addFreezStock(orderId);
+		
+		int orderResult= orderDao.updateOrderStatusByOrderIdAndNotStatus(orderId,0,0);
+		if(orderResult<1){
+			result.setCode("400");
+			result.setMessage("子订单作废失败");
+			return result;
+		}
+		
+		OrderAction orderAction=new OrderAction();
+		orderAction.setAction(31);
+		orderAction.setActionTime(new Date());
+		orderAction.setTaoOrderSn(order.getTaoOrderSn());
+		orderAction.setOrderId(order.getOrderId());
+		orderAction.setOrderSnMain(order.getOrderSnMain());
+		orderAction.setActor(actor);
+		orderAction.setNotes("system子订单取消作废");
+		orderActionDao.save(orderAction);
+		
+		result.setCode("200");
+		result.setMessage("子订单取消作废成功");
+		return result;
+	}
+	
+	//支付子订单
+	public BaseRes<String> paySubOrder(String orderSnMain,String actor,int payId){
+		BaseRes<String> result=new BaseRes<String>();
+		if(orderSnMain==""){
+			result.setCode("400");
+			result.setMessage("非法操作");
+			return result;
+		}
+		
+		List<Order> orderList=orderDao.findByOrderSnMain(orderSnMain);
+		if (CollectionUtils.isEmpty(orderList)) {
+			result.setCode("400");
+			result.setMessage("订单为空");
+			return result;
+		}
+		
+		Double allGoodsAmount=0.0;
+		Double allShippingFee=0.0;
+		for(Order o:orderList){
+			if(o.getPayStatus()==1){
+				result.setCode("400");
+				result.setMessage("该订单已支付");
+				return result;
+			}
+			
+			allGoodsAmount+=o.getGoodsAmount();
+			allShippingFee+=o.getShippingFee();
+		}
+		
+		Double orderPayMoney=orderPayDao.getPayedAmountByOrderSnMain(orderSnMain);
+		if(orderPayMoney==null){
+			orderPayMoney=0.0;
+		}
+		if((allGoodsAmount+allShippingFee)<=orderPayMoney){
+			result.setCode("400");
+			result.setMessage("该订单已支付");
+			return result;
+		}
+		
+		if(payId>0){
+			int updateResult=orderDao.updateOrderPayId(payId, orderSnMain);
+			if(updateResult<1){
+				result.setCode("400");
+				result.setMessage("订单状态更新失败");
+				return result;
+			}
+			
+			for(Order o:orderList){
+				OrderPay orderPay=new OrderPay();
+				orderPay.setOrderSnMain(orderSnMain);
+				orderPay.setOrderId(o.getOrderId());
+				orderPay.setPaymentId(payId);
+				orderPay.setMoney(o.getGoodsAmount()+o.getShippingFee()-o.getOrderPayed());
+				orderPay.setPayTime(o.getAddTime());
+				orderPay.setStatus("succ");
+				orderPayDao.save(orderPay);
+			}
+			
+			OrderAction orderAction=new OrderAction();
+			orderAction.setAction(0);
+			orderAction.setActionTime(new Date());
+			orderAction.setOrderSnMain(orderSnMain);
+			orderAction.setActor(actor);
+			orderAction.setNotes("后台直接修改为已支付状态");
+			orderActionDao.save(orderAction);
+			
+			result.setCode("200");
+			result.setMessage("支付成功");
+			return result;
+		}
+		
+		result.setCode("200");
+		result.setMessage("可以支付");
+		return result;
+	}
+	
+	//获取全部支付方式
+	public List<BkOrderPayDto> getPaymentList(){
+		Iterable<Payment> paymentList=paymentDao.findAll();
+		List<BkOrderPayDto> resp = new ArrayList<BkOrderPayDto>();
+		
+		for(Payment p:paymentList){
+			if(p.getPaymentName()!=""){
+				BkOrderPayDto orderPayDto = new BkOrderPayDto();
+				orderPayDto.setPaymentName(p.getPaymentName());
+				orderPayDto.setPaymentId(p.getPaymentId());
+				resp.add(orderPayDto);
+			}
+		}
+		
+		return resp;
 	}
 }

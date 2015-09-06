@@ -7,19 +7,15 @@ import com.loukou.order.service.req.dto.BkOrderRemarkReqDto;
 import com.loukou.order.service.req.dto.CssOrderReqDto;
 import com.loukou.order.service.resp.dto.BkCouponListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderActionRespDto;
-import com.loukou.order.service.resp.dto.BkOrderListBaseDto;
-import com.loukou.order.service.resp.dto.BkOrderListDto;
 import com.loukou.order.service.resp.dto.BkOrderListRespDto;
+import com.loukou.order.service.resp.dto.BkOrderPayDto;
+import com.loukou.order.service.resp.dto.BkOrderRemarkListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderReturnDto;
 import com.loukou.order.service.resp.dto.BkOrderReturnListRespDto;
 import com.loukou.order.service.resp.dto.BkTxkDto;
 import com.loukou.order.service.resp.dto.BkTxkRecordListRespDto;
 import com.loukou.order.service.resp.dto.BkVaccountListResultRespDto;
-import com.loukou.order.service.resp.dto.CouponListRespDto;
-import com.loukou.order.service.resp.dto.BkOrderPayDto;
 import com.loukou.order.service.resp.dto.BkOrderRemarkDto;
-import com.loukou.order.service.resp.dto.BkOrderRemarkListRespDto;
-import com.loukou.order.service.resp.dto.CssOrderRespDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
 
 /**
@@ -163,4 +159,12 @@ public interface BkOrderService {
 	 * @return
 	 */
 	public List<BkOrderRemarkDto> queryHandoverByOrderSnMain(String orderSnMain);
+
+	public BaseRes<String> cancelSubOrder(int orderId,String actor);
+	
+	public BaseRes<String> resetCancelSubOrder(int orderId,String actor);
+	
+	public BaseRes<String> paySubOrder(String orderSnMain,String actor,int payId);
+	
+	public List<BkOrderPayDto> getPaymentList();
 }
