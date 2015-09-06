@@ -2,7 +2,7 @@ package com.loukou.order.service.enums;
 
 public enum InviteStatusEnum {
 	
-	//邀请状态(1:已注册 2:已下单 3:邀请成功4:已退货)
+	//邀请状态(1:已注册 2:已下单 3:邀请成功4:订单无效)
 	//已注册
 	INVITESTATUS_REGISTERED(1,"已注册"),
 	//已下单
@@ -10,7 +10,7 @@ public enum InviteStatusEnum {
 	//邀请成功
 	 INVITESTATUS_SUCCESS(3,"邀请成功"),
 	//已退货
-	INVITESTATUS_CANCEL(4,"已退货");
+	INVITESTATUS_CANCEL(4,"订单无效");
 	
 	
 	private int id;

@@ -326,8 +326,8 @@ public class InviteOperationProcessor {
 	 */
 	private String createInviteCode(int userId){
 		StringBuffer strBuf = new StringBuffer();
-		//0开头邀请码
-		strBuf.append("0");
+		//7开头邀请码
+		strBuf.append("7");
 		String a =	Integer.toHexString(userId);
 		//填充长度
 		int fillLength=LENGTH_INVITE-1-a.length();
