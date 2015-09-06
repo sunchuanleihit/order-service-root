@@ -41,4 +41,9 @@ public interface GoodsSpecDao extends PagingAndSortingRepository<GoodsSpec, Inte
 	@Modifying
 	@Query("UPDATE GoodsSpec SET freezstock=freezstock-?2 WHERE specId = ?1")
 	void updateBySpecId(int specId, int quantity);
+	
+	@Transactional
+	@Modifying
+	@Query("UPDATE GoodsSpec SET freezstock=freezstock+?2 WHERE specId = ?1")
+	void updateAddBySpecId(int specId, int quantity);
 }

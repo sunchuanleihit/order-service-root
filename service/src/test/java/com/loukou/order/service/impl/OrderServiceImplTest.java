@@ -156,7 +156,7 @@ public class OrderServiceImplTest extends AbstractTestObject {
 		// 微信红包
 //		resp = orderService.createCouponCode(userId, 1, 1, false, 
 //	    		 0, "", 1);
-		resp=orderService.createCouponCode(1156410 , InviteConstans.invited_CouponId,  CouponFormType.PRIVATE,false, 1,"", 0);
+		resp=orderService.createCouponCode(1156410 , InviteConstans.INVITED_COUPONID,  CouponFormType.PRIVATE,false, 1,"", 0);
 		System.out.println(resp);
 		
 	}

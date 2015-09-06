@@ -3,6 +3,8 @@ package com.loukou.order.service.dao;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -39,8 +41,15 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 	@Query("UPDATE CoupList set ischecked = 0, usedtime=NULL where userId = ?2 and commoncode=?1")
 	int refundCouponList(String commoncode,int userId);//优惠券状态改成未使用
 	
+	@Transactional
+	@Modifying
+	@Query("UPDATE CoupList SET ischecked=1, usedTime=NOW() WHERE userId=?1 AND commoncode=?2 AND ischecked=0 AND issue=1")
+	int useCouponByCommoncode(int userId,String commoncode);
+	
 	CoupList getByUserIdAndCommoncode(int userId,String commoncode);
-
+	
+	Page<CoupList> findByUserId(int userId, Pageable pageable);
+	
 	@Query("SELECT c FROM CoupList c WHERE userId = ?1 AND issue=1 AND ischecked=0 AND endtime<NOW()")
 	List<CoupList> getInvalidCoupLists(int userId);
 	

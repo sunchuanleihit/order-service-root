@@ -58,6 +58,9 @@ public class Store {
 
 	@Column(name = "tel_business")
 	private String telBusiness = "";
+	
+	@Column(name = "taxapply")
+	private int taxApply = 0;
 
 	public int getStoreId() {
 		return storeId;
@@ -178,5 +181,12 @@ public class Store {
 	public void setOwnerTel(String ownerTel) {
 		this.ownerTel = ownerTel;
 	}
+	
+	public int getTaxApply() {
+		return taxApply;
+	}
 
+	public void setTaxApply(int taxApply) {
+		this.taxApply = taxApply;
+	}
 }

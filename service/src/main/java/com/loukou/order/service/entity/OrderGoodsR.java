@@ -1,7 +1,6 @@
 package com.loukou.order.service.entity;
 
 import java.sql.Timestamp;
-import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -42,7 +41,7 @@ public class OrderGoodsR {
     private double price;
 
     @Column(name="add_time")
-    private Date addTime;
+    private String addTime;
     
     @Column(name="pro_type")
     private int proType;
@@ -125,13 +124,13 @@ public class OrderGoodsR {
         this.price = price;
     }
 
-    public Date getAddTime() {
+    public String getAddTime() {
         return addTime;
     }
 
-    public void setAddTime(Date addTime) {
-        this.addTime = addTime;
-    }
+    public void setAddTime(String addTime) {
+		this.addTime = addTime;
+	}
 
     public int getProType() {
         return proType;
