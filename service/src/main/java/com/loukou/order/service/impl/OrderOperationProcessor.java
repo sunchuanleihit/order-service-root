@@ -59,8 +59,8 @@ public class OrderOperationProcessor {
     private OrderRefuseDao orderRefuseDao;
 
     public OResponseDto<String> confirmBookOrder(String taoOrderSn, String userName, int senderId) {
-       List<Order> orders = orderDao.findByTaoOrderSn(taoOrderSn);
-       
+        List<Order> orders = orderDao.findByTaoOrderSn(taoOrderSn);
+
         if (CollectionUtils.isEmpty(orders) || orders.get(0).getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()) {
             return new OResponseDto<String>(500, "错误的订单号");
         }
@@ -70,8 +70,10 @@ public class OrderOperationProcessor {
             return new OResponseDto<String>(500, "错误的快递员");
         }
         String receiveNo = new String("" + (int) (Math.random() * 10000));
-        orderDao.updateOrderStatusAndreceiveNo(order.getOrderId(), OrderStatusEnum.STATUS_14.getId(), receiveNo);
-
+        int num  = orderDao.updateOrderStatusAndreceiveNo(order.getOrderId(), OrderStatusEnum.STATUS_14.getId(), receiveNo);
+        if(num <1 ){
+            return new OResponseDto<String>(500, "错误的订单号");
+        }
         createAction(order, OrderStatusEnum.STATUS_14.getId(), userName, "配送员" + lkDelivery.getdName() + ",手机号"
                 + lkDelivery.getdMobile());
         sendMessage(order, String.format(ShortMessage.FINISH_PACKAGE_MESSAGE_MODEL, order.getTaoOrderSn(),
@@ -81,14 +83,16 @@ public class OrderOperationProcessor {
 
     public OResponseDto<String> confirmRevieveOrder(String taoOrderSn, String gps, String userName) {
         List<Order> orders = orderDao.findByTaoOrderSn(taoOrderSn);
-        
+
         if (CollectionUtils.isEmpty(orders) || orders.get(0).getStatus() != OrderStatusEnum.STATUS_14.getId()) {
             return new OResponseDto<String>(500, "错误的订单号");
         }
         Order order = orders.get(0);
-        orderDao.updateStatusAndFinishedTime(OrderStatusEnum.STATUS_FINISHED.getId(), DateUtils.getTime(),
+        int num = orderDao.updateStatusAndFinishedTime(OrderStatusEnum.STATUS_FINISHED.getId(), DateUtils.getTime(),
                 order.getOrderId());
-
+        if(num < 1){
+            return new OResponseDto<String>(500, "错误的订单号成功");
+        }
         createAction(order, OrderStatusEnum.STATUS_FINISHED.getId(), userName, "仓库回单" + gps);
 
         sendMessage(order, String.format(ShortMessage.FINISH_ORDER_MESSAGE_MODEL, order.getTaoOrderSn()));
@@ -99,13 +103,20 @@ public class OrderOperationProcessor {
     @Transactional
     public OResponseDto<String> finishPackagingOrder(String taoOrderSn, String userName, int senderId) {
         List<Order> orders = orderDao.findByTaoOrderSn(taoOrderSn);
-        if (CollectionUtils.isEmpty(orders)|| orders.get(0).getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()) {
+        if (CollectionUtils.isEmpty(orders) || orders.get(0).getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()) {
             return new OResponseDto<String>(500, "错误的订单号");
         }
         Order order = orders.get(0);
         LkWhDelivery lkDelivery = lkWhDeliveryDao.findByDId(senderId);
         if (lkDelivery == null) {
             return new OResponseDto<String>(500, "错误的快递员");
+        }
+
+        String receiveNo = new String("" + (int) (Math.random() * 10000));
+        int num = orderDao.updateOrderStatusAndreceiveNo(order.getOrderId(), OrderStatusEnum.STATUS_14.getId(),
+                receiveNo);
+        if (num < 1) {
+            return new OResponseDto<String>(500, "错误的订单号");
         }
 
         List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
@@ -119,9 +130,6 @@ public class OrderOperationProcessor {
         lkWhDeliveryOrder.setdId(senderId);
         lkWhDeliveryOrder.setRemark("仓库发货");
         lkWhDeliveryOrderDao.save(lkWhDeliveryOrder);
-
-        String receiveNo = new String("" + (int) (Math.random() * 10000));
-        orderDao.updateOrderStatusAndreceiveNo(order.getOrderId(), OrderStatusEnum.STATUS_14.getId(), receiveNo);
 
         createAction(order, OrderStatusEnum.STATUS_14.getId(), userName, "配送员" + lkDelivery.getdName() + ",手机号"
                 + lkDelivery.getdMobile());
@@ -137,13 +145,19 @@ public class OrderOperationProcessor {
         if (CollectionUtils.isEmpty(orders) || orders.get(0).getStatus() != OrderStatusEnum.STATUS_REVIEWED.getId()) {
             return new OResponseDto<String>(500, "失败");
         }
-        Order order  = orders.get(0);
+
+        Order order = orders.get(0);
+
+        int num = orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_REFUSED.getId());
+        if (num < 1) {
+            return new OResponseDto<String>(500, "错误的订单号");
+        }
+
         List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
         for (OrderGoods good : goods) {
             lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(good.getSpecId(), good.getStoreId(), new Date(),
                     good.getQuantity(), good.getQuantity());
         }
-        orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_REFUSED.getId());
 
         OrderRefuse orderRefuse = new OrderRefuse();
         // 拒绝原因是其他 refuseId=0
@@ -184,7 +198,7 @@ public class OrderOperationProcessor {
     private boolean sendMessage(Order order, String messageString) {
         // 发送短信
         List<OrderExtm> orderExm = orderExtmDao.findByOrderSnMain(order.getOrderSnMain());
-        if (orderExm != null &&orderExm.size()!=0&& !StringUtils.isEmpty(orderExm.get(0).getPhoneMob())) {
+        if (orderExm != null && orderExm.size() != 0 && !StringUtils.isEmpty(orderExm.get(0).getPhoneMob())) {
             MultiClient.getProvider(MultiClient.CHUANGLAN_PROVIDER).sendMessage(
                     Lists.newArrayList(orderExm.get(0).getPhoneMob()), messageString);
         }
