@@ -105,16 +105,16 @@ public interface BkOrderService {
 	BkOrderListRespDto orderReturnMsg(String orderSnMain);
 	
 	public BaseRes<String> generateReturn(String actor,int orderId,String postScript,String orderSnMain,int returnType,int payId,double shippingFee,
-			int[] goodsIdList,
-			int[] specIdList,
-			int[] proTypeList,
-			int[] recIdList,
-			int[] goodsReturnNumList,
-			double[] goodsReturnAmountList,
-			int[] goodsReasonList,
-			String[] goodsNameList,
-			int[] paymentIdList,
-			double[] returnAmountList);
+	int[] goodsIdList,
+	int[] specIdList,
+	int[] proTypeList,
+	int[] recIdList,
+	int[] goodsReturnNumList,
+	double[] goodsReturnAmountList,
+	int[] goodsReasonList,
+	String[] goodsNameList,
+	int[] paymentIdList,
+	double[] returnAmountList);
 	
 	public BaseRes<String> cancelOrder(String orderSnMain,String actor);
 	
