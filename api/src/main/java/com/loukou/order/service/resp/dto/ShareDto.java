@@ -9,6 +9,7 @@ public class ShareDto implements Serializable {
 	 */
 	private static final long serialVersionUID = -7572260352506561110L;
 	private String icon = "";
+	private String title = "";
 	private String content = "";
 	private String url = "";
 
@@ -34,6 +35,14 @@ public class ShareDto implements Serializable {
 
 	public void setUrl(String url) {
 		this.url = url;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
 	}
 
 }
