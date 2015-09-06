@@ -1891,6 +1891,7 @@ public class OrderServiceImpl implements OrderService {
 			if(!CollectionUtils.isEmpty(recommend))
 			{
 				dto = recommend.get(0);
+				dto.setCouponName(dto.getCouponName()+"  -"+dto.getMoney());
 			}
 		}
 		return dto;

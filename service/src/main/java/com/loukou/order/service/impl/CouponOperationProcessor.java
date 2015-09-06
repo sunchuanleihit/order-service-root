@@ -216,10 +216,20 @@ public class CouponOperationProcessor {
 			CoupList coupList = coupListDao.findByCommoncode(useCouponNo);
 			if(coupList != null)
 			{
-				CoupRule coupRule = coupRuleDao.findByCommoncode(useCouponNo);
+				CoupRule coupRule = coupRuleDao.findOne(coupList.getCouponId());
 				if(coupRule != null)
 				{
 					dto = assembleDto(coupList, coupRule, 1);
+					dto.setCouponName(dto.getCouponName()+"  -"+dto.getMoney());
+				}
+				else
+				{
+					dto.setCouponId(coupList.getId());
+					dto.setCommoncode(coupList.getCommoncode());
+					dto.setCouponName("  -"+dto.getMoney());
+					dto.setMoney(coupList.getMoney());
+					dto.setStarttime(DateUtils.date2DateStr(coupList.getBegintime()));
+					dto.setEndtime(DateUtils.date2DateStr(coupList.getEndtime()));
 				}
 			}
 		}
@@ -228,6 +238,8 @@ public class CouponOperationProcessor {
 	
 	private CouponListDto assembleDto(CoupList coupList, CoupRule coupRule, int isUsable) {
 		String couponName = "";
+		if(coupRule == null)
+			return new CouponListDto();
 		if (coupRule.getCoupontypeid() == 1) {
 			couponName = "现金券";
 		} else {
