@@ -864,8 +864,6 @@ public class OrderServiceImpl implements OrderService {
 		Site site = siteDao.findOne(req.getCityId());
 
 		// 优惠券, 目前只有全场券和品类券
-		double needPay = DoubleUtils.add(cartRespDto.getTotalPrice(),
-				cartRespDto.getShippingFeeTotal()); // 还需付多少钱
 		int couponId = req.getCouponId();
 		CoupList coupList = null;
 		if (couponId > 0) {
@@ -891,11 +889,20 @@ public class OrderServiceImpl implements OrderService {
 				LOGGER.error(msg);
 				throw new RuntimeException(msg);
 			}
+			
+		}
+		
+		// 还需付多少钱, 优惠券可以抵扣商品价格，不能抵扣运费
+		double needPay = cartRespDto.getTotalPrice();
+		if (coupList != null) {
 			needPay = DoubleUtils.sub(needPay, coupList.getMoney());
+			if (needPay < 0) {
+				needPay = 0;
+			}
 		}
-		if (needPay < 0) {
-			needPay = 0;
-		}
+		needPay = DoubleUtils.add(needPay,
+				cartRespDto.getShippingFeeTotal()); 
+
 
 		// 新建订单
 		final String orderSnMain = generateOrderSnMain();
@@ -1151,7 +1158,7 @@ public class OrderServiceImpl implements OrderService {
 					return new ResponseCodeDto(400, "部分预售商品预售时间已过");
 				}
 				if (!StringUtils.isEmpty(g.getErrorMsg())) {
-					return new ResponseCodeDto(400, "部分商品不能购买");
+					return new ResponseCodeDto(400, g.getErrorMsg());
 				}
 			}
 		}
