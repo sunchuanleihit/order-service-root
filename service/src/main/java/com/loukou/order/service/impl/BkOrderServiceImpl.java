@@ -1996,33 +1996,45 @@ public class BkOrderServiceImpl implements BkOrderService{
 
 	@Override
 	public BkOrderRemarkListRespDto queryHandover(int pageNum, int pageSize, BkOrderRemarkReqDto reqDto) {
+		BkOrderRemarkListRespDto resp = new BkOrderRemarkListRespDto(200, "");
 		String orderSnMain = reqDto.getOrderSnMain();
 		String user = reqDto.getUser();
 		Integer type = reqDto.getType();
 		Integer closed = reqDto.getClosed();
-		String sql = "select distinct(o.orderSnMain) from OrderRemark o where 1=1 ";
+		String params = "";
 		if(StringUtils.isNotBlank(orderSnMain)){
-			sql += " and o.orderSnMain = '"+orderSnMain+"'";
+			params += " and o.orderSnMain = '"+orderSnMain+"'";
 		}
 		if(StringUtils.isNotBlank(user)){
-			sql += " and o.user = '"+user+"'";
+			params += " and o.user = '"+user+"'";
 		}
 		if(type != null){
-			sql += " and o.type = "+type;
+			params += " and o.type = "+type;
 		}
 		if(closed != null){
-			sql += " and o.closed = "+closed;
+			params += " and o.closed = "+closed;
 		}
+		String sql = "select distinct(o.orderSnMain) from OrderRemark o where 1=1 " + params;
 		sql += " order by o.id desc ";
 		EntityManager em = entityManagerFactory.createEntityManager();
 		Query query = em.createQuery(sql);
 		List<String> orderSnMainTotal = query.getResultList();
 		int total = orderSnMainTotal.size();
-		List<String> orderSnMains = new ArrayList<String>();
+		String orderSnMains = "";
+		List<String> orderSnMainList = new ArrayList<String>();
 		for(int i=(pageNum-1)*pageSize ; i < total && i< pageNum*pageSize; i++ ){
-			orderSnMains.add(orderSnMainTotal.get(i));
+			orderSnMains += ",'"+orderSnMainTotal.get(i)+"'";
+			orderSnMainList.add(orderSnMainTotal.get(i));
 		}
-		List<OrderRemark> orderRemarkAllList = orderRemarkDao.findByOrderSnMainIn(orderSnMains);
+		sql = "select o from OrderRemark o where 1=1 " + params; 
+		if(StringUtils.isNotBlank(orderSnMains)){
+			orderSnMains = orderSnMains.substring(1);
+			sql += " and o.orderSnMain in (" + orderSnMains + ")";
+		}else{
+			return resp;
+		}
+		query = em.createQuery(sql);
+		List<OrderRemark> orderRemarkAllList = query.getResultList();
 		Map<String, OrderRemark> orderRemarkMap = new HashMap<String, OrderRemark>();
 		for(OrderRemark tmp: orderRemarkAllList){
 			OrderRemark orderRemark = orderRemarkMap.get(tmp.getOrderSnMain());
@@ -2033,13 +2045,11 @@ public class BkOrderServiceImpl implements BkOrderService{
 			}
 		}
 		List<BkOrderRemarkDto> bkOrderRemarkList = new ArrayList<BkOrderRemarkDto>();
-		for(String tmp : orderSnMains){
+		for(String tmp : orderSnMainList){
 			OrderRemark orderRemark = orderRemarkMap.get(tmp);
 			BkOrderRemarkDto dto = createBkOrderRemark(orderRemark);
 			bkOrderRemarkList.add(dto);
 		}
-		
-		BkOrderRemarkListRespDto resp = new BkOrderRemarkListRespDto(200, "");
 		resp.setBkOrderRemarkList(bkOrderRemarkList);
 		resp.setTotal(total);
 		return resp;
@@ -2050,13 +2060,50 @@ public class BkOrderServiceImpl implements BkOrderService{
 		dto.setOrderSnMain(orderRemark.getOrderSnMain());
 		dto.setClosed(orderRemark.getClosed());
 		dto.setUserClosed(orderRemark.getUserClosed());
-		dto.setClosedTime(DateUtils.date2DateStr(orderRemark.getClosedTime()));
+		if(orderRemark.getClosedTime()!=null){
+			dto.setClosedTime(DateUtils.date2DateStr2(orderRemark.getClosedTime()));
+		}
 		dto.setContent(orderRemark.getContent());
-		dto.setFinishedTime(DateUtils.date2DateStr(orderRemark.getFinishedTime()));
+		if(orderRemark.getFinishedTime()!=null){
+			dto.setFinishedTime(DateUtils.date2DateStr2(orderRemark.getFinishedTime()));
+		}
 		dto.setOrderSnMain(dto.getOrderSnMain());
-		dto.setTime(DateUtils.date2DateStr(orderRemark.getTime()));
+		if(orderRemark.getTime()!=null){
+			dto.setTime(DateUtils.date2DateStr2(orderRemark.getTime()));
+		}
 		dto.setType(orderRemark.getType());
 		dto.setUser(orderRemark.getUser());
 		return dto;
+	}
+
+	@Override
+	public int closeOrderRemark(String userName , Integer id) {
+		Integer count = orderRemarkDao.updateOrderCloseByIdList(userName, id);
+		return count;
+	}
+
+	@Override
+	public void addOrderRemark(String userName, String orderSnMain, String content, Integer type) {
+		OrderRemark orderRemark = new OrderRemark();
+		orderRemark.setBumen(0);
+		orderRemark.setContent(content);
+		orderRemark.setOrderSnMain(orderSnMain);
+		orderRemark.setType(1);
+		orderRemark.setUser(userName);
+		orderRemark.setTime(new Date());
+		orderRemarkDao.save(orderRemark);
+	}
+
+	@Override
+	public List<BkOrderRemarkDto> queryHandoverByOrderSnMain(String orderSnMain) {
+		List<OrderRemark> remarkList = orderRemarkDao.getHandoverByOrderSnMain(orderSnMain);
+		List<BkOrderRemarkDto> resultList = new ArrayList<BkOrderRemarkDto>();
+		if(remarkList !=null && remarkList.size()>0){
+			for(OrderRemark tmp: remarkList){
+				BkOrderRemarkDto dto = this.createBkOrderRemark(tmp);
+				resultList.add(dto);
+			}
+		}
+		return resultList;
 	}
 }

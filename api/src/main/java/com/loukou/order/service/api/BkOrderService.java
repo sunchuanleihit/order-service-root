@@ -17,6 +17,7 @@ import com.loukou.order.service.resp.dto.BkTxkRecordListRespDto;
 import com.loukou.order.service.resp.dto.BkVaccountListResultRespDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderPayDto;
+import com.loukou.order.service.resp.dto.BkOrderRemarkDto;
 import com.loukou.order.service.resp.dto.BkOrderRemarkListRespDto;
 import com.loukou.order.service.resp.dto.CssOrderRespDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
@@ -141,4 +142,25 @@ public interface BkOrderService {
 	 * @return
 	 */
 	public BkOrderRemarkListRespDto queryHandover(int page, int rows, BkOrderRemarkReqDto reqDto);
+	
+	/**
+	 * 交接订单
+	 * @param idList
+	 */
+	public int closeOrderRemark(String userName , Integer id);
+	
+	/**
+	 * 添加交接任务
+	 * @param orderSnMain
+	 * @param content
+	 * @param type
+	 */
+	public void addOrderRemark(String userName, String orderSnMain, String content, Integer type);
+	
+	/**
+	 * 根据主订单编号获取其下所有交接
+	 * @param orderSnMain
+	 * @return
+	 */
+	public List<BkOrderRemarkDto> queryHandoverByOrderSnMain(String orderSnMain);
 }
