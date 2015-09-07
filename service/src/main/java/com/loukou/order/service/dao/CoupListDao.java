@@ -21,7 +21,7 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 //			+ "AND (usedtime IS NULL OR usedtime='0000-00-00 00:00:00')")
 //	List<CoupList> getCoupLists(int userId);
 
-	@Query("SELECT count(id) FROM CoupList WHERE userId = ?1 AND usedtime >= ?2")
+	@Query("SELECT count(id) FROM CoupList WHERE userId = ?1 AND ischecked = 1 AND usedtime >= ?2")
 	int getUsedCoupNumber(int userId, Date start);
 
 	
