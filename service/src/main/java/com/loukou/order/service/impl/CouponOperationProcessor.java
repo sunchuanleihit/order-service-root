@@ -174,13 +174,10 @@ public class CouponOperationProcessor {
 			
 			// 能否使用券
 			int canUse = 1;
-			Date now = new Date();
-			Date start = DateUtils.getStartofDate(now);
-			int count = coupListDao.getUsedCoupNumber(userId, start);
-			if (count >= LIMIT_COUPON_PER_DAY) {
-				// 一天最多只能用2张券
+			if (isCouponUseOverLimit(userId)) {
 				canUse = 0;
 			}
+			
 			result.setCanUse(canUse);
 			result.setEverydayNum(String.valueOf(LIMIT_COUPON_PER_DAY));
 			result.setEverydayMsg(String.format("每天限使用%d张优惠券，明天再来吧",
@@ -206,6 +203,23 @@ public class CouponOperationProcessor {
 		}
 	
 		return resp;
+	}
+	
+	/**
+	 * 用户每天使用优惠券数是否超过限制
+	 * @param userId
+	 * @return
+	 */
+	public boolean isCouponUseOverLimit(int userId) {
+		Date now = new Date();
+		Date start = DateUtils.getStartofDate(now);
+		int count = coupListDao.getUsedCoupNumber(userId, start);
+		if (count >= LIMIT_COUPON_PER_DAY) {
+			// 一天最多只能用2张券
+			return true;
+		}
+		
+		return false;
 	}
 	
 	public CouponListDto getCouponListDtoByUseCouponNo(String useCouponNo)
