@@ -1843,6 +1843,7 @@ public class OrderServiceImpl implements OrderService {
 			couponMoney = coupList.getMoney();
 			
 			recommend = couponOperationProcessor.assembleDto(coupList, coupRule, 1);
+			recommend.setCouponName(recommend.getCouponName()+"  -"+recommend.getMoney());
 		}
 		else if (couponId == 0) {
 			// 如果没有选中优惠券, 选择推荐的优惠券
