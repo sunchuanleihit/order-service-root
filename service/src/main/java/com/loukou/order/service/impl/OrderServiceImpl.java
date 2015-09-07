@@ -304,7 +304,6 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired
 	private OrderUserDao orderUserDao;
 
-	private DecimalFormat decimalFormat = new DecimalFormat("#.00");
 	@Override
 	public UserOrderNumRespDto getOrderNum(int userId) {
 		UserOrderNumRespDto resp = new UserOrderNumRespDto();
@@ -746,9 +745,9 @@ public class OrderServiceImpl implements OrderService {
 				.append(DigestUtils.md5DigestAsHex(md5time.toString()
 						.getBytes()));
 		ShareDto shareDto = new ShareDto();
-		shareDto.setTitle("标题：“楼口”1小时送货到家，还送30元红包，下载“楼口”app，享受便利到家生活！");
+		shareDto.setTitle("“楼口”1小时送货到家，还送30元红包，下载“楼口”app，享受便利到家生活！");
 		shareDto.setContent("红包可以直接抵扣支付金额。“楼口”让您享受1小时到家生活！");
-		shareDto.setIcon("");
+		shareDto.setIcon("http://pic2.taocz.cn//201505121544252619.png");
 		shareDto.setUrl(shareUrl.toString());
 		return shareDto;
 	}
