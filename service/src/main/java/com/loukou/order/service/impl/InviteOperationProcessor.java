@@ -275,7 +275,7 @@ public class InviteOperationProcessor {
 			resp.setMessage("抱歉，您不是新用户，不可领取邀请券。");
 			return  resp;
 		}else{
-			if(orderService.createCouponCode(userId, InviteConstans.INVITED_COUPONID,  CouponFormType.PRIVATE,false, 2,"", 0)){
+			if(orderService.createCouponCode(userId, InviteConstans.INVITED_COUPONID,  CouponFormType.PRIVATE,false, 2, openId, 0)){
 				InviteList inviteList=new  InviteList();
 				inviteList.setInviteCode(inviteCode);
 				inviteList.setInviteStatus(InviteStatusEnum.INVITESTATUS_REGISTERED.getId());
