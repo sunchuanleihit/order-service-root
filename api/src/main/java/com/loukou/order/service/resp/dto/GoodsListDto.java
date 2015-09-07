@@ -10,8 +10,8 @@ public class GoodsListDto implements Serializable {
 	private String goodsImage = "";
 	private String goodsName = "";
 	private String specification = "";
-	private double pricePurchase = 0;
-	private double priceDiscount = 0;
+	private double pricePurchase = 0.0;
+	private double priceDiscount = 0.0;
 	private int quantity = 0;
 	private Integer returnQuantity;
 	private int specId = 0;
@@ -19,7 +19,7 @@ public class GoodsListDto implements Serializable {
 	private int goodsId = 0;
 	private String bn = "";
 	private String taosku = "";
-	private double returnMoney = 0;
+	private double returnMoney = 0.0;
 	private int recId;
 
 	public String getGoodsImage() {

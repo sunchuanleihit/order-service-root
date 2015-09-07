@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.google.common.collect.Lists;
 import com.loukou.order.service.api.OrderService;
 import com.loukou.order.service.constants.CouponFormType;
 import com.loukou.order.service.constants.InviteConstans;
@@ -35,11 +36,11 @@ import com.loukou.order.service.resp.dto.InviteInfoRespDto;
 import com.loukou.order.service.resp.dto.InviteListDto;
 import com.loukou.order.service.resp.dto.InviteValidateRespDto;
 import com.loukou.order.service.resp.dto.ResponseDto;
+import com.loukou.sms.sdk.client.MultiClient;
 import com.loukou.sms.sdk.client.SingletonSmsClient;
 import com.serverstarted.user.api.PhoneVeriCodeService;
 
 import org.apache.commons.collections.CollectionUtils;
-
 import org.apache.log4j.Logger;
 
 @Service
@@ -229,14 +230,16 @@ public class InviteOperationProcessor {
 			response.setPhoneNumber(req.getPhoneNumber());
 			response.setCode(200);
 			String content = "亲，10元红包塞进你的账户。自从用楼口，惊喜天天有！快去查看账户钱包吧！http://t.cn/R2mStax";
-			String[] phones = new String[]{req.getPhoneNumber()};
+//			String[] phones = new String[]{req.getPhoneNumber()};
 			//调用短信服务，发送短信
-			try {
-			SingletonSmsClient.getClient().sendSMS(phones,content);
-			} catch (RemoteException e) {
-				LOGGER.error(e);
-
-			}
+//			try {
+//			SingletonSmsClient.getClient().sendSMS(phones,content);
+//			} catch (RemoteException e) {
+//				LOGGER.error(e);
+//
+//			}
+			MultiClient.getProvider(MultiClient.CHUANGLAN_PROVIDER).sendMessage(
+                    Lists.newArrayList(req.getPhoneNumber()), content);
 
 		}
 	
