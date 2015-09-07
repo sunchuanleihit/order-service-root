@@ -16,6 +16,7 @@ public interface InviteInfoDao extends PagingAndSortingRepository<InviteList, In
 	Page<InviteList> findByUserId(int userId ,Pageable page);
 	
 	//查询邀请列表不分页
+	@Query("SELECT  l FROM InviteList  l  where l.userId=?1 order by createdTime desc")
 	List<InviteList> findByUserId(int userId);
 	//查询奖励金额
 	@Query("SELECT  coalesce( sum(l.reward),0) FROM InviteList  l  where l.userId=?1")
