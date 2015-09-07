@@ -311,7 +311,7 @@ public class InviteOperationProcessor {
 			List<CoupList> coList=coupListDao.findByCouponIdAndOpenid(InviteConstans.INVITED_COUPONID, openId);
 			if(coList.size()<2){
 				//创建邀请券 成功并修改获取邀请状态
-				if(orderService.createCouponCode(userId, InviteConstans.INVITED_COUPONID, CouponFormType.PRIVATE, false, 1, "", 0)){
+				if(orderService.createCouponCode(userId, InviteConstans.INVITED_COUPONID, CouponFormType.PRIVATE, false, 2, "", 0)){
 					inviteInfoDao.updateIfGetcouponByPhone(phoneNumber);
 					return true;
 				}
