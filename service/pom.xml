@@ -42,7 +42,7 @@
 		<dependency>
 			<groupId>com.serverstarted</groupId>
 			<artifactId>goods-api</artifactId>
-			<version>0.4.0</version>
+			<version>0.5.0</version>
 		</dependency>
 		<!-- dubbo-ext -->
 		<dependency>
@@ -74,13 +74,13 @@
 		<dependency>
 			<groupId>com.loukou</groupId>
 			<artifactId>pos-account-client</artifactId>
-			<version>0.2.1</version>
+			<version>0.2.2</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.serverstarted</groupId>
 			<artifactId>user-api</artifactId>
-			<version>0.2.0</version>
+			<version>0.5.0</version>
 		</dependency>
 
 		<dependency>
@@ -107,7 +107,6 @@
 			<version>0.2.0</version>
 		</dependency>
 
-
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -127,7 +126,7 @@
 		<dependency>
 			<groupId>${project.groupId}</groupId>
 			<artifactId>order-api</artifactId>
-			<version>0.4.2</version>
+			<version>0.5.0</version>
 		</dependency>
 
 		<dependency>
@@ -165,6 +164,11 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>jcl-over-slf4j</artifactId>
+		</dependency>
+		<dependency>
+		  <groupId>org.json</groupId>
+		  <artifactId>json</artifactId>
+		  <version>20140107</version>
 		</dependency>
 	</dependencies>
 </project>

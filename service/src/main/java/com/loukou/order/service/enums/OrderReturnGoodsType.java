@@ -11,7 +11,8 @@ public enum OrderReturnGoodsType {
 	TYPE_REPAY(4, "客户赔偿"),
 	TYPE_OTHER(5, "其他退款"),
 	TYPE_SELF_CANCEL(6, "客户自己取消订单退款"),
-	TYPE_SPECEL(7, "特殊退款");
+	TYPE_SPECEL(7, "特殊退款"),
+	TYPE_UNKNOWN(-1, "");
 	
 	OrderReturnGoodsType(int id, String type) {
 		this.id = id;
@@ -34,6 +35,15 @@ public enum OrderReturnGoodsType {
 
 	public void setType(String type) {
 		this.type = type;
+	}
+	
+	public static OrderReturnGoodsType parseType(int id){
+		for (OrderReturnGoodsType e : OrderReturnGoodsType.values()) {
+			if (e.id == id) {
+				return e;
+			}
+		}
+		return TYPE_UNKNOWN;
 	}
 	
 }

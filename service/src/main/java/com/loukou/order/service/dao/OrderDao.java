@@ -1,10 +1,12 @@
 
 package com.loukou.order.service.dao;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -13,24 +15,24 @@ import org.springframework.transaction.annotation.Transactional;
 import com.loukou.order.service.entity.Order;
 
 
-public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
-
+public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, JpaSpecificationExecutor<Order>{
 	List<Order> findByTaoOrderSn(String taoOrderSn);
 	
 	List<Order> findByOrderSnMain(String orderSnMain);
 
 	@Query("SELECT o FROM Order o WHERE shippingId=?1 AND status=15 AND finishedTime>=?2 AND finishedTime<=?3")
 	List<Order> getCvsFininshedOrders(int cvsId, int start, int end);
+
+	@Query("SELECT o FROM Order o WHERE orderSnMain=?1 AND status=15")
+	List<Order> getFininshedOrders(String orderSnMain);
 	
 	@Query("SELECT o FROM Order o WHERE status=15 AND sellerId IN (?1) AND finishedTime >= ?2 AND finishedTime < ?3")
 	List<Order> getByStoreIdsAndFinishedTime(List<Integer> storeIds, int start, int end);
 	
 	@Query("SELECT count(o) FROM Order o WHERE status > 2 AND sellerId = ?1 AND addTime >= ?2 AND addTime < ?3")
 	int countValidOrderBetweenAddTime(int storeId, int start, int end);
-	
 
 	List<Order> findByStatusAndSellerIdAndAddTimeBetween(int orderStatus,int storeId, int start, int end);
-
 
 	Page<Order> findBySellerIdAndPayStatusAndStatusIn(int storeId, int payStatus, List<Integer> statusList, Pageable Pageable);
 
@@ -50,10 +52,16 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	int updateShippingNo(String shippingNo,int orderId);
 
 	Page<Order> findByOrderSnMainIn(Iterable<String> orderSnMains, Pageable pageable);
-
+	
+	List<Order> findByOrderSnMainIn(List<String> orderSnMains);
+	
+	List<Order> findByUseCouponNoIn(List<String> couponNos);
+	
 	List<Order> findByshippingNoIn(List<String> shippingNo);
 
 	Page<Order> findByBuyerIdAndIsDel(int userId, int isDel, Pageable pageable);
+	
+	Page<Order> findByBuyerId(int userId, Pageable pageable);
 
 	@Transactional
 	@Modifying
@@ -98,7 +106,34 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>{
 	@Transactional
 	int updateStatusAndFinishedTime(int status,int finishedTime,int orderId);
 
-	List<Order> findByBuyerIdAndStatusNotIn(int userId, List<Integer> statusList);
+	@Transactional(value="transactionManagerMall")
+	@Modifying
+	@Query("UPDATE Order set status = ?3 where orderSnMain = ?1 and status != ?2")
+	int updateOrderStatusByOrderSnMainAndNotStatus(String orderSnMain, int oldStatus, int newStatus);
+	
+	@Transactional(value="transactionManagerMall")
+	@Modifying
+	@Query("UPDATE Order set status = ?3 where orderId = ?1 and status != ?2")
+	int updateOrderStatusByOrderIdAndNotStatus(int orderId, int oldStatus, int newStatus);
 
+	List<Order> findByBuyerIdAndStatusNotIn(int userId, List<Integer> statusList);
+	
+	@Transactional(value="transactionManagerMall")
+	@Modifying
+	@Query("UPDATE Order set status = ?2 where orderSnMain = ?1")
+	int updateStatusByOrderSnMain(String orderSnMain, int status);
+
+	@Query("SELECT 1 FROM Order WHERE buyerId=?1")
+	String IfExistOrder(int buyerId);
+	
+	@Transactional(value="transactionManagerMall")
+	@Modifying
+	@Query("UPDATE Order set needShiptime = ?2,needShiptimeSlot=?3 where orderSnMain = ?1")
+	int updateNeedShipTimeByOrderSnMain(String orderSnMain,Date needShiptime, String needShiptimeSlot);
+	
+	@Transactional
+	@Modifying
+	@Query("UPDATE Order set payId = ?1, payStatus = 1, payTime = addTime, orderPayed = goodsAmount+shippingFee where orderSnMain = ?2")
+	int updateOrderPayId(int payId,String orderSnMain);
 }
 

@@ -6,8 +6,8 @@ public enum ReturnGoodsStatus {
 	ASSIGN(1, "已指派"),
 	WASTAGE(2,"损耗"),
 	TO_BACK(3, "待退商家"),
-	BACKED(4, "已退商家");
-	
+	BACKED(4, "已退商家"),
+	UNKNOWN(-1, "");
 	private int id;
 	private String status;
 	
@@ -32,4 +32,12 @@ public enum ReturnGoodsStatus {
 		this.status = status;
 	}
 	
+	public static ReturnGoodsStatus parseStatus(int id){
+		for (ReturnGoodsStatus e : ReturnGoodsStatus.values()) {
+			if (e.id == id) {
+				return e;
+			}
+		}
+		return UNKNOWN;
+	}
 }

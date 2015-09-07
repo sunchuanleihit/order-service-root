@@ -10,11 +10,8 @@
 	<bean class="org.springframework.context.support.PropertySourcesPlaceholderConfigurer">
     	<property name="properties" ref="propertiesConfiguration" />
   	</bean>
-
 	<bean id="propertiesConfiguration" class="com.github.diamond.client.PropertiesConfigurationFactoryBean">
 	</bean>
-	
-	
 	<context:annotation-config />
 	<context:component-scan base-package="com.loukou.order" />
 	

@@ -4,11 +4,17 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.loukou.order.AbstractTestObject;
+import com.loukou.order.service.api.InviteService;
 import com.loukou.order.service.api.OrderService;
+import com.loukou.order.service.constants.CouponFormType;
+import com.loukou.order.service.constants.InviteConstans;
+import com.loukou.order.service.req.dto.InviteInfoReqdto;
 import com.loukou.order.service.req.dto.ReturnStorageGoodsReqDto;
 import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
+import com.loukou.order.service.resp.dto.InviteInfoRespDto;
+import com.loukou.order.service.resp.dto.InviteListDto;
 import com.loukou.order.service.resp.dto.OrderCancelRespDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
@@ -21,6 +27,8 @@ public class OrderServiceImplTest extends AbstractTestObject {
 
 	@Autowired
 	private OrderService orderService;
+	@Autowired
+	private InviteService inviteService;
 
 	@Test
 	public void cancelOrder() {
@@ -146,9 +154,39 @@ public class OrderServiceImplTest extends AbstractTestObject {
 //		System.out.println(resp);
 		
 		// 微信红包
-		resp = orderService.createCouponCode(userId, 1, 1, false, 
-	    		 0, "", 1);
+//		resp = orderService.createCouponCode(userId, 1, 1, false, 
+//	    		 0, "", 1);
+//		resp=orderService.createCouponCode(1156410 , InviteConstans.invited_CouponId,  CouponFormType.PRIVATE,false, 1,"", 0);
+		resp=orderService.createCouponCode(1156410 , InviteConstans.INVITED_COUPONID,  CouponFormType.PRIVATE,false, 1,"", 0);
 		System.out.println(resp);
 		
 	}
+	/*
+	 * 查询邀请码
+	 */
+	@Test
+	public void getInviteCode(){
+		InviteInfoReqdto req=new InviteInfoReqdto();
+		req.setUserId(1032752);
+		req.setQueryType("code");
+		InviteInfoRespDto r  =new InviteInfoRespDto();
+		r=inviteService.getInviteInfo(req);
+	System.out.println(r.getInviteCode()+"已奖励"+r.getTotalReward());	
+		
+	}
+	
+	@Test
+	public void getInviteList(){
+		InviteInfoReqdto req=new InviteInfoReqdto();
+		req.setUserId(10);
+		req.setQueryType("list");
+		req.setPageSize(0);
+		InviteInfoRespDto r  =new InviteInfoRespDto();
+		r=inviteService.getInviteInfo(req);
+		for(InviteListDto d:r.getInviteList()){
+			System.out.println(d.getMoblie()+"----"+d.getInviteStatus()+"----"+d.getReward());
+			System.out.println(r.getInviteCode()+"已奖励"+r.getTotalReward());	
+		}
+	}
+	
 }

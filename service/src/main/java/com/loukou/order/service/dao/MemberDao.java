@@ -18,6 +18,9 @@ public interface MemberDao extends CrudRepository<Member, Integer> {
 	@Query("SELECT m FROM Member m WHERE phoneMob = ?1")
 	List<Member> findByPhoneMob(String mob);
 	
+	@Query("SELECT m FROM Member m WHERE phoneMob = ?1 AND phoneChecked = '1'")
+	List<Member> findByCheckedPhoneMob(String mob);
+	
 	@Query("SELECT m FROM Member m WHERE phoneMob = ?1 OR cardNo = ?1")
 	List<Member> findMemberByMobCardNo(String mobCardNo);
 
