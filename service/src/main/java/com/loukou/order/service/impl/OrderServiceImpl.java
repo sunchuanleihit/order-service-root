@@ -1815,7 +1815,10 @@ public class OrderServiceImpl implements OrderService {
 		double couponMoney = 0.0;
 		// 购物车
 		CartRespDto cart = cartService.getCart(userId, openId, cityId, storeId);
+		
+		CouponListDto recommend = new CouponListDto();	// 建议优惠券
 		if (couponId > 0) {
+			// 选中了优惠券
 			CoupList coupList = coupListDao.getValidCoupList(userId, couponId);
 			if (coupList == null) {
 				return new PayBeforeRespDto(400, "优惠券不可用，请重新选择");
@@ -1828,8 +1831,16 @@ public class OrderServiceImpl implements OrderService {
 				return new PayBeforeRespDto(400, "优惠券不可用，请重新选择");
 			}
 			couponMoney = coupList.getMoney();
+			
+			recommend = couponOperationProcessor.assembleDto(coupList, coupRule, 1);
+		}
+		else if (couponId == 0) {
+			// 如果没有选中优惠券, 选择推荐的优惠券
+			recommend = getRecommendCoupon(cityId, userId, storeId, openId);
+			couponMoney = recommend.getMoney();
 		}
 
+		// couponId == -1 时，表示不使用优惠券
 		
 		ResponseCodeDto validateCart = validateCart(cart);
 		if (validateCart.getCode() != 200) {
@@ -1865,7 +1876,7 @@ public class OrderServiceImpl implements OrderService {
 		orderMsgDto.setTxkNum(txkNum);
 		orderMsgDto.setVcount(vcount);
 		
-		resp.getResult().setRecommend(getRecommendCoupon(cityId, userId, storeId, openId));
+		resp.getResult().setRecommend(recommend);
 		resp.getResult().setGoodsList(getGoodsListByCart(cart));
 		
 		return resp;

@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.google.common.collect.Lists;
 import com.loukou.order.service.api.OrderService;
 import com.loukou.order.service.constants.CouponFormType;
 import com.loukou.order.service.constants.InviteConstans;
@@ -35,11 +36,11 @@ import com.loukou.order.service.resp.dto.InviteInfoRespDto;
 import com.loukou.order.service.resp.dto.InviteListDto;
 import com.loukou.order.service.resp.dto.InviteValidateRespDto;
 import com.loukou.order.service.resp.dto.ResponseDto;
+import com.loukou.sms.sdk.client.MultiClient;
 import com.loukou.sms.sdk.client.SingletonSmsClient;
 import com.serverstarted.user.api.PhoneVeriCodeService;
 
 import org.apache.commons.collections.CollectionUtils;
-
 import org.apache.log4j.Logger;
 
 @Service
@@ -229,14 +230,16 @@ public class InviteOperationProcessor {
 			response.setPhoneNumber(req.getPhoneNumber());
 			response.setCode(200);
 			String content = "亲，10元红包塞进你的账户。自从用楼口，惊喜天天有！快去查看账户钱包吧！http://t.cn/R2mStax";
-			String[] phones = new String[]{req.getPhoneNumber()};
+//			String[] phones = new String[]{req.getPhoneNumber()};
 			//调用短信服务，发送短信
-			try {
-			SingletonSmsClient.getClient().sendSMS(phones,content);
-			} catch (RemoteException e) {
-				LOGGER.error(e);
-
-			}
+//			try {
+//			SingletonSmsClient.getClient().sendSMS(phones,content);
+//			} catch (RemoteException e) {
+//				LOGGER.error(e);
+//
+//			}
+			MultiClient.getProvider(MultiClient.CHUANGLAN_PROVIDER).sendMessage(
+                    Lists.newArrayList(req.getPhoneNumber()), content);
 
 		}
 	
@@ -272,7 +275,7 @@ public class InviteOperationProcessor {
 			resp.setMessage("抱歉，您不是新用户，不可领取邀请券。");
 			return  resp;
 		}else{
-			if(orderService.createCouponCode(userId, InviteConstans.INVITED_COUPONID,  CouponFormType.PRIVATE,false, 2,"", 0)){
+			if(orderService.createCouponCode(userId, InviteConstans.INVITED_COUPONID,  CouponFormType.PRIVATE,false, 2, openId, 0)){
 				InviteList inviteList=new  InviteList();
 				inviteList.setInviteCode(inviteCode);
 				inviteList.setInviteStatus(InviteStatusEnum.INVITESTATUS_REGISTERED.getId());
@@ -308,7 +311,7 @@ public class InviteOperationProcessor {
 			List<CoupList> coList=coupListDao.findByCouponIdAndOpenid(InviteConstans.INVITED_COUPONID, openId);
 			if(coList.size()<2){
 				//创建邀请券 成功并修改获取邀请状态
-				if(orderService.createCouponCode(userId, InviteConstans.INVITED_COUPONID, CouponFormType.PRIVATE, false, 1, "", 0)){
+				if(orderService.createCouponCode(userId, InviteConstans.INVITED_COUPONID, CouponFormType.PRIVATE, false, 2, "", 0)){
 					inviteInfoDao.updateIfGetcouponByPhone(phoneNumber);
 					return true;
 				}

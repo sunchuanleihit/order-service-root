@@ -1,6 +1,7 @@
 
 package com.loukou.order.service.dao;
 
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
@@ -109,6 +110,11 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 	@Modifying
 	@Query("UPDATE Order set status = ?3 where orderSnMain = ?1 and status != ?2")
 	int updateOrderStatusByOrderSnMainAndNotStatus(String orderSnMain, int oldStatus, int newStatus);
+	
+	@Transactional(value="transactionManagerMall")
+	@Modifying
+	@Query("UPDATE Order set status = ?3 where orderId = ?1 and status != ?2")
+	int updateOrderStatusByOrderIdAndNotStatus(int orderId, int oldStatus, int newStatus);
 
 	List<Order> findByBuyerIdAndStatusNotIn(int userId, List<Integer> statusList);
 	
@@ -119,6 +125,15 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 
 	@Query("SELECT 1 FROM Order WHERE buyerId=?1")
 	String IfExistOrder(int buyerId);
-
+	
+	@Transactional(value="transactionManagerMall")
+	@Modifying
+	@Query("UPDATE Order set needShiptime = ?2,needShiptimeSlot=?3 where orderSnMain = ?1")
+	int updateNeedShipTimeByOrderSnMain(String orderSnMain,Date needShiptime, String needShiptimeSlot);
+	
+	@Transactional
+	@Modifying
+	@Query("UPDATE Order set payId = ?1, payStatus = 1, payTime = addTime, orderPayed = goodsAmount+shippingFee where orderSnMain = ?2")
+	int updateOrderPayId(int payId,String orderSnMain);
 }
 

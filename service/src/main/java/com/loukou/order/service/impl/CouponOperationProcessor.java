@@ -236,7 +236,7 @@ public class CouponOperationProcessor {
 		return dto;
 	}
 	
-	private CouponListDto assembleDto(CoupList coupList, CoupRule coupRule, int isUsable) {
+	public CouponListDto assembleDto(CoupList coupList, CoupRule coupRule, int isUsable) {
 		String couponName = "";
 		if(coupRule == null)
 			return new CouponListDto();
@@ -458,7 +458,7 @@ public class CouponOperationProcessor {
      * @param  [string]   $code      [公用券码]
      * @param  [bol]      $type      [true: 私有券(default)， false: 公用券]
      * @param  [bol]      $check     [是否检测可领取(default: false)]
-     * @param  [bol]      $num       [检测会员可以领取的张数] 0为不检测领取数量
+     * @param  [bol]      $num       [检测会员可以领取的张数] 0为不检测领取数量, 同时也是领券的张数
 	 * @param  [int]      $money     [自定义优惠券金额]
      * 
      * @return [type]     [description]
@@ -554,8 +554,8 @@ public class CouponOperationProcessor {
     	
     	int coupNum = coupRule.getNum() + 1;//优惠券总张数
     	int sumResiduenum = coupRule.getResiduenum() + 1;//优惠券未使用张数
-    	//邀请券发两张
-    	if(InviteConstans.INVITED_COUPONID==couponId){
+    	// 如果num = 2， 发两张券
+    	if(num == 2){
     		CoupList coupL2 =new CoupList();
     		BeanUtils.copyProperties(coupL, coupL2);
     		//获取新的券码

@@ -56,6 +56,7 @@ import com.loukou.order.service.dao.OrderGoodsDao;
 import com.loukou.order.service.dao.OrderGoodsRDao;
 import com.loukou.order.service.dao.OrderPayDao;
 import com.loukou.order.service.dao.OrderPayRDao;
+import com.loukou.order.service.dao.OrderRemarkDao;
 import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.SiteCityDao;
@@ -76,6 +77,7 @@ import com.loukou.order.service.entity.OrderGoods;
 import com.loukou.order.service.entity.OrderGoodsR;
 import com.loukou.order.service.entity.OrderPay;
 import com.loukou.order.service.entity.OrderPayR;
+import com.loukou.order.service.entity.OrderRemark;
 import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Payment;
 import com.loukou.order.service.entity.SiteCity;
@@ -87,8 +89,11 @@ import com.loukou.order.service.enums.BkOrderSourceEnum;
 import com.loukou.order.service.enums.BkOrderStatusEnum;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
 import com.loukou.order.service.enums.OrderPayTypeEnum;
+import com.loukou.order.service.enums.OrderReturnGoodsType;
 import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.enums.PayStatusEnum;
+import com.loukou.order.service.enums.ReturnGoodsStatus;
+import com.loukou.order.service.req.dto.BkOrderRemarkReqDto;
 import com.loukou.order.service.req.dto.CssOrderReqDto;
 import com.loukou.order.service.resp.dto.BkCouponListDto;
 import com.loukou.order.service.resp.dto.BkCouponListRespDto;
@@ -100,6 +105,8 @@ import com.loukou.order.service.resp.dto.BkOrderListDto;
 import com.loukou.order.service.resp.dto.BkOrderListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderListResultDto;
 import com.loukou.order.service.resp.dto.BkOrderPayDto;
+import com.loukou.order.service.resp.dto.BkOrderRemarkDto;
+import com.loukou.order.service.resp.dto.BkOrderRemarkListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderReturnDto;
 import com.loukou.order.service.resp.dto.BkOrderReturnListDto;
 import com.loukou.order.service.resp.dto.BkOrderReturnListRespDto;
@@ -194,6 +201,9 @@ public class BkOrderServiceImpl implements BkOrderService{
     
     @Autowired
     private CoupListDao coupListDao;
+    
+    @Autowired
+    private OrderRemarkDao orderRemarkDao;
 	
 	//订单详情
 	@Override
@@ -1504,6 +1514,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		baseDto.setInvoiceHeader(order.getInvoiceHeader());
 		baseDto.setBuyerName(order.getBuyerName());
 		baseDto.setPayType(order.getPayType());
+		baseDto.setPayName(BkOrderPayTypeEnum.parseType(order.getPayType()).getPayType());
 		baseDto.setOrderAmount(order.getOrderAmount());
 		baseDto.setGoodsAmount(order.getGoodsAmount());
 		baseDto.setOrderPaid(order.getOrderPayed());
@@ -1699,8 +1710,11 @@ public class BkOrderServiceImpl implements BkOrderService{
 		dto.setAddTime(orderReturn.getAddTime());
 		dto.setGoodsType(orderReturn.getGoodsType());
 		dto.setOrderStatus(orderReturn.getOrderStatus());
+		dto.setOrderStatusStr(BkOrderStatusEnum.pasrseStatus(orderReturn.getOrderStatus()).getStatus());
 		dto.setOrderType(orderReturn.getOrderType());
+		dto.setOrderTypeStr(OrderReturnGoodsType.parseType(orderReturn.getOrderType()).getType());
 		dto.setGoodsStatus(orderReturn.getGoodsStatus());
+		dto.setGoodsStatusStr(ReturnGoodsStatus.parseStatus(orderReturn.getGoodsStatus()).getStatus());
 		dto.setRefundStatus(orderReturn.getRefundStatus());
 		dto.setStatementStatus(orderReturn.getStatementStatus());
 		dto.setPostscript(orderReturn.getPostscript());
@@ -1963,5 +1977,343 @@ public class BkOrderServiceImpl implements BkOrderService{
 		respDto.setRecordList(recordList);
 		respDto.setTotal(respVO.getTotal());
 		return respDto;
+	}
+	
+	
+	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot){
+		BaseRes<String> result=new BaseRes<String>();
+		Date needShiptimeDate=DateUtils.str2Date(needShiptime);
+		int orderResult=orderDao.updateNeedShipTimeByOrderSnMain(orderSnMain, needShiptimeDate, needShiptimeSlot);
+		if(orderResult<1){
+			result.setCode("400");
+			result.setMessage("保存失败");
+			return result;
+		}
+		result.setCode("200");
+		result.setMessage("保存成功");
+		return result;
+	}
+
+	@Override
+	public BkOrderRemarkListRespDto queryHandover(int pageNum, int pageSize, BkOrderRemarkReqDto reqDto) {
+		BkOrderRemarkListRespDto resp = new BkOrderRemarkListRespDto(200, "");
+		String orderSnMain = reqDto.getOrderSnMain();
+		String user = reqDto.getUser();
+		Integer type = reqDto.getType();
+		Integer closed = reqDto.getClosed();
+		String params = "";
+		if(StringUtils.isNotBlank(orderSnMain)){
+			params += " and o.orderSnMain = '"+orderSnMain+"'";
+		}
+		if(StringUtils.isNotBlank(user)){
+			params += " and o.user = '"+user+"'";
+		}
+		if(type != null){
+			params += " and o.type = "+type;
+		}
+		if(closed != null){
+			params += " and o.closed = "+closed;
+		}
+		String sql = "select distinct(o.orderSnMain) from OrderRemark o where 1=1 " + params;
+		sql += " order by o.id desc ";
+		EntityManager em = entityManagerFactory.createEntityManager();
+		Query query = em.createQuery(sql);
+		List<String> orderSnMainTotal = query.getResultList();
+		int total = orderSnMainTotal.size();
+		String orderSnMains = "";
+		List<String> orderSnMainList = new ArrayList<String>();
+		for(int i=(pageNum-1)*pageSize ; i < total && i< pageNum*pageSize; i++ ){
+			orderSnMains += ",'"+orderSnMainTotal.get(i)+"'";
+			orderSnMainList.add(orderSnMainTotal.get(i));
+		}
+		sql = "select o from OrderRemark o where 1=1 " + params; 
+		if(StringUtils.isNotBlank(orderSnMains)){
+			orderSnMains = orderSnMains.substring(1);
+			sql += " and o.orderSnMain in (" + orderSnMains + ")";
+		}else{
+			return resp;
+		}
+		query = em.createQuery(sql);
+		List<OrderRemark> orderRemarkAllList = query.getResultList();
+		Map<String, OrderRemark> orderRemarkMap = new HashMap<String, OrderRemark>();
+		for(OrderRemark tmp: orderRemarkAllList){
+			OrderRemark orderRemark = orderRemarkMap.get(tmp.getOrderSnMain());
+			if(orderRemark == null){
+				orderRemarkMap.put(tmp.getOrderSnMain(), tmp);
+			}else if(tmp.getId() > orderRemark.getId()){
+				orderRemarkMap.put(tmp.getOrderSnMain(), tmp);
+			}
+		}
+		List<BkOrderRemarkDto> bkOrderRemarkList = new ArrayList<BkOrderRemarkDto>();
+		for(String tmp : orderSnMainList){
+			OrderRemark orderRemark = orderRemarkMap.get(tmp);
+			BkOrderRemarkDto dto = createBkOrderRemark(orderRemark);
+			bkOrderRemarkList.add(dto);
+		}
+		resp.setBkOrderRemarkList(bkOrderRemarkList);
+		resp.setTotal(total);
+		return resp;
+	}
+	private BkOrderRemarkDto createBkOrderRemark(OrderRemark orderRemark){
+		BkOrderRemarkDto dto = new BkOrderRemarkDto();
+		dto.setId(orderRemark.getId());
+		dto.setOrderSnMain(orderRemark.getOrderSnMain());
+		dto.setClosed(orderRemark.getClosed());
+		dto.setUserClosed(orderRemark.getUserClosed());
+		if(orderRemark.getClosedTime()!=null){
+			dto.setClosedTime(DateUtils.date2DateStr2(orderRemark.getClosedTime()));
+		}
+		dto.setContent(orderRemark.getContent());
+		if(orderRemark.getFinishedTime()!=null){
+			dto.setFinishedTime(DateUtils.date2DateStr2(orderRemark.getFinishedTime()));
+		}
+		dto.setOrderSnMain(dto.getOrderSnMain());
+		if(orderRemark.getTime()!=null){
+			dto.setTime(DateUtils.date2DateStr2(orderRemark.getTime()));
+		}
+		dto.setType(orderRemark.getType());
+		dto.setUser(orderRemark.getUser());
+		return dto;
+	}
+
+	@Override
+	public int closeOrderRemark(String userName , Integer id) {
+		Integer count = orderRemarkDao.updateOrderCloseByIdList(userName, id);
+		return count;
+	}
+
+	@Override
+	public void addOrderRemark(String userName, String orderSnMain, String content, Integer type) {
+		OrderRemark orderRemark = new OrderRemark();
+		orderRemark.setBumen(0);
+		orderRemark.setContent(content);
+		orderRemark.setOrderSnMain(orderSnMain);
+		orderRemark.setType(1);
+		orderRemark.setUser(userName);
+		orderRemark.setTime(new Date());
+		orderRemarkDao.save(orderRemark);
+	}
+
+	@Override
+	public List<BkOrderRemarkDto> queryHandoverByOrderSnMain(String orderSnMain) {
+		List<OrderRemark> remarkList = orderRemarkDao.getHandoverByOrderSnMain(orderSnMain);
+		List<BkOrderRemarkDto> resultList = new ArrayList<BkOrderRemarkDto>();
+		if(remarkList !=null && remarkList.size()>0){
+			for(OrderRemark tmp: remarkList){
+				BkOrderRemarkDto dto = this.createBkOrderRemark(tmp);
+				resultList.add(dto);
+			}
+		}
+		return resultList;
+	}
+	
+	//作废子订单
+	public BaseRes<String> cancelSubOrder(int orderId,String actor){
+		BaseRes<String> result=new BaseRes<String>();
+		
+		Order order=orderDao.findByOrderId(orderId);
+		if(order.getStatus()==1 || order.getStatus()==2){
+			result.setCode("400");
+			result.setMessage("已作废，不可再次作废");
+			return result;
+		}
+		
+		if(order.getType()!="booking"){
+			if(order.getStatus()>=8){
+				result.setCode("400");
+				result.setMessage("子订单作废失败");
+				return result;
+			}
+		}
+		
+		if(order.getStatus()==15){
+			result.setCode("400");
+			result.setMessage("子订单已完成，不可作废");
+			return result;
+		}
+		
+		int orderResult= orderDao.updateOrderStatusByOrderIdAndNotStatus(orderId,2,2);
+		if(orderResult<1){
+			result.setCode("400");
+			result.setMessage("子订单作废失败");
+			return result;
+		}
+		
+		//取消订单返还库存
+		if(order.getType()!="booking"){
+			if(order.getStatus()!=1){//已取消订单不退库存
+				releaseFreezStock(order.getOrderId(),2);
+			}
+		}
+		
+		OrderAction orderAction=new OrderAction();
+		orderAction.setAction(2);
+		orderAction.setActionTime(new Date());
+		orderAction.setTaoOrderSn(order.getTaoOrderSn());
+		orderAction.setOrderId(order.getOrderId());
+		orderAction.setOrderSnMain(order.getOrderSnMain());
+		orderAction.setActor(actor);
+		orderAction.setNotes("子订单作废");
+		orderActionDao.save(orderAction);
+		
+		result.setCode("200");
+		result.setMessage("子订单作废成功");
+		return result;
+	}
+	
+	//取消作废子订单
+	public BaseRes<String> resetCancelSubOrder(int orderId,String actor){
+		BaseRes<String> result=new BaseRes<String>();
+		Order order=orderDao.findByOrderId(orderId);
+		if(order==null){
+			result.setCode("400");
+			result.setMessage("订单不存在");
+			return result;
+		}
+		
+		if(order.getStatus()!=1 && order.getStatus()!=2){
+			result.setCode("400");
+			result.setMessage("未作废，不可取消作废");
+			return result;
+		}
+		
+		OrderReturn orderReturn=orderReturnDao.findByOrderSnMainAndNotOrderTypeAndOrderStatus(order.getOrderSnMain(),0,0);
+		if(orderReturn !=null && orderReturn.getOrderIdR()>0){
+			result.setCode("400");
+			result.setMessage("已生成退款单，不可取消作废");
+			return result;
+		}
+		
+		String errorMessage="";
+		List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(orderId);
+		for(OrderGoods og:orderGoodsList){
+			Goods goodsMsg=goodsDao.findByGoodsId(og.getGoodsId());
+			int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),goodsMsg.getStoreId());
+			if(stock<og.getQuantity()){
+				errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
+			}
+		}
+		
+		if(errorMessage!=""){
+			errorMessage="取消作废失败，"+errorMessage;
+			result.setCode("400");
+			result.setMessage(errorMessage);
+			return result;
+		}
+		
+		addFreezStock(orderId);
+		
+		int orderResult= orderDao.updateOrderStatusByOrderIdAndNotStatus(orderId,0,0);
+		if(orderResult<1){
+			result.setCode("400");
+			result.setMessage("子订单作废失败");
+			return result;
+		}
+		
+		OrderAction orderAction=new OrderAction();
+		orderAction.setAction(31);
+		orderAction.setActionTime(new Date());
+		orderAction.setTaoOrderSn(order.getTaoOrderSn());
+		orderAction.setOrderId(order.getOrderId());
+		orderAction.setOrderSnMain(order.getOrderSnMain());
+		orderAction.setActor(actor);
+		orderAction.setNotes("system子订单取消作废");
+		orderActionDao.save(orderAction);
+		
+		result.setCode("200");
+		result.setMessage("子订单取消作废成功");
+		return result;
+	}
+	
+	//支付子订单
+	public BaseRes<String> paySubOrder(String orderSnMain,String actor,int payId){
+		BaseRes<String> result=new BaseRes<String>();
+		if(orderSnMain==""){
+			result.setCode("400");
+			result.setMessage("非法操作");
+			return result;
+		}
+		
+		List<Order> orderList=orderDao.findByOrderSnMain(orderSnMain);
+		if (CollectionUtils.isEmpty(orderList)) {
+			result.setCode("400");
+			result.setMessage("订单为空");
+			return result;
+		}
+		
+		Double allGoodsAmount=0.0;
+		Double allShippingFee=0.0;
+		for(Order o:orderList){
+			if(o.getPayStatus()==1){
+				result.setCode("400");
+				result.setMessage("该订单已支付");
+				return result;
+			}
+			
+			allGoodsAmount+=o.getGoodsAmount();
+			allShippingFee+=o.getShippingFee();
+		}
+		
+		Double orderPayMoney=orderPayDao.getPayedAmountByOrderSnMain(orderSnMain);
+		if(orderPayMoney==null){
+			orderPayMoney=0.0;
+		}
+		if((allGoodsAmount+allShippingFee)<=orderPayMoney){
+			result.setCode("400");
+			result.setMessage("该订单已支付");
+			return result;
+		}
+		
+		if(payId>0){
+			int updateResult=orderDao.updateOrderPayId(payId, orderSnMain);
+			if(updateResult<1){
+				result.setCode("400");
+				result.setMessage("订单状态更新失败");
+				return result;
+			}
+			
+			for(Order o:orderList){
+				OrderPay orderPay=new OrderPay();
+				orderPay.setOrderSnMain(orderSnMain);
+				orderPay.setOrderId(o.getOrderId());
+				orderPay.setPaymentId(payId);
+				orderPay.setMoney(o.getGoodsAmount()+o.getShippingFee()-o.getOrderPayed());
+				orderPay.setPayTime(o.getAddTime());
+				orderPay.setStatus("succ");
+				orderPayDao.save(orderPay);
+			}
+			
+			OrderAction orderAction=new OrderAction();
+			orderAction.setAction(0);
+			orderAction.setActionTime(new Date());
+			orderAction.setOrderSnMain(orderSnMain);
+			orderAction.setActor(actor);
+			orderAction.setNotes("后台直接修改为已支付状态");
+			orderActionDao.save(orderAction);
+			
+			result.setCode("200");
+			result.setMessage("支付成功");
+			return result;
+		}
+		
+		result.setCode("200");
+		result.setMessage("可以支付");
+		return result;
+	}
+	
+	//获取全部支付方式
+	public List<BkOrderPayDto> getPaymentList(){
+		Iterable<Payment> paymentList=paymentDao.findAll();
+		List<BkOrderPayDto> resp = new ArrayList<BkOrderPayDto>();
+		
+		for(Payment p:paymentList){
+			if(p.getPaymentName()!=""){
+				BkOrderPayDto orderPayDto = new BkOrderPayDto();
+				orderPayDto.setPaymentName(p.getPaymentName());
+				orderPayDto.setPaymentId(p.getPaymentId());
+				resp.add(orderPayDto);
+			}
+		}
+		return resp;
 	}
 }

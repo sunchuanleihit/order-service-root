@@ -4,7 +4,7 @@ public enum BkOrderPayTypeEnum {
 	NOPAYMENT(0,"未选支付方式"),
 	CASH(1,"现金"),
 	TAOCZ(2,"虚拟账户"),
-	UNION(3,"虚拟账户"),
+	UNION(3,"银联在线支付"),
 	ALIPAY(4,"支付宝"),
 	TENPAY(5,"财付通"),
 	TAOXINKA(6,"淘心卡"),
