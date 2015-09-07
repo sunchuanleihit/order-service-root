@@ -363,6 +363,9 @@ public class OrderInfoService {
     }
 
     private int calDelivertResult(Date needShipTime, String needShipSlot, int finishedTime) {
+        if(needShipTime ==null || needShipSlot ==null){
+            return 0;
+        }
         String timeString = new SimpleDateFormat("yyyy-MM-dd").format(needShipTime);
         DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm");
         Iterable<String> times = Splitter.on("-").split(needShipSlot);
