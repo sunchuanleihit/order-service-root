@@ -261,7 +261,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			
 			Store storeMsg = storeDao.findOne(order.getSellerId());
 			String taxApply = "商家";
-			if(storeMsg.getTaxApply()==1){
+			if(storeMsg!=null && storeMsg.getTaxApply()==1){
 				taxApply = "淘常州";
 			}
 			baseDto.setTaxApply(taxApply);
@@ -1729,10 +1729,15 @@ public class BkOrderServiceImpl implements BkOrderService{
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		for(OrderAction tmp: orderActionList){
 			BkOrderActionRespDto dto = new BkOrderActionRespDto();
-			String actionTime = dateFormat.format(tmp.getActionTime());
+			String actionTime=null;
+			if(tmp.getActionTime()!=null){
+				actionTime = dateFormat.format(tmp.getActionTime());
+			}
+			
 			dto.setActionTime(actionTime);
 			dto.setNote(tmp.getNotes());
 			dto.setActor(tmp.getActor());
+			dto.setAction(tmp.getAction());
 			resultList.add(dto);
 		}
 		//查找支付信息
@@ -1761,7 +1766,13 @@ public class BkOrderServiceImpl implements BkOrderService{
 		Collections.sort(resultList, new Comparator<BkOrderActionRespDto>(){
 			@Override
 			public int compare(BkOrderActionRespDto o1, BkOrderActionRespDto o2) {
-				return o1.getActionTime().compareTo(o2.getActionTime());
+				if(o2.getActionTime() == null){
+					return 1;
+				}else if(o1.getActionTime() == null){
+					return -1;
+				}else{
+					return o1.getActionTime().compareTo(o2.getActionTime());
+				}
 			}
 		});
 		return resultList;
@@ -1881,6 +1892,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			}
 		}
 		
+		//优惠券使用规则
 		List<CoupRule> rules = coupRuleDao.findByIdIn(couponIds);
 		Map<Integer, CoupRule> ruleMap = new HashMap<Integer, CoupRule>();
 		for(CoupRule tmp: rules){
@@ -1907,14 +1919,18 @@ public class BkOrderServiceImpl implements BkOrderService{
 		List<BkCouponListDto> couponList = new ArrayList<BkCouponListDto>();
 		for(CoupList coup : coupList){
 			CoupRule rule = ruleMap.get(coup.getCouponId());
-			CoupType type = typeMap.get(rule.getTypeid());
 			Order order = orderMap.get(coup.getCommoncode());
 			BkCouponListDto dto = new BkCouponListDto();
 			dto.setCommonCode(coup.getCommoncode());
 			dto.setMoney(coup.getMoney());
-			dto.setCouponName(rule.getCouponName());
-			dto.setCouponTypeId(rule.getCoupontypeid());
-			dto.setCouponFormId(type.getTypeid());
+			if(rule != null){
+				dto.setCouponName(rule.getCouponName());
+				dto.setCouponTypeId(rule.getCoupontypeid());
+				CoupType type = typeMap.get(rule.getTypeid());
+				if(type != null){
+					dto.setCouponFormId(type.getTypeid());
+				}
+			}
 			dto.setIsSue(coup.getIssue());
 			dto.setIsChecked(coup.getIschecked());
 			if(order!=null){
@@ -1980,15 +1996,17 @@ public class BkOrderServiceImpl implements BkOrderService{
 	}
 	
 	
-	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot){
+	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot,String invoiceHeader,String phoneMob){
 		BaseRes<String> result=new BaseRes<String>();
 		Date needShiptimeDate=DateUtils.str2Date(needShiptime);
-		int orderResult=orderDao.updateNeedShipTimeByOrderSnMain(orderSnMain, needShiptimeDate, needShiptimeSlot);
+		int orderResult=orderDao.updateNeedShipTimeByOrderSnMain(orderSnMain, needShiptimeDate, needShiptimeSlot,invoiceHeader);
 		if(orderResult<1){
 			result.setCode("400");
 			result.setMessage("保存失败");
 			return result;
 		}
+		orderExtmDao.updateExtmByOrderSnMain(orderSnMain,phoneMob);
+		
 		result.setCode("200");
 		result.setMessage("保存成功");
 		return result;
@@ -2088,15 +2106,15 @@ public class BkOrderServiceImpl implements BkOrderService{
 		orderRemark.setBumen(0);
 		orderRemark.setContent(content);
 		orderRemark.setOrderSnMain(orderSnMain);
-		orderRemark.setType(1);
+		orderRemark.setType(type);
 		orderRemark.setUser(userName);
 		orderRemark.setTime(new Date());
 		orderRemarkDao.save(orderRemark);
 	}
 
 	@Override
-	public List<BkOrderRemarkDto> queryHandoverByOrderSnMain(String orderSnMain) {
-		List<OrderRemark> remarkList = orderRemarkDao.getHandoverByOrderSnMain(orderSnMain);
+	public List<BkOrderRemarkDto> queryOrderRemark(String orderSnMain,Integer type) {
+		List<OrderRemark> remarkList = orderRemarkDao.getOrderRemark(orderSnMain,type);
 		List<BkOrderRemarkDto> resultList = new ArrayList<BkOrderRemarkDto>();
 		if(remarkList !=null && remarkList.size()>0){
 			for(OrderRemark tmp: remarkList){

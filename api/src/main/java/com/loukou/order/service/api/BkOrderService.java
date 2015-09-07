@@ -128,7 +128,7 @@ public interface BkOrderService {
 	
 	public BaseRes<String> generateComplaint(String actor,String orderSnMain,String content1,String addTime,String userName,String mobile,int type,int status,String content2,String[] sellerNameList,String[] goodsNameList);
 	
-	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot);
+	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot,String invoiceHeader,String phoneMob);
 	
 	/**
 	 * 查询订单交接
@@ -158,7 +158,7 @@ public interface BkOrderService {
 	 * @param orderSnMain
 	 * @return
 	 */
-	public List<BkOrderRemarkDto> queryHandoverByOrderSnMain(String orderSnMain);
+	public List<BkOrderRemarkDto> queryOrderRemark(String orderSnMain,Integer type);
 
 	public BaseRes<String> cancelSubOrder(int orderId,String actor);
 	

@@ -128,8 +128,8 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 	
 	@Transactional(value="transactionManagerMall")
 	@Modifying
-	@Query("UPDATE Order set needShiptime = ?2,needShiptimeSlot=?3 where orderSnMain = ?1")
-	int updateNeedShipTimeByOrderSnMain(String orderSnMain,Date needShiptime, String needShiptimeSlot);
+	@Query("UPDATE Order set needShiptime = ?2,needShiptimeSlot=?3,invoiceHeader=?4 where orderSnMain = ?1")
+	int updateNeedShipTimeByOrderSnMain(String orderSnMain,Date needShiptime, String needShiptimeSlot,String invoiceHeader);
 	
 	@Transactional
 	@Modifying
