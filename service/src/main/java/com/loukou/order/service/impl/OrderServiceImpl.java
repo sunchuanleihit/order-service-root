@@ -868,6 +868,11 @@ public class OrderServiceImpl implements OrderService {
 		int couponId = req.getCouponId();
 		CoupList coupList = null;
 		if (couponId > 0) {
+			
+			if (couponOperationProcessor.isCouponUseOverLimit(req.getUserId())) {
+				return new SubmitOrderRespDto(400, "您今天使用的优惠券已超过限制，明天在用吧");
+			}
+			
 			coupList = coupListDao.getValidCoupList(req.getUserId(), couponId);
 			if (coupList == null) {
 				return new SubmitOrderRespDto(400, "优惠券不可用，请重新选择");
@@ -1816,6 +1821,11 @@ public class OrderServiceImpl implements OrderService {
 		double couponMoney = 0.0;
 		// 购物车
 		CartRespDto cart = cartService.getCart(userId, openId, cityId, storeId);
+		
+		// 如果用户使用优惠券超过限制，不能使用优惠券
+		if (couponOperationProcessor.isCouponUseOverLimit(userId)) {
+			couponId = -1;
+		}
 		
 		CouponListDto recommend = new CouponListDto();	// 建议优惠券
 		if (couponId > 0) {
