@@ -1761,7 +1761,13 @@ public class BkOrderServiceImpl implements BkOrderService{
 		Collections.sort(resultList, new Comparator<BkOrderActionRespDto>(){
 			@Override
 			public int compare(BkOrderActionRespDto o1, BkOrderActionRespDto o2) {
-				return o1.getActionTime().compareTo(o2.getActionTime());
+				if(o2.getActionTime() == null){
+					return 1;
+				}else if(o1.getActionTime() == null){
+					return -1;
+				}else{
+					return o1.getActionTime().compareTo(o2.getActionTime());
+				}
 			}
 		});
 		return resultList;
@@ -1881,6 +1887,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			}
 		}
 		
+		//优惠券使用规则
 		List<CoupRule> rules = coupRuleDao.findByIdIn(couponIds);
 		Map<Integer, CoupRule> ruleMap = new HashMap<Integer, CoupRule>();
 		for(CoupRule tmp: rules){
@@ -1907,14 +1914,18 @@ public class BkOrderServiceImpl implements BkOrderService{
 		List<BkCouponListDto> couponList = new ArrayList<BkCouponListDto>();
 		for(CoupList coup : coupList){
 			CoupRule rule = ruleMap.get(coup.getCouponId());
-			CoupType type = typeMap.get(rule.getTypeid());
 			Order order = orderMap.get(coup.getCommoncode());
 			BkCouponListDto dto = new BkCouponListDto();
 			dto.setCommonCode(coup.getCommoncode());
 			dto.setMoney(coup.getMoney());
-			dto.setCouponName(rule.getCouponName());
-			dto.setCouponTypeId(rule.getCoupontypeid());
-			dto.setCouponFormId(type.getTypeid());
+			if(rule != null){
+				dto.setCouponName(rule.getCouponName());
+				dto.setCouponTypeId(rule.getCoupontypeid());
+				CoupType type = typeMap.get(rule.getTypeid());
+				if(type != null){
+					dto.setCouponFormId(type.getTypeid());
+				}
+			}
 			dto.setIsSue(coup.getIssue());
 			dto.setIsChecked(coup.getIschecked());
 			if(order!=null){
