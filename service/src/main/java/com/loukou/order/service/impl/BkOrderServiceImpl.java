@@ -1729,7 +1729,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		for(OrderAction tmp: orderActionList){
 			BkOrderActionRespDto dto = new BkOrderActionRespDto();
-			String actionTime=null;
+			String actionTime="";
 			if(tmp.getActionTime()!=null){
 				actionTime = dateFormat.format(tmp.getActionTime());
 			}
