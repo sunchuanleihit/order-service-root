@@ -962,6 +962,8 @@ public class OrderServiceImpl implements OrderService {
 				needShippingTime = bookingShippingTimeMap.get(specId);
 			}
 			if (needShippingTime != null) {
+				// ios 6.4 bug fix
+				needShippingTime = needShippingTime.replace("定时达", "").trim();
 				String[] strs = needShippingTime.split(" ");
 				order.setNeedShiptime(DateUtils.str2Date(strs[0].trim()));
 				order.setNeedShiptimeSlot(strs[1].trim());
