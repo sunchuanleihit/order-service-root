@@ -823,7 +823,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(o.getOrderId());
 			for(OrderGoods og:orderGoodsList){
 				Goods goodsMsg=goodsDao.findByGoodsId(og.getGoodsId());
-				int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),goodsMsg.getStoreId());
+				int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),o.getSellerId());
 				if(stock<og.getQuantity()){
 					errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
 				}
@@ -910,7 +910,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		
 		for(OrderGoods og:orderGoodsList){
-			if(orderMsg.getType() == "wei_wh" || orderMsg.getType() == "wei_self"){
+			if(orderMsg.getType().equals("wei_wh") || orderMsg.getType().equals("wei_self")){
 				if(operateType==6){//发货
 					weiCangGoodsStoreDao.updateBySpecIdAndStoreId(og.getSpecId(), og.getStoreId(), og.getQuantity(), og.getQuantity());
 				}else{//取消
