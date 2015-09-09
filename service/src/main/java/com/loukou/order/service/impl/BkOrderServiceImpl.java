@@ -48,7 +48,6 @@ import com.loukou.order.service.dao.CoupTypeDao;
 import com.loukou.order.service.dao.ExpressDao;
 import com.loukou.order.service.dao.GoodsDao;
 import com.loukou.order.service.dao.GoodsSpecDao;
-import com.loukou.order.service.dao.LkComplaintDao;
 import com.loukou.order.service.dao.MemberDao;
 import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
@@ -69,7 +68,6 @@ import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.CoupType;
 import com.loukou.order.service.entity.Express;
 import com.loukou.order.service.entity.Goods;
-import com.loukou.order.service.entity.LkComplaint;
 import com.loukou.order.service.entity.Member;
 import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
@@ -179,9 +177,6 @@ public class BkOrderServiceImpl implements BkOrderService{
     
     @Autowired
     private GoodsDao goodsDao;
-    
-    @Autowired
-    private LkComplaintDao lkComplaintDao;
     
     @Autowired
     private TosuHandleDao tosuHandleDao;
@@ -1141,52 +1136,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 		
 		result.setCode("200");
 		result.setMessage("退款成功");
-		return result;
-	}
-	
-	
-	//提交/修改投诉
-	public BaseRes<String> generateComplaint(String actor,int complaintId,String orderSnMain,int whId,String whName,
-		String[] goodsNameList,String content,String creatTime,String userName,String mobile,int department,String complaintType,int handleStatus){
-		BaseRes<String> result=new BaseRes<String>();
-		
-		List<Order> orderList = orderDao.findByOrderSnMain(orderSnMain);//获取订单列表信息
-		if (CollectionUtils.isEmpty(orderList)) {
-			result.setCode("400");
-			result.setMessage("订单为空");
-			return result;
-		}
-		
-		String goodsName="";
-		for(String sn:goodsNameList){
-			goodsName+=sn+",";
-		}
-		goodsName=goodsName.substring(0,goodsName.length()-1);
-		
-		LkComplaint complaintData=new LkComplaint();
-		complaintData.setUserName(userName);
-		complaintData.setMobile(mobile);
-		complaintData.setOrderSnMain(orderSnMain);
-		complaintData.setWhId(whId);
-		complaintData.setWhName(whName);
-		complaintData.setGoodsName(goodsName);
-		complaintData.setContent(content);
-		complaintData.setDepartment(department);
-		complaintData.setComplaintType(complaintType);
-		complaintData.setHandleStatus(handleStatus);
-		complaintData.setStatus(0);
-		complaintData.setCreatTime(DateUtils.str2Date(creatTime));
-		complaintData.setCityCode(orderList.get(0).getSellSite());
-		complaintData.setActor(actor);
-		LkComplaint complaintResult=lkComplaintDao.save(complaintData);
-		if(complaintResult==null){
-			result.setCode("400");
-			result.setMessage("生成退款支付单失败");
-			return result;
-		}
-		
-		result.setCode("200");
-		result.setMessage("提交成功");
 		return result;
 	}
 

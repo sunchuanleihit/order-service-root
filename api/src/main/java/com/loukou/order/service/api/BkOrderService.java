@@ -125,10 +125,7 @@ public interface BkOrderService {
 	public BaseRes<String> generatePaymentRefund(int reason,String actor,String orderSnMain,String postScript,int[] paymentIdList,double[] returnAmountList);
 	
 	public BaseRes<String> generateSpecialPaymentRefund(int reason,String actor,String orderSnMain,String postScript,int[] paymentIdList,double[] returnAmountList);
-	
-//	actor,complaintId,orderSnMain,whId,whName,goodsNameList,content,creatTime,userName,mobile,department,complaintType,handleStatus
-	public BaseRes<String> generateComplaint(String actor,int complaintId,String orderSnMain,int whId,String whName,String[] goodsNameList,String content,String creatTime,String userName,String mobile,int department,String complaintType,int handleStatus);
-	
+		
 	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot,String invoiceHeader,String phoneMob);
 	
 	/**
