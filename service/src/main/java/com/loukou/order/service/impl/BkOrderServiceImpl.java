@@ -823,7 +823,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(o.getOrderId());
 			for(OrderGoods og:orderGoodsList){
 				Goods goodsMsg=goodsDao.findByGoodsId(og.getGoodsId());
-				int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),goodsMsg.getStoreId());
+				int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),o.getSellerId());
 				if(stock<og.getQuantity()){
 					errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
 				}
@@ -910,7 +910,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		
 		for(OrderGoods og:orderGoodsList){
-			if(orderMsg.getType() == "wei_wh" || orderMsg.getType() == "wei_self"){
+			if(orderMsg.getType().equals("wei_wh") || orderMsg.getType().equals("wei_self")){
 				if(operateType==6){//发货
 					weiCangGoodsStoreDao.updateBySpecIdAndStoreId(og.getSpecId(), og.getStoreId(), og.getQuantity(), og.getQuantity());
 				}else{//取消
@@ -1733,10 +1733,15 @@ public class BkOrderServiceImpl implements BkOrderService{
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		for(OrderAction tmp: orderActionList){
 			BkOrderActionRespDto dto = new BkOrderActionRespDto();
-			String actionTime = dateFormat.format(tmp.getActionTime());
+			String actionTime="";
+			if(tmp.getActionTime()!=null){
+				actionTime = dateFormat.format(tmp.getActionTime());
+			}
+			
 			dto.setActionTime(actionTime);
 			dto.setNote(tmp.getNotes());
 			dto.setActor(tmp.getActor());
+			dto.setAction(tmp.getAction());
 			resultList.add(dto);
 		}
 		//查找支付信息
@@ -1995,15 +2000,17 @@ public class BkOrderServiceImpl implements BkOrderService{
 	}
 	
 	
-	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot){
+	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot,String invoiceHeader,String phoneMob){
 		BaseRes<String> result=new BaseRes<String>();
 		Date needShiptimeDate=DateUtils.str2Date(needShiptime);
-		int orderResult=orderDao.updateNeedShipTimeByOrderSnMain(orderSnMain, needShiptimeDate, needShiptimeSlot);
+		int orderResult=orderDao.updateNeedShipTimeByOrderSnMain(orderSnMain, needShiptimeDate, needShiptimeSlot,invoiceHeader);
 		if(orderResult<1){
 			result.setCode("400");
 			result.setMessage("保存失败");
 			return result;
 		}
+		orderExtmDao.updateExtmByOrderSnMain(orderSnMain,phoneMob);
+		
 		result.setCode("200");
 		result.setMessage("保存成功");
 		return result;

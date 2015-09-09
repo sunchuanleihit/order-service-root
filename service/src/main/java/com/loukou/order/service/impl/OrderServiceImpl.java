@@ -1,5 +1,6 @@
 package com.loukou.order.service.impl;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
@@ -36,7 +37,6 @@ import com.loukou.order.service.constants.FlagType;
 import com.loukou.order.service.constants.OS;
 import com.loukou.order.service.constants.OrderPayType;
 import com.loukou.order.service.constants.OrderStateReturn;
-import com.loukou.order.service.constants.RedPaperStatus;
 import com.loukou.order.service.constants.ReturnGoodsType;
 import com.loukou.order.service.constants.ShippingMsgDesc;
 import com.loukou.order.service.dao.AddressDao;
@@ -110,7 +110,6 @@ import com.loukou.order.service.enums.ReturnGoodsStatus;
 import com.loukou.order.service.enums.ReturnOrderStatus;
 import com.loukou.order.service.enums.ReturnStatusEnum;
 import com.loukou.order.service.enums.WeiCangGoodsStoreStatusEnum;
-import com.loukou.order.service.req.dto.InviteInfoReqdto;
 import com.loukou.order.service.req.dto.OrderListParamDto;
 import com.loukou.order.service.req.dto.ReturnStorageGoodsReqDto;
 import com.loukou.order.service.req.dto.ReturnStorageReqDto;
@@ -118,10 +117,8 @@ import com.loukou.order.service.req.dto.SpecShippingTime;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
-import com.loukou.order.service.resp.dto.CouponListResultDto;
 import com.loukou.order.service.resp.dto.ExtmMsgDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
-import com.loukou.order.service.resp.dto.InviteInfoRespDto;
 import com.loukou.order.service.resp.dto.LkStatusItemDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderBonusRespDto;
@@ -307,7 +304,7 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired
 	private OrderUserDao orderUserDao;
 
-	
+	private DecimalFormat decimalFormat = new DecimalFormat("#.00");
 	@Override
 	public UserOrderNumRespDto getOrderNum(int userId) {
 		UserOrderNumRespDto resp = new UserOrderNumRespDto();
@@ -663,6 +660,9 @@ public class OrderServiceImpl implements OrderService {
 				if(og.getOrderId() == order.getOrderId()) {
 					GoodsListDto goodsListDto = new GoodsListDto();
 					BeanUtils.copyProperties(og, goodsListDto);
+					//add
+					goodsListDto.setPriceDiscount(DoubleUtils.round(og.getPriceDiscount(), 2));
+					goodsListDto.setPricePurchase(DoubleUtils.round(og.getPricePurchase(), 2));
 					goodsListDtoList.add(goodsListDto);
 				}
 			}
@@ -746,7 +746,8 @@ public class OrderServiceImpl implements OrderService {
 				.append(DigestUtils.md5DigestAsHex(md5time.toString()
 						.getBytes()));
 		ShareDto shareDto = new ShareDto();
-		shareDto.setContent("楼口全场代金券来啊，速抢");
+		shareDto.setTitle("标题：“楼口”1小时送货到家，还送30元红包，下载“楼口”app，享受便利到家生活！");
+		shareDto.setContent("红包可以直接抵扣支付金额。“楼口”让您享受1小时到家生活！");
 		shareDto.setIcon("");
 		shareDto.setUrl(shareUrl.toString());
 		return shareDto;
@@ -1815,7 +1816,10 @@ public class OrderServiceImpl implements OrderService {
 		double couponMoney = 0.0;
 		// 购物车
 		CartRespDto cart = cartService.getCart(userId, openId, cityId, storeId);
+		
+		CouponListDto recommend = new CouponListDto();	// 建议优惠券
 		if (couponId > 0) {
+			// 选中了优惠券
 			CoupList coupList = coupListDao.getValidCoupList(userId, couponId);
 			if (coupList == null) {
 				return new PayBeforeRespDto(400, "优惠券不可用，请重新选择");
@@ -1828,8 +1832,16 @@ public class OrderServiceImpl implements OrderService {
 				return new PayBeforeRespDto(400, "优惠券不可用，请重新选择");
 			}
 			couponMoney = coupList.getMoney();
+			
+			recommend = couponOperationProcessor.assembleDto(coupList, coupRule, 1);
+		}
+		else if (couponId == 0) {
+			// 如果没有选中优惠券, 选择推荐的优惠券
+			recommend = getRecommendCoupon(cityId, userId, storeId, openId);
+			couponMoney = recommend.getMoney();
 		}
 
+		// couponId == -1 时，表示不使用优惠券
 		
 		ResponseCodeDto validateCart = validateCart(cart);
 		if (validateCart.getCode() != 200) {
@@ -1865,7 +1877,7 @@ public class OrderServiceImpl implements OrderService {
 		orderMsgDto.setTxkNum(txkNum);
 		orderMsgDto.setVcount(vcount);
 		
-		resp.getResult().setRecommend(getRecommendCoupon(cityId, userId, storeId, openId));
+		resp.getResult().setRecommend(recommend);
 		resp.getResult().setGoodsList(getGoodsListByCart(cart));
 		
 		return resp;
@@ -1891,6 +1903,7 @@ public class OrderServiceImpl implements OrderService {
 			if(!CollectionUtils.isEmpty(recommend))
 			{
 				dto = recommend.get(0);
+				dto.setCouponName(dto.getCouponName()+"  -"+dto.getMoney());
 			}
 		}
 		return dto;
