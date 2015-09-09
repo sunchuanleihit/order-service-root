@@ -131,6 +131,8 @@ import com.loukou.pos.client.vaccount.resp.VaccountWaterBillQueryRespVO;
 import com.loukou.sms.sdk.client.SingletonSmsClient;
 import com.serverstarted.goods.service.api.GoodsSpecService;
 
+import ch.qos.logback.classic.net.SyslogAppender;
+
 @Service("bkOrderService")
 public class BkOrderServiceImpl implements BkOrderService{
 	@Autowired
@@ -1375,36 +1377,38 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		final String cityCodeFinal = cityCode;
 		//不好意思了，这么写也是醉了
-		String qlStr = "select distinct(orderSnMain) from Order o where 1=1 ";
+		String countStr = "select count(DISTINCT o.orderSnMain) from Order o where 1=1 ";
+		String qlStr = "select DISTINCT(o.orderSnMain) from Order o where 1=1 ";
+		String whereStr = "";
 		if(cssOrderReqDto.getIsDel()!=null){
-			qlStr += " and o.isDel = " + cssOrderReqDto.getIsDel();
+			whereStr += " and o.isDel = " + cssOrderReqDto.getIsDel();
 		}
 		if(cssOrderReqDto.getTimeLimit()!=null){
-			qlStr += " and o.addTime > " + cssOrderReqDto.getTimeLimit();
+			whereStr += " and o.addTime > " + cssOrderReqDto.getTimeLimit();
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
-			qlStr += " and o.orderSnMain = '"+cssOrderReqDto.getOrderSnMain()+"'";
+			whereStr += " and o.orderSnMain = '"+cssOrderReqDto.getOrderSnMain()+"'";
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getBuyerName())){
-			qlStr += " and o.buyerName = '"+cssOrderReqDto.getBuyerName()+"'";
+			whereStr += " and o.buyerName = '"+cssOrderReqDto.getBuyerName()+"'";
 		}
 		if(cssOrderReqDto.getBuyerId() != null ){
-			qlStr += " and o.buyerId = "+cssOrderReqDto.getBuyerId();
+			whereStr += " and o.buyerId = "+cssOrderReqDto.getBuyerId();
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getStartTime())){
-			qlStr += " and o.addTime >= "+(int)(DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
+			whereStr += " and o.addTime >= "+(int)(DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
-			qlStr += " and o.addTime <= "+(int)(DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
+			whereStr += " and o.addTime <= "+(int)(DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
 		}
 		if(cssOrderReqDto.getStatus()!=null){
-			qlStr += " and o.status = "+cssOrderReqDto.getStatus();
+			whereStr += " and o.status = "+cssOrderReqDto.getStatus();
 		}
 		if(cssOrderReqDto.getPayStatus()!=null){
-			qlStr += " and o.payStatus = " + cssOrderReqDto.getPayStatus();
+			whereStr += " and o.payStatus = " + cssOrderReqDto.getPayStatus();
 		}
 		if(StringUtils.isNotBlank(cityCodeFinal) && StringUtils.isNotBlank(cssOrderReqDto.getQueryContent())){
-			qlStr += " and o.sellSite = '"+cityCodeFinal+"'";
+			whereStr += " and o.sellSite = '"+cityCodeFinal+"'";
 		}
 		if(orderSnMainSet.size()>0){
 			String orderSns = "";
@@ -1412,21 +1416,17 @@ public class BkOrderServiceImpl implements BkOrderService{
 				orderSns += ",'"+str+"'";
 			}
 			orderSns = orderSns.substring(1);
-			qlStr += " and o.orderSnMain in ("+orderSns+")";
+			whereStr += " and o.orderSnMain in ("+orderSns+")";
 		}
-		qlStr += " order by o.orderId desc";
-		
+		String orderStr = " order by o.orderId desc ";
 		EntityManager em = entityManagerFactory.createEntityManager();
-		Query query = em.createQuery(qlStr);
-		List<String> orderSnMainAll = query.getResultList();
-		List<String> orderSnMains = new ArrayList<String>();
-		for(int i=pageNum*pageSize; i<(pageNum+1)*pageSize; i++){
-			if(i<orderSnMainAll.size()){
-				orderSnMains.add(orderSnMainAll.get(i));
-			}
-		}
+		Query query = null;
+		query = em.createQuery(countStr+whereStr);
+		int count = ((Long)query.getResultList().get(0)).intValue();
+		query = em.createQuery(qlStr+whereStr+orderStr).setFirstResult(pageNum*pageSize).setMaxResults(pageSize);
+		List<String> orderSnMains = query.getResultList();
 		List<Order> orderListAll = new ArrayList<Order>();
-		if(orderSnMains.size()>0){
+		if(orderSnMains.size() > 0){
 			orderListAll = orderDao.findByOrderSnMainIn(orderSnMains);
 		}
 		Map<String, Order> orderMap = new HashMap<String, Order>();
@@ -1472,7 +1472,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			bkOrderList.add(orderListDto);
 		}
 		BkOrderListResultDto resultDto = new BkOrderListResultDto();
-		resultDto.setOrderCount(orderSnMainAll.size());
+		resultDto.setOrderCount(count);
 		resultDto.setOrderList(bkOrderList);
 		resp.setResult(resultDto);
 		return resp;
@@ -1537,15 +1537,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 	public BkOrderListRespDto queryBkOrderNoReturnList(String sort, String order, int pageNum, int pageSize,
 			final CssOrderReqDto cssOrderReqDto) {
 		BkOrderListRespDto resp = new BkOrderListRespDto(200, "");
-		
 		Sort pageSort = new Sort(Sort.Direction.DESC,"orderId");
-		if(StringUtils.isNotBlank(sort) && StringUtils.isNotBlank(order)){
-			if(order.toLowerCase().equals("asc")){
-				pageSort = new Sort(Sort.Direction.ASC,sort);
-			}else if(order.toLowerCase().equals("desc")){
-				pageSort = new Sort(Sort.Direction.DESC,sort);
-			}
-		}
 		pageNum--;
 		Pageable pageable = new PageRequest(pageNum, pageSize, pageSort);
 		Page<Order> noreturnOrderPage = orderDao.findAll(new Specification<Order>(){
@@ -1554,7 +1546,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 				List<Predicate> predicate = new ArrayList<>();
 				Integer lastTime = getLastFourMonth();
 				predicate.add(cb.greaterThan(root.get("addTime").as(Integer.class), lastTime));
-				
 				if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
 					predicate.add(cb.equal(root.get("orderSnMain"), cssOrderReqDto.getOrderSnMain()));
 				}
