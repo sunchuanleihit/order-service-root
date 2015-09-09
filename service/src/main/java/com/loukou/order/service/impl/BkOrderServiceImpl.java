@@ -1579,6 +1579,10 @@ public class BkOrderServiceImpl implements BkOrderService{
 				if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
 					predicate.add(cb.lessThanOrEqualTo(root.get("addTime").as(Integer.class), endTime));
 				}
+				if(StringUtils.isNotBlank(cssOrderReqDto.getStoreType())){
+					predicate.add(cb.equal(root.get("type"), cssOrderReqDto.getStoreType()));
+				}
+				
 				predicate.add(cb.equal(root.get("isDel"), 0));
 				predicate.add(cb.greaterThan(root.<Double>get("orderPayed"), 0.0));
 				
