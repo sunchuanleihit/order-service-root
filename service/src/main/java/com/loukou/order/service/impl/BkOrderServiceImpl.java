@@ -61,7 +61,6 @@ import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.SiteCityDao;
 import com.loukou.order.service.dao.StoreDao;
-import com.loukou.order.service.dao.TosuDao;
 import com.loukou.order.service.dao.TosuHandleDao;
 import com.loukou.order.service.dao.WeiCangGoodsStoreDao;
 import com.loukou.order.service.entity.CoupList;
@@ -82,8 +81,6 @@ import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Payment;
 import com.loukou.order.service.entity.SiteCity;
 import com.loukou.order.service.entity.Store;
-import com.loukou.order.service.entity.Tosu;
-import com.loukou.order.service.entity.TosuHandle;
 import com.loukou.order.service.enums.BkOrderPayTypeEnum;
 import com.loukou.order.service.enums.BkOrderSourceEnum;
 import com.loukou.order.service.enums.BkOrderStatusEnum;
@@ -182,9 +179,6 @@ public class BkOrderServiceImpl implements BkOrderService{
     
     @Autowired
     private GoodsDao goodsDao;
-    
-    @Autowired
-    private TosuDao tosuDao;
     
     @Autowired
     private TosuHandleDao tosuHandleDao;
@@ -824,7 +818,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 		for(Order o:orderList){
 			List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(o.getOrderId());
 			for(OrderGoods og:orderGoodsList){
-				Goods goodsMsg=goodsDao.findByGoodsId(og.getGoodsId());
 				int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),o.getSellerId());
 				if(stock<og.getQuantity()){
 					errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
@@ -1145,63 +1138,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 		
 		result.setCode("200");
 		result.setMessage("退款成功");
-		return result;
-	}
-	
-	
-	//提交投诉
-	public BaseRes<String> generateComplaint(String actor,String orderSnMain,String content1,String addTime,String userName,String mobile,int type,int status,String content2,String[] sellerNameList,String[] goodsNameList){
-		BaseRes<String> result=new BaseRes<String>();
-		
-		String sellerName="";
-		for(String sn:sellerNameList){
-			sellerName+=sn+",";
-		}
-		sellerName=sellerName.substring(0, sellerName.length()-1);
-		
-		String goodsName="";
-		for(String sn:goodsNameList){
-			goodsName+=sn+",";
-		}
-		goodsName=goodsName.substring(0,goodsName.length()-1);
-		
-		Tosu tosuData=new Tosu();
-		tosuData.setDateline1((int)(DateUtils.str2Date(addTime).getTime()/1000));
-		tosuData.setUserName(userName);
-		tosuData.setMobile(mobile);
-		tosuData.setType(type);
-		tosuData.setStatus(status);
-		tosuData.setOrderSnMain(orderSnMain);
-		tosuData.setDateline2(DateUtils.getTime());
-		tosuData.setSellerName(sellerName);
-		tosuData.setGoodsName(goodsName);
-		Tosu tosuResult=tosuDao.save(tosuData);
-		if(tosuResult==null){
-			result.setCode("400");
-			result.setMessage("生成退款支付单失败");
-			return result;
-		}
-		
-		TosuHandle tosuHandle1=new TosuHandle();
-		tosuHandle1.setTid(tosuResult.getId());
-		tosuHandle1.setContent(content1);
-		tosuHandle1.setType(0);
-		tosuHandle1.setActor(actor);
-		tosuHandle1.setDateline(DateUtils.getTime());
-		tosuHandleDao.save(tosuHandle1);
-		
-		if(content2!=""){
-			TosuHandle tosuHandle2=new TosuHandle();
-			tosuHandle2.setTid(tosuResult.getId());
-			tosuHandle2.setContent(content2);
-			tosuHandle2.setType(1);
-			tosuHandle2.setActor(actor);
-			tosuHandle2.setDateline(DateUtils.getTime());
-			tosuHandleDao.save(tosuHandle2);
-		}
-		
-		result.setCode("200");
-		result.setMessage("提交成功");
 		return result;
 	}
 
