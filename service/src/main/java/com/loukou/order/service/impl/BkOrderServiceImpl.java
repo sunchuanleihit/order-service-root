@@ -48,6 +48,7 @@ import com.loukou.order.service.dao.CoupTypeDao;
 import com.loukou.order.service.dao.ExpressDao;
 import com.loukou.order.service.dao.GoodsDao;
 import com.loukou.order.service.dao.GoodsSpecDao;
+import com.loukou.order.service.dao.LkComplaintDao;
 import com.loukou.order.service.dao.MemberDao;
 import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
@@ -61,7 +62,6 @@ import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.SiteCityDao;
 import com.loukou.order.service.dao.StoreDao;
-import com.loukou.order.service.dao.TosuDao;
 import com.loukou.order.service.dao.TosuHandleDao;
 import com.loukou.order.service.dao.WeiCangGoodsStoreDao;
 import com.loukou.order.service.entity.CoupList;
@@ -69,6 +69,7 @@ import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.CoupType;
 import com.loukou.order.service.entity.Express;
 import com.loukou.order.service.entity.Goods;
+import com.loukou.order.service.entity.LkComplaint;
 import com.loukou.order.service.entity.Member;
 import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
@@ -82,8 +83,6 @@ import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Payment;
 import com.loukou.order.service.entity.SiteCity;
 import com.loukou.order.service.entity.Store;
-import com.loukou.order.service.entity.Tosu;
-import com.loukou.order.service.entity.TosuHandle;
 import com.loukou.order.service.enums.BkOrderPayTypeEnum;
 import com.loukou.order.service.enums.BkOrderSourceEnum;
 import com.loukou.order.service.enums.BkOrderStatusEnum;
@@ -182,7 +181,7 @@ public class BkOrderServiceImpl implements BkOrderService{
     private GoodsDao goodsDao;
     
     @Autowired
-    private TosuDao tosuDao;
+    private LkComplaintDao lkComplaintDao;
     
     @Autowired
     private TosuHandleDao tosuHandleDao;
@@ -822,7 +821,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 		for(Order o:orderList){
 			List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(o.getOrderId());
 			for(OrderGoods og:orderGoodsList){
-				Goods goodsMsg=goodsDao.findByGoodsId(og.getGoodsId());
 				int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),o.getSellerId());
 				if(stock<og.getQuantity()){
 					errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
@@ -1147,15 +1145,17 @@ public class BkOrderServiceImpl implements BkOrderService{
 	}
 	
 	
-	//提交投诉
-	public BaseRes<String> generateComplaint(String actor,String orderSnMain,String content1,String addTime,String userName,String mobile,int type,int status,String content2,String[] sellerNameList,String[] goodsNameList){
+	//提交/修改投诉
+	public BaseRes<String> generateComplaint(String actor,int complaintId,String orderSnMain,int whId,String whName,
+		String[] goodsNameList,String content,String creatTime,String userName,String mobile,int department,String complaintType,int handleStatus){
 		BaseRes<String> result=new BaseRes<String>();
 		
-		String sellerName="";
-		for(String sn:sellerNameList){
-			sellerName+=sn+",";
+		List<Order> orderList = orderDao.findByOrderSnMain(orderSnMain);//获取订单列表信息
+		if (CollectionUtils.isEmpty(orderList)) {
+			result.setCode("400");
+			result.setMessage("订单为空");
+			return result;
 		}
-		sellerName=sellerName.substring(0, sellerName.length()-1);
 		
 		String goodsName="";
 		for(String sn:goodsNameList){
@@ -1163,39 +1163,26 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		goodsName=goodsName.substring(0,goodsName.length()-1);
 		
-		Tosu tosuData=new Tosu();
-		tosuData.setDateline1((int)(DateUtils.str2Date(addTime).getTime()/1000));
-		tosuData.setUserName(userName);
-		tosuData.setMobile(mobile);
-		tosuData.setType(type);
-		tosuData.setStatus(status);
-		tosuData.setOrderSnMain(orderSnMain);
-		tosuData.setDateline2(DateUtils.getTime());
-		tosuData.setSellerName(sellerName);
-		tosuData.setGoodsName(goodsName);
-		Tosu tosuResult=tosuDao.save(tosuData);
-		if(tosuResult==null){
+		LkComplaint complaintData=new LkComplaint();
+		complaintData.setUserName(userName);
+		complaintData.setMobile(mobile);
+		complaintData.setOrderSnMain(orderSnMain);
+		complaintData.setWhId(whId);
+		complaintData.setWhName(whName);
+		complaintData.setGoodsName(goodsName);
+		complaintData.setContent(content);
+		complaintData.setDepartment(department);
+		complaintData.setComplaintType(complaintType);
+		complaintData.setHandleStatus(handleStatus);
+		complaintData.setStatus(0);
+		complaintData.setCreatTime(DateUtils.str2Date(creatTime));
+		complaintData.setCityCode(orderList.get(0).getSellSite());
+		complaintData.setActor(actor);
+		LkComplaint complaintResult=lkComplaintDao.save(complaintData);
+		if(complaintResult==null){
 			result.setCode("400");
 			result.setMessage("生成退款支付单失败");
 			return result;
-		}
-		
-		TosuHandle tosuHandle1=new TosuHandle();
-		tosuHandle1.setTid(tosuResult.getId());
-		tosuHandle1.setContent(content1);
-		tosuHandle1.setType(0);
-		tosuHandle1.setActor(actor);
-		tosuHandle1.setDateline(DateUtils.getTime());
-		tosuHandleDao.save(tosuHandle1);
-		
-		if(content2!=""){
-			TosuHandle tosuHandle2=new TosuHandle();
-			tosuHandle2.setTid(tosuResult.getId());
-			tosuHandle2.setContent(content2);
-			tosuHandle2.setType(1);
-			tosuHandle2.setActor(actor);
-			tosuHandle2.setDateline(DateUtils.getTime());
-			tosuHandleDao.save(tosuHandle2);
 		}
 		
 		result.setCode("200");
