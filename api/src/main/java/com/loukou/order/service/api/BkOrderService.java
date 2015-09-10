@@ -105,6 +105,7 @@ public interface BkOrderService {
 	BkOrderListRespDto orderReturnMsg(String orderSnMain);
 	
 	public BaseRes<String> generateReturn(String actor,int orderId,String postScript,String orderSnMain,int returnType,int payId,double shippingFee,
+	int[] checkedGoodsList,
 	int[] goodsIdList,
 	int[] specIdList,
 	int[] proTypeList,
@@ -122,7 +123,7 @@ public interface BkOrderService {
 	
 	public double getMultiplePaymentRefundMsg(String orderSnMain);
 	
-	public BaseRes<String> generatePaymentRefund(int reason,String actor,String orderSnMain,String postScript,int[] paymentIdList,double[] returnAmountList);
+	public BaseRes<String> generatePaymentRefund(int reason,String actor,String orderSnMain,String postScript,int[] paymentIdList,double hasPaid,double[] returnAmountList);
 	
 	public BaseRes<String> generateSpecialPaymentRefund(int reason,String actor,String orderSnMain,String postScript,int[] paymentIdList,double[] returnAmountList);
 		

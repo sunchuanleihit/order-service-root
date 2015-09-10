@@ -128,8 +128,6 @@ import com.loukou.pos.client.vaccount.resp.VaccountWaterBillQueryRespVO;
 import com.loukou.sms.sdk.client.SingletonSmsClient;
 import com.serverstarted.goods.service.api.GoodsSpecService;
 
-import ch.qos.logback.classic.net.SyslogAppender;
-
 @Service("bkOrderService")
 public class BkOrderServiceImpl implements BkOrderService{
 	@Autowired
@@ -477,6 +475,11 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		
 		List<BkOrderPayDto> resp = new ArrayList<BkOrderPayDto>();
+		BkOrderPayDto orderPayBDto = new BkOrderPayDto();
+		orderPayBDto.setPaymentName("虚拟账户");
+		orderPayBDto.setPaymentId(2);
+		orderPayBDto.setMoney(0);
+		resp.add(orderPayBDto);
 		
 		Iterator<Entry<Integer, Double>> iter = orderPayMap.entrySet().iterator();
 		while (iter.hasNext()) {
@@ -496,6 +499,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 	
 	//生成退款单
 	public BaseRes<String> generateReturn(String actor,int orderId,String postScript,String orderSnMain,int returnType,int payId,double shippingFee,
+			int[] checkedGoodsList,
 			int[] goodsIdList,
 			int[] specIdList,
 			int[] proTypeList,
@@ -523,16 +527,24 @@ public class BkOrderServiceImpl implements BkOrderService{
 		//处理退款单商品
 		List<ReturnOrderGoodsBo> returnOrderGoodsList=new ArrayList<ReturnOrderGoodsBo>();
 		for(int i=0;i<goodsIdList.length;i++){
-			ReturnOrderGoodsBo returnOrderGoods=new ReturnOrderGoodsBo();
-			returnOrderGoods.setGoodsId(goodsIdList[i]);
-			returnOrderGoods.setSpecId(specIdList[i]);
-			returnOrderGoods.setProType(proTypeList[i]);
-			returnOrderGoods.setRecId(recIdList[i]);
-			returnOrderGoods.setGoodsNum(goodsReturnNumList[i]);
-			returnOrderGoods.setGoodsAmount(goodsReturnAmountList[i]);
-			returnOrderGoods.setGoodsReasonId(goodsReasonList[i]);
-			returnOrderGoods.setGoodsName(goodsNameList[i]);
-			returnOrderGoodsList.add(returnOrderGoods);
+			int has=0;
+			for(int cg:checkedGoodsList){
+				if(goodsIdList[i]==cg){
+					has=1;
+				}
+			}
+			if(has==1){
+				ReturnOrderGoodsBo returnOrderGoods=new ReturnOrderGoodsBo();
+				returnOrderGoods.setGoodsId(goodsIdList[i]);
+				returnOrderGoods.setSpecId(specIdList[i]);
+				returnOrderGoods.setProType(proTypeList[i]);
+				returnOrderGoods.setRecId(recIdList[i]);
+				returnOrderGoods.setGoodsNum(goodsReturnNumList[i]);
+				returnOrderGoods.setGoodsAmount(goodsReturnAmountList[i]);
+				returnOrderGoods.setGoodsReasonId(goodsReasonList[i]);
+				returnOrderGoods.setGoodsName(goodsNameList[i]);
+				returnOrderGoodsList.add(returnOrderGoods);
+			}
 		}
 		
 		for(ReturnOrderGoodsBo returnOrderGoods:returnOrderGoodsList){
@@ -975,7 +987,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 	}
 	
 	//生成退款单
-	public BaseRes<String> generatePaymentRefund(int reason,String actor,String orderSnMain,String postScript,int[] paymentIdList,double[] returnAmountList){
+	public BaseRes<String> generatePaymentRefund(int reason,String actor,String orderSnMain,String postScript,int[] paymentIdList,double hasPaid,double[] returnAmountList){
 		BaseRes<String> result=new BaseRes<String>();
 		if(orderSnMain.isEmpty()){
 			result.setCode("400");
@@ -1009,6 +1021,15 @@ public class BkOrderServiceImpl implements BkOrderService{
 		if(returnAmount<=0){
 			result.setCode("400");
 			result.setMessage("请选择退款方式");
+			return result;
+		}
+		
+		for(double r:returnAmountList){
+			returnAmount+=r;
+		}
+		if(returnAmount>hasPaid){
+			result.setCode("400");
+			result.setMessage("退款金额大于需退金额");
 			return result;
 		}
 
