@@ -25,6 +25,7 @@ public class OrderInfoDto  implements Serializable{
     private DeliveryInfo deliveryInfo; // 配送信息
     private List<SpecDto> specList = new ArrayList<SpecDto>(); // 规格信息列表
     private int deliveryResult;//送达结果　　　早，及时，延时
+    private int payStatus = 0;//付款状态
 
     public String getTaoOrderSn() {
         return taoOrderSn;
@@ -125,6 +126,12 @@ public class OrderInfoDto  implements Serializable{
     }
     public void setDeliverResult(int deliverResult) {
         this.deliveryResult = deliverResult;
+    }
+    public int getPayStatus() {
+        return payStatus;
+    }
+    public void setPayStatus(int payStatus) {
+        this.payStatus = payStatus;
     }
   
 }

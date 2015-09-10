@@ -443,7 +443,7 @@ public class OrderInfoService {
             value.setGoodsAmount(o.getOrderAmount());
             value.setTaoOrderSn(o.getTaoOrderSn());
             value.setOrderStatus(o.getStatus());
-
+            value.setPayStatus(o.getPayStatus());
             if (o.getType().equals("booking")) {
                 value.setIsBooking(1);
                 value.setShippingNo(o.getShippingNo());
