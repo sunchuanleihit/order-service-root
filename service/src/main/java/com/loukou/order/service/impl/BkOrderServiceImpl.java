@@ -61,7 +61,6 @@ import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.SiteCityDao;
 import com.loukou.order.service.dao.StoreDao;
-import com.loukou.order.service.dao.TosuDao;
 import com.loukou.order.service.dao.TosuHandleDao;
 import com.loukou.order.service.dao.WeiCangGoodsStoreDao;
 import com.loukou.order.service.entity.CoupList;
@@ -82,8 +81,6 @@ import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Payment;
 import com.loukou.order.service.entity.SiteCity;
 import com.loukou.order.service.entity.Store;
-import com.loukou.order.service.entity.Tosu;
-import com.loukou.order.service.entity.TosuHandle;
 import com.loukou.order.service.enums.BkOrderPayTypeEnum;
 import com.loukou.order.service.enums.BkOrderSourceEnum;
 import com.loukou.order.service.enums.BkOrderStatusEnum;
@@ -180,9 +177,6 @@ public class BkOrderServiceImpl implements BkOrderService{
     
     @Autowired
     private GoodsDao goodsDao;
-    
-    @Autowired
-    private TosuDao tosuDao;
     
     @Autowired
     private TosuHandleDao tosuHandleDao;
@@ -481,6 +475,11 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		
 		List<BkOrderPayDto> resp = new ArrayList<BkOrderPayDto>();
+		BkOrderPayDto orderPayBDto = new BkOrderPayDto();
+		orderPayBDto.setPaymentName("虚拟账户");
+		orderPayBDto.setPaymentId(2);
+		orderPayBDto.setMoney(0);
+		resp.add(orderPayBDto);
 		
 		Iterator<Entry<Integer, Double>> iter = orderPayMap.entrySet().iterator();
 		while (iter.hasNext()) {
@@ -500,6 +499,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 	
 	//生成退款单
 	public BaseRes<String> generateReturn(String actor,int orderId,String postScript,String orderSnMain,int returnType,int payId,double shippingFee,
+			int[] checkedGoodsList,
 			int[] goodsIdList,
 			int[] specIdList,
 			int[] proTypeList,
@@ -527,16 +527,24 @@ public class BkOrderServiceImpl implements BkOrderService{
 		//处理退款单商品
 		List<ReturnOrderGoodsBo> returnOrderGoodsList=new ArrayList<ReturnOrderGoodsBo>();
 		for(int i=0;i<goodsIdList.length;i++){
-			ReturnOrderGoodsBo returnOrderGoods=new ReturnOrderGoodsBo();
-			returnOrderGoods.setGoodsId(goodsIdList[i]);
-			returnOrderGoods.setSpecId(specIdList[i]);
-			returnOrderGoods.setProType(proTypeList[i]);
-			returnOrderGoods.setRecId(recIdList[i]);
-			returnOrderGoods.setGoodsNum(goodsReturnNumList[i]);
-			returnOrderGoods.setGoodsAmount(goodsReturnAmountList[i]);
-			returnOrderGoods.setGoodsReasonId(goodsReasonList[i]);
-			returnOrderGoods.setGoodsName(goodsNameList[i]);
-			returnOrderGoodsList.add(returnOrderGoods);
+			int has=0;
+			for(int cg:checkedGoodsList){
+				if(goodsIdList[i]==cg){
+					has=1;
+				}
+			}
+			if(has==1){
+				ReturnOrderGoodsBo returnOrderGoods=new ReturnOrderGoodsBo();
+				returnOrderGoods.setGoodsId(goodsIdList[i]);
+				returnOrderGoods.setSpecId(specIdList[i]);
+				returnOrderGoods.setProType(proTypeList[i]);
+				returnOrderGoods.setRecId(recIdList[i]);
+				returnOrderGoods.setGoodsNum(goodsReturnNumList[i]);
+				returnOrderGoods.setGoodsAmount(goodsReturnAmountList[i]);
+				returnOrderGoods.setGoodsReasonId(goodsReasonList[i]);
+				returnOrderGoods.setGoodsName(goodsNameList[i]);
+				returnOrderGoodsList.add(returnOrderGoods);
+			}
 		}
 		
 		for(ReturnOrderGoodsBo returnOrderGoods:returnOrderGoodsList){
@@ -822,7 +830,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 		for(Order o:orderList){
 			List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(o.getOrderId());
 			for(OrderGoods og:orderGoodsList){
-				Goods goodsMsg=goodsDao.findByGoodsId(og.getGoodsId());
 				int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),o.getSellerId());
 				if(stock<og.getQuantity()){
 					errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
@@ -980,7 +987,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 	}
 	
 	//生成退款单
-	public BaseRes<String> generatePaymentRefund(int reason,String actor,String orderSnMain,String postScript,int[] paymentIdList,double[] returnAmountList){
+	public BaseRes<String> generatePaymentRefund(int reason,String actor,String orderSnMain,String postScript,int[] paymentIdList,double hasPaid,double[] returnAmountList){
 		BaseRes<String> result=new BaseRes<String>();
 		if(orderSnMain.isEmpty()){
 			result.setCode("400");
@@ -1014,6 +1021,15 @@ public class BkOrderServiceImpl implements BkOrderService{
 		if(returnAmount<=0){
 			result.setCode("400");
 			result.setMessage("请选择退款方式");
+			return result;
+		}
+		
+		for(double r:returnAmountList){
+			returnAmount+=r;
+		}
+		if(returnAmount>hasPaid){
+			result.setCode("400");
+			result.setMessage("退款金额大于需退金额");
 			return result;
 		}
 
@@ -1143,63 +1159,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 		
 		result.setCode("200");
 		result.setMessage("退款成功");
-		return result;
-	}
-	
-	
-	//提交投诉
-	public BaseRes<String> generateComplaint(String actor,String orderSnMain,String content1,String addTime,String userName,String mobile,int type,int status,String content2,String[] sellerNameList,String[] goodsNameList){
-		BaseRes<String> result=new BaseRes<String>();
-		
-		String sellerName="";
-		for(String sn:sellerNameList){
-			sellerName+=sn+",";
-		}
-		sellerName=sellerName.substring(0, sellerName.length()-1);
-		
-		String goodsName="";
-		for(String sn:goodsNameList){
-			goodsName+=sn+",";
-		}
-		goodsName=goodsName.substring(0,goodsName.length()-1);
-		
-		Tosu tosuData=new Tosu();
-		tosuData.setDateline1((int)(DateUtils.str2Date(addTime).getTime()/1000));
-		tosuData.setUserName(userName);
-		tosuData.setMobile(mobile);
-		tosuData.setType(type);
-		tosuData.setStatus(status);
-		tosuData.setOrderSnMain(orderSnMain);
-		tosuData.setDateline2(DateUtils.getTime());
-		tosuData.setSellerName(sellerName);
-		tosuData.setGoodsName(goodsName);
-		Tosu tosuResult=tosuDao.save(tosuData);
-		if(tosuResult==null){
-			result.setCode("400");
-			result.setMessage("生成退款支付单失败");
-			return result;
-		}
-		
-		TosuHandle tosuHandle1=new TosuHandle();
-		tosuHandle1.setTid(tosuResult.getId());
-		tosuHandle1.setContent(content1);
-		tosuHandle1.setType(0);
-		tosuHandle1.setActor(actor);
-		tosuHandle1.setDateline(DateUtils.getTime());
-		tosuHandleDao.save(tosuHandle1);
-		
-		if(content2!=""){
-			TosuHandle tosuHandle2=new TosuHandle();
-			tosuHandle2.setTid(tosuResult.getId());
-			tosuHandle2.setContent(content2);
-			tosuHandle2.setType(1);
-			tosuHandle2.setActor(actor);
-			tosuHandle2.setDateline(DateUtils.getTime());
-			tosuHandleDao.save(tosuHandle2);
-		}
-		
-		result.setCode("200");
-		result.setMessage("提交成功");
 		return result;
 	}
 
@@ -1375,36 +1334,38 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		final String cityCodeFinal = cityCode;
 		//不好意思了，这么写也是醉了
-		String qlStr = "select distinct(orderSnMain) from Order o where 1=1 ";
+		String countStr = "select count(DISTINCT o.orderSnMain) from Order o where 1=1 ";
+		String qlStr = "select DISTINCT(o.orderSnMain) from Order o where 1=1 ";
+		String whereStr = "";
 		if(cssOrderReqDto.getIsDel()!=null){
-			qlStr += " and o.isDel = " + cssOrderReqDto.getIsDel();
+			whereStr += " and o.isDel = " + cssOrderReqDto.getIsDel();
 		}
 		if(cssOrderReqDto.getTimeLimit()!=null){
-			qlStr += " and o.addTime > " + cssOrderReqDto.getTimeLimit();
+			whereStr += " and o.addTime > " + cssOrderReqDto.getTimeLimit();
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
-			qlStr += " and o.orderSnMain = '"+cssOrderReqDto.getOrderSnMain()+"'";
+			whereStr += " and o.orderSnMain = '"+cssOrderReqDto.getOrderSnMain()+"'";
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getBuyerName())){
-			qlStr += " and o.buyerName = '"+cssOrderReqDto.getBuyerName()+"'";
+			whereStr += " and o.buyerName = '"+cssOrderReqDto.getBuyerName()+"'";
 		}
 		if(cssOrderReqDto.getBuyerId() != null ){
-			qlStr += " and o.buyerId = "+cssOrderReqDto.getBuyerId();
+			whereStr += " and o.buyerId = "+cssOrderReqDto.getBuyerId();
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getStartTime())){
-			qlStr += " and o.addTime >= "+(int)(DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
+			whereStr += " and o.addTime >= "+(int)(DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
-			qlStr += " and o.addTime <= "+(int)(DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
+			whereStr += " and o.addTime <= "+(int)(DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
 		}
 		if(cssOrderReqDto.getStatus()!=null){
-			qlStr += " and o.status = "+cssOrderReqDto.getStatus();
+			whereStr += " and o.status = "+cssOrderReqDto.getStatus();
 		}
 		if(cssOrderReqDto.getPayStatus()!=null){
-			qlStr += " and o.payStatus = " + cssOrderReqDto.getPayStatus();
+			whereStr += " and o.payStatus = " + cssOrderReqDto.getPayStatus();
 		}
 		if(StringUtils.isNotBlank(cityCodeFinal) && StringUtils.isNotBlank(cssOrderReqDto.getQueryContent())){
-			qlStr += " and o.sellSite = '"+cityCodeFinal+"'";
+			whereStr += " and o.sellSite = '"+cityCodeFinal+"'";
 		}
 		if(orderSnMainSet.size()>0){
 			String orderSns = "";
@@ -1412,21 +1373,17 @@ public class BkOrderServiceImpl implements BkOrderService{
 				orderSns += ",'"+str+"'";
 			}
 			orderSns = orderSns.substring(1);
-			qlStr += " and o.orderSnMain in ("+orderSns+")";
+			whereStr += " and o.orderSnMain in ("+orderSns+")";
 		}
-		qlStr += " order by o.orderId desc";
-		
+		String orderStr = " order by o.orderId desc ";
 		EntityManager em = entityManagerFactory.createEntityManager();
-		Query query = em.createQuery(qlStr);
-		List<String> orderSnMainAll = query.getResultList();
-		List<String> orderSnMains = new ArrayList<String>();
-		for(int i=pageNum*pageSize; i<(pageNum+1)*pageSize; i++){
-			if(i<orderSnMainAll.size()){
-				orderSnMains.add(orderSnMainAll.get(i));
-			}
-		}
+		Query query = null;
+		query = em.createQuery(countStr+whereStr);
+		int count = ((Long)query.getResultList().get(0)).intValue();
+		query = em.createQuery(qlStr+whereStr+orderStr).setFirstResult(pageNum*pageSize).setMaxResults(pageSize);
+		List<String> orderSnMains = query.getResultList();
 		List<Order> orderListAll = new ArrayList<Order>();
-		if(orderSnMains.size()>0){
+		if(orderSnMains.size() > 0){
 			orderListAll = orderDao.findByOrderSnMainIn(orderSnMains);
 		}
 		Map<String, Order> orderMap = new HashMap<String, Order>();
@@ -1472,7 +1429,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			bkOrderList.add(orderListDto);
 		}
 		BkOrderListResultDto resultDto = new BkOrderListResultDto();
-		resultDto.setOrderCount(orderSnMainAll.size());
+		resultDto.setOrderCount(count);
 		resultDto.setOrderList(bkOrderList);
 		resp.setResult(resultDto);
 		return resp;
@@ -1537,15 +1494,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 	public BkOrderListRespDto queryBkOrderNoReturnList(String sort, String order, int pageNum, int pageSize,
 			final CssOrderReqDto cssOrderReqDto) {
 		BkOrderListRespDto resp = new BkOrderListRespDto(200, "");
-		
 		Sort pageSort = new Sort(Sort.Direction.DESC,"orderId");
-		if(StringUtils.isNotBlank(sort) && StringUtils.isNotBlank(order)){
-			if(order.toLowerCase().equals("asc")){
-				pageSort = new Sort(Sort.Direction.ASC,sort);
-			}else if(order.toLowerCase().equals("desc")){
-				pageSort = new Sort(Sort.Direction.DESC,sort);
-			}
-		}
 		pageNum--;
 		Pageable pageable = new PageRequest(pageNum, pageSize, pageSort);
 		Page<Order> noreturnOrderPage = orderDao.findAll(new Specification<Order>(){
@@ -1554,7 +1503,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 				List<Predicate> predicate = new ArrayList<>();
 				Integer lastTime = getLastFourMonth();
 				predicate.add(cb.greaterThan(root.get("addTime").as(Integer.class), lastTime));
-				
 				if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
 					predicate.add(cb.equal(root.get("orderSnMain"), cssOrderReqDto.getOrderSnMain()));
 				}
@@ -1579,6 +1527,10 @@ public class BkOrderServiceImpl implements BkOrderService{
 				if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
 					predicate.add(cb.lessThanOrEqualTo(root.get("addTime").as(Integer.class), endTime));
 				}
+				if(StringUtils.isNotBlank(cssOrderReqDto.getStoreType())){
+					predicate.add(cb.equal(root.get("type"), cssOrderReqDto.getStoreType()));
+				}
+				
 				predicate.add(cb.equal(root.get("isDel"), 0));
 				predicate.add(cb.greaterThan(root.<Double>get("orderPayed"), 0.0));
 				
