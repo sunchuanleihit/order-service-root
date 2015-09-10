@@ -112,7 +112,7 @@ public class InviteOperationProcessor {
 				pageSize=req.getPageSize();
 				//分页查询
 				PageRequest p=new PageRequest(0,pageSize, new Sort(
-		                Sort.Direction.ASC, "createdTime"));
+		                Sort.Direction.DESC, "createdTime"));
 				Page<InviteList> pList= inviteInfoDao.findByUserId(userId, p);	
 				Ilist=pList.getContent();
 			}
