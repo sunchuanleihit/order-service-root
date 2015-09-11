@@ -1294,7 +1294,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 	}
 
 	@Override
-	public BkOrderListRespDto queryBkOrderList(int pageNum, int pageSize, final CssOrderReqDto cssOrderReqDto) {
+	public synchronized BkOrderListRespDto queryBkOrderList(int pageNum, int pageSize, final CssOrderReqDto cssOrderReqDto) {
 		BkOrderListRespDto resp = new BkOrderListRespDto(200, "");
 		List<Order> orderList = new ArrayList<Order>();
 		//先从收货人中查出所有相关的订单
@@ -1489,7 +1489,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 	 * 查找未生成退款单
 	 */
 	@Override
-	public BkOrderListRespDto queryBkOrderNoReturnList(String sort, String order, int pageNum, int pageSize,
+	public  BkOrderListRespDto queryBkOrderNoReturnList(String sort, String order, int pageNum, int pageSize,
 			final CssOrderReqDto cssOrderReqDto) {
 		BkOrderListRespDto resp = new BkOrderListRespDto(200, "");
 		Sort pageSort = new Sort(Sort.Direction.DESC,"orderId");
