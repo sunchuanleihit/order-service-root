@@ -9,7 +9,7 @@ public enum OrderStatusEnum {
 	
 	STATUS_CANCELED(1),	// 取消
 	
-	STATUS_INVALID(2),	// 无效
+	STATUS_INVALID(2),	// 无效 微仓拒绝订单
 	
 	STATUS_REVIEWED(3), // 已审核
 	
@@ -25,7 +25,7 @@ public enum OrderStatusEnum {
 	
 	STATUS_FINISHED(15), // 回单
 	
-	STATUS_REFUSED(16); //拒单
+	STATUS_REFUSED(16); //拒收订单 这是送货后出现的问题
 	
 	private int id;
 	

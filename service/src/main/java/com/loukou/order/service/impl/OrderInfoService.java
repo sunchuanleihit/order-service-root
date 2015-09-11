@@ -127,7 +127,7 @@ public class OrderInfoService {
             orderInfoDto.setShippingNo(order.getShippingNo());
         }
         // 各个状态需要加一些特殊字段
-        if (order.getStatus() == OrderStatusEnum.STATUS_REFUSED.getId()) {
+        if (order.getStatus() == OrderStatusEnum.STATUS_INVALID.getId()) {
             OrderRefuse orderRefuse = orderRefuseDao.findByTaoOrderSn(order.getTaoOrderSn());
             if (orderRefuse != null) {
                 orderInfoDto.setRejectReason(orderRefuse.getRefuseReason());
@@ -301,7 +301,7 @@ public class OrderInfoService {
 
         } else if (param.getOrderStatus() == OrderStatusEnum.STATUS_14.getId()) {
 
-        } else if (param.getOrderStatus() == OrderStatusEnum.STATUS_REFUSED.getId()) {
+        } else if (param.getOrderStatus() == OrderStatusEnum.STATUS_INVALID.getId()) {
             List<OrderRefuse> orderRefuses = orderRefuseDao.findByTaoOrderSnIn(biMap.values());
 
             if (!CollectionUtils.isEmpty(orderRefuses)) {
