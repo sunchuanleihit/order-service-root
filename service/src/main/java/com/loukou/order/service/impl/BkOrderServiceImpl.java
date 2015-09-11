@@ -179,9 +179,6 @@ public class BkOrderServiceImpl implements BkOrderService{
     private GoodsDao goodsDao;
     
     @Autowired
-    private TosuHandleDao tosuHandleDao;
-
-    @Autowired
     private EntityManagerFactory entityManagerFactory;
     
     @Autowired
@@ -1382,6 +1379,8 @@ public class BkOrderServiceImpl implements BkOrderService{
 		int count = ((Long)query.getResultList().get(0)).intValue();
 		query = em.createQuery(qlStr+whereStr+orderStr).setFirstResult(pageNum*pageSize).setMaxResults(pageSize);
 		List<String> orderSnMains = query.getResultList();
+		em.clear();
+		em.close();
 		List<Order> orderListAll = new ArrayList<Order>();
 		if(orderSnMains.size() > 0){
 			orderListAll = orderDao.findByOrderSnMainIn(orderSnMains);
@@ -2005,6 +2004,8 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		query = em.createQuery(sql);
 		List<OrderRemark> orderRemarkAllList = query.getResultList();
+		em.clear();
+		em.close();
 		Map<String, OrderRemark> orderRemarkMap = new HashMap<String, OrderRemark>();
 		for(OrderRemark tmp: orderRemarkAllList){
 			OrderRemark orderRemark = orderRemarkMap.get(tmp.getOrderSnMain());
