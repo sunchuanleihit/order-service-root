@@ -105,28 +105,27 @@ public class CoupServiceImpl implements CoupService{
 	//优惠券类别列表
 	@Override
 	public BkCouponTypeListRespDto queryCoupType(Integer pageNum, Integer pageSize) {
-//		Pageable pageable = new PageRequest(pageNum, pageSize);
-//		Page<CoupType> coupTypePage = coupTypeDao.findAll(null, pageable);
-//		BkCouponTypeListRespDto respDto = new BkCouponTypeListRespDto(200,"");
-//		respDto.setCount(coupTypePage.getTotalElements());
-//
-//		List<CoupType> coupRuleList = coupTypePage.getContent();
-//		List<BkCouponTypeListDto> coupTypeDtoList = new ArrayList<BkCouponTypeListDto>();
-//		if(coupRuleList!=null && coupRuleList.size()>0){
-//			for(CoupType t: coupRuleList){
-//				BkCouponTypeListDto tt = new BkCouponTypeListDto();
-//				tt.setId(t.getId());
-//				tt.setTitle(t.getTitle());
-//				tt.setDescription(t.getDescription());
-//				tt.setType(CoupTypeEnum.parseName(t.getTypeid()).getName());
-//				tt.setUsenum(t.getUsenum());
-//				tt.setNewuser(CoupNewUserEnum.parseName(t.getNewuser()).getName());
-//				coupTypeDtoList.add(tt);
-//			}
-//		}
-//		respDto.setBkCouponTypeList(coupTypeDtoList);
-//		return respDto;
-		return null;
+		Pageable pageable = new PageRequest(pageNum, pageSize);
+		Page<CoupType> coupTypePage = coupTypeDao.findAll(null, pageable);
+		BkCouponTypeListRespDto respDto = new BkCouponTypeListRespDto(200,"");
+		respDto.setCount(coupTypePage.getTotalElements());
+
+		List<CoupType> coupRuleList = coupTypePage.getContent();
+		List<BkCouponTypeListDto> coupTypeDtoList = new ArrayList<BkCouponTypeListDto>();
+		if(coupRuleList!=null && coupRuleList.size()>0){
+			for(CoupType t: coupRuleList){
+				BkCouponTypeListDto tt = new BkCouponTypeListDto();
+				tt.setId(t.getId());
+				tt.setTitle(t.getTitle());
+				tt.setDescription(t.getDescription());
+				tt.setType(CoupTypeEnum.parseName(t.getTypeid()).getName());
+				tt.setUsenum(t.getUsenum());
+				tt.setNewuser(CoupNewUserEnum.parseName(t.getNewuser()).getName());
+				coupTypeDtoList.add(tt);
+			}
+		}
+		respDto.setBkCouponTypeList(coupTypeDtoList);
+		return respDto;
 	}
 }
 
