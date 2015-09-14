@@ -5,8 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BkCouponTypeListRespDto extends ResponseCodeDto implements Serializable {
-
-	private static final long serialVersionUID = -2936686365664540039L;
+	private static final long serialVersionUID = 9168823377879349796L;
 
 	public BkCouponTypeListRespDto(int code, String message) {
 		super(code, message);
