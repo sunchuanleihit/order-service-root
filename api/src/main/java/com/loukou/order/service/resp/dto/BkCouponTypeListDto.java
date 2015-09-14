@@ -8,7 +8,7 @@ public class BkCouponTypeListDto implements Serializable{
 	private Integer id;
 	private String title;
 	private String description;
-	private Integer typeid;
+	private String type;
 	private Integer usenum;
 	private Integer newuser;
 	public Integer getId() {
@@ -29,11 +29,11 @@ public class BkCouponTypeListDto implements Serializable{
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	public Integer getTypeid() {
-		return typeid;
+	public String getType() {
+		return type;
 	}
-	public void setTypeid(Integer typeid) {
-		this.typeid = typeid;
+	public void setType(String type) {
+		this.type = type;
 	}
 	public Integer getUsenum() {
 		return usenum;

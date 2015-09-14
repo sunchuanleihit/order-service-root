@@ -102,29 +102,30 @@ public class CoupServiceImpl implements CoupService{
 	
 	//优惠券类别列表
 	@Override
-	public BkCouponTypeListRespDto typeList(int pageNum, int pageSize) {
-		BkCouponTypeListRespDto result = new BkCouponTypeListRespDto(200,"");
-		
-		pageSize = pageNum*pageSize;
-		pageNum = pageNum-1;
-		List<CoupType> typeList=coupTypeDao.getCoupTypeList(0, pageNum, pageSize);
-		
-		List<BkCouponTypeListDto> orderListResult = new ArrayList<BkCouponTypeListDto>();
-		for(CoupType t:typeList){
-			BkCouponTypeListDto tt = new BkCouponTypeListDto();
-			tt.setId(t.getId());
-			tt.setTitle(t.getTitle());
-			tt.setDescription(t.getDescription());
-			tt.setTypeid(t.getTypeid());
-			tt.setUsenum(t.getUsenum());
-			tt.setNewuser(t.getNewuser());
-			tt.setStatus(t.getStatus());
-			tt.setSell_site(t.getSellSite());
-			orderListResult.add(tt);
+	public BkCouponTypeListRespDto queryCoupType(int pageNum, int pageSize) {
+		Pageable pageable = new PageRequest(pageNum, pageSize);
+		Page<CoupType> coupTypePage = coupTypeDao.findAll(null, pageable);
+		BkCouponTypeListRespDto respDto = new BkCouponTypeListRespDto(200,"");
+		respDto.setCount(coupTypePage.getTotalElements());
+
+		List<CoupType> coupRuleList = coupTypePage.getContent();
+		List<BkCouponTypeListDto> coupTypeDtoList = new ArrayList<BkCouponTypeListDto>();
+		if(coupRuleList!=null && coupRuleList.size()>0){
+			for(CoupType t: coupRuleList){
+				BkCouponTypeListDto tt = new BkCouponTypeListDto();
+				tt.setId(t.getId());
+				tt.setTitle(t.getTitle());
+				tt.setDescription(t.getDescription());
+				tt.setType(CoupTypeEnum.parseName(t.getTypeid()).getName());
+				tt.setUsenum(t.getUsenum());
+				tt.setNewuser(t.getNewuser());
+				tt.setStatus(t.getStatus());
+				tt.setSell_site(t.getSellSite());
+				coupTypeDtoList.add(tt);
+			}
 		}
-		
-		result.setBkCouponTypeList(orderListResult);
-		return result;
+		respDto.setBkCouponTypeList(coupTypeDtoList);
+		return respDto;
 	}
 }
 

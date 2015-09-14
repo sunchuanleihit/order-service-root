@@ -11,8 +11,15 @@ public class BkCouponTypeListRespDto extends ResponseCodeDto implements Serializ
 	public BkCouponTypeListRespDto(int code, String message) {
 		super(code, message);
 	}
+	long count = 0l;
 	List<BkCouponTypeListDto> bkCouponTypeList = new ArrayList<BkCouponTypeListDto>();
 
+	public long getCount() {
+		return count;
+	}
+	public void setCount(long count) {
+		this.count = count;
+	}
 	public List<BkCouponTypeListDto> getBkCouponTypeList() {
 		return bkCouponTypeList;
 	}
