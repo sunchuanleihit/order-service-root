@@ -1,6 +1,6 @@
 package com.loukou.order.service.enums;
 
-public enum CoupTypeEnum {
+public enum CoupRuleTypeEnum {
 	NONE(-1, ""),
 	ENOUGH(0, "满减券"),
 	CASH(1, "现金券"),
@@ -21,12 +21,12 @@ public enum CoupTypeEnum {
 	public void setName(String name) {
 		this.name = name;
 	}
-	private CoupTypeEnum(int id, String name){
+	private CoupRuleTypeEnum(int id, String name){
 		this.id = id;
 		this.name = name;
 	}
-	public static CoupTypeEnum parseName(int id){
-		for(CoupTypeEnum e: CoupTypeEnum.values()){
+	public static CoupRuleTypeEnum parseName(int id){
+		for(CoupRuleTypeEnum e: CoupRuleTypeEnum.values()){
 			if(e.id == id){
 				return e;
 			}

@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 import com.loukou.order.service.api.CoupService;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.entity.CoupRule;
-import com.loukou.order.service.enums.CoupTypeEnum;
+import com.loukou.order.service.enums.CoupRuleTypeEnum;
 import com.loukou.order.service.enums.CoupUseScopeEnum;
 import com.loukou.order.service.req.dto.CoupRuleReqDto;
 import com.loukou.order.service.resp.dto.CoupRuleDto;
@@ -81,7 +81,7 @@ public class CoupServiceImpl implements CoupService{
 		CoupRuleDto dto = new CoupRuleDto();
 		dto.setId(coupRule.getId());
 		dto.setName(coupRule.getCouponName());
-		dto.setType(CoupTypeEnum.parseName(coupRule.getCoupontypeid()).getName());
+		dto.setType(CoupRuleTypeEnum.parseName(coupRule.getCoupontypeid()).getName());
 		dto.setScope(CoupUseScopeEnum.parseName(coupRule.getCouponType()).getName());
 		if(coupRule.getCanuseday() == 0){
 			if(coupRule.getBegintime() !=null && coupRule.getEndtime() !=null){
