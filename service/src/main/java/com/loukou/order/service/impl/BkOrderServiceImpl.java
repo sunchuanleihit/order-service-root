@@ -61,7 +61,6 @@ import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.SiteCityDao;
 import com.loukou.order.service.dao.StoreDao;
-import com.loukou.order.service.dao.TosuHandleDao;
 import com.loukou.order.service.dao.WeiCangGoodsStoreDao;
 import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupRule;
