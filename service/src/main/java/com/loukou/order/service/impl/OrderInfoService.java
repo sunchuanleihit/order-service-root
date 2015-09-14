@@ -205,7 +205,16 @@ public class OrderInfoService {
                 }
                 orders = orderDao.findBySellerIdAndStatusAndFinishedTimeBetweenAndTypeIn(param.getStoreId(),
                         param.getOrderStatus(), (int) startTime, (int) endTime, types, pagenation);
-            } else if (param.getOrderStatus() == OrderStatusEnum.STATUS_CANCELED.getId()) {
+            }else if(param.getOrderStatus() == OrderStatusEnum.STATUS_INVALID.getId()){
+                //无效状态  分为 
+                //1.   2小时未付款被job自动设置为无效
+                //2.   商家拒绝订单，设置为无效 
+                //这里只为商家展示拒绝的订单，所以使用付款状态
+                List<Integer> payed = Lists.newArrayList(PayStatusEnum.STATUS_PART_PAYED.getId(),
+                        PayStatusEnum.STATUS_PAYED.getId());
+                orders = orderDao.findBysellerIdAndStatusAndPayStatusInAndTypeIn(param.getStoreId(),
+                        param.getOrderStatus(), payed, types, pagenation);
+            }else if (param.getOrderStatus() == OrderStatusEnum.STATUS_CANCELED.getId()) {
                 // 取消状态需要已付款
                 List<Integer> payed = Lists.newArrayList(PayStatusEnum.STATUS_PART_PAYED.getId(),
                         PayStatusEnum.STATUS_PAYED.getId());
