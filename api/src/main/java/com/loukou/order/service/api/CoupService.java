@@ -7,5 +7,5 @@ public interface CoupService {
 
 	CoupRuleRespDto queryCoupRule(CoupRuleReqDto req, Integer pageNum, Integer pageSize);
 	
-	BkCouponTypeListRespDto queryCoupType(int pageNum, int pageSize);
+	BkCouponTypeListRespDto queryCoupType(Integer pageNum, Integer pageSize);
 }

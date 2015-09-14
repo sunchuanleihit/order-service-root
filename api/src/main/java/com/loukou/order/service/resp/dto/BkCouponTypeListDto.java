@@ -10,7 +10,7 @@ public class BkCouponTypeListDto implements Serializable{
 	private String description;
 	private String type;
 	private Integer usenum;
-	private Integer newuser;
+	private String newuser;
 	public Integer getId() {
 		return id;
 	}
@@ -41,10 +41,10 @@ public class BkCouponTypeListDto implements Serializable{
 	public void setUsenum(Integer usenum) {
 		this.usenum = usenum;
 	}
-	public Integer getNewuser() {
+	public String getNewuser() {
 		return newuser;
 	}
-	public void setNewuser(Integer newuser) {
+	public void setNewuser(String newuser) {
 		this.newuser = newuser;
 	}
 	public Integer getStatus() {
