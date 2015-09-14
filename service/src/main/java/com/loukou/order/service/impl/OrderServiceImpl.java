@@ -1,6 +1,5 @@
 package com.loukou.order.service.impl;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
@@ -154,7 +153,8 @@ import com.loukou.pos.client.txk.processor.AccountTxkProcessor;
 import com.loukou.pos.client.txk.req.TxkCardRefundRespVO;
 import com.loukou.pos.client.vaccount.processor.VirtualAccountProcessor;
 import com.loukou.pos.client.vaccount.resp.VaccountUpdateRespVO;
-import com.loukou.search.service.api.GoodsSearchService;
+import com.loukou.search.service.api.ProductSearchService;
+import com.loukou.search.service.dto.product.SkuDto;
 import com.serverstarted.cart.service.api.CartService;
 import com.serverstarted.cart.service.constants.PackageType;
 import com.serverstarted.cart.service.resp.dto.CartGoodsRespDto;
@@ -162,8 +162,6 @@ import com.serverstarted.cart.service.resp.dto.CartRespDto;
 import com.serverstarted.cart.service.resp.dto.PackageRespDto;
 import com.serverstarted.goods.service.api.GoodsService;
 import com.serverstarted.goods.service.api.GoodsSpecService;
-import com.serverstarted.goods.service.resp.dto.GoodsRespDto;
-import com.serverstarted.goods.service.resp.dto.GoodsSpecRespDto;
 import com.serverstarted.goods.service.resp.dto.GoodsStockInfoRespDto;
 import com.serverstarted.store.service.api.StoreService;
 import com.serverstarted.store.service.resp.dto.StoreRespDto;
@@ -252,8 +250,8 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired 
 	private OrderLnglatDao orderLnglatDao;
 	
-	@Autowired 
-	private GoodsSearchService goodsSearchService;
+	@Autowired
+	private ProductSearchService productSearchService;
 	
 	@Autowired
 	private OrderGoodsRDao orderGoodsRDao;
@@ -971,13 +969,11 @@ public class OrderServiceImpl implements OrderService {
 
 			int storeId = req.getStoreId();
 			StoreRespDto store = null;
-			GoodsRespDto goods = null;
-			GoodsSpecRespDto spec = null;
 			if (PackageType.SELF_SALES.equals(pl.getPackageType())) {
 				int specId = pl.getGoodsList().get(0).getSpecId();
-				spec = goodsSpecService.get(specId);
-				goods = goodsService.getGoods(spec.getGoodsId());
-				storeId = goods.getStoreId();
+				SkuDto sku = productSearchService.getSku(specId);
+				// TODO getStoreId
+//				storeId = sku.getStoreId();
 			}
 			store = storeService.getByStoreId(storeId);
 			order.setSellerId(storeId);
@@ -1047,13 +1043,15 @@ public class OrderServiceImpl implements OrderService {
 					// 整箱购商品，用标准规格的商品来记录
 					int stockBase = info.getStockBase();
 					
-					GoodsSpecRespDto goodsSpec = goodsSpecService.get(info.getStockSpecId());
-					g.setSpecId(goodsSpec.getSpecId());
-					g.setSpecName(goodsSpec.getSpecOne());
+					SkuDto sku = productSearchService.getSku(info.getStockSpecId());
+//					GoodsSpecRespDto goodsSpec = goodsSpecService.get(info.getStockSpecId());
+					g.setSpecId(sku.getSkuId());
+					g.setSpecName(sku.getAttributes().get(0));
 					g.setPrice(DoubleUtils.div(g.getPrice(), stockBase, 8));
 					g.setAmount(g.getAmount() * stockBase);
-					g.setTaosku(goodsSpec.getTaosku());
-					g.setBn(goodsSpec.getBn());
+					// TODO 获取taosku, bn
+//					g.setTaosku(sku.getTaosku());
+//					g.setBn(sku.getBn());
 				}
 				
 				

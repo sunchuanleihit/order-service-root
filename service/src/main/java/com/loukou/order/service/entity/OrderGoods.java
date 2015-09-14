@@ -176,6 +176,34 @@ public class OrderGoods {
 	 */
 	@Column(name = "del_flag")
 	private int delFlag = 0;
+	
+	@Column(name = "product_id")
+	private int productId = 0;
+
+	@Column(name = "sitesku_id")
+	private int siteskuId = 0;
+
+
+	public int getProductId() {
+	return productId;
+
+	}
+
+	public void setProductId(int productId) {
+	this.productId = productId;
+
+	}
+
+	public int getSiteskuId() {
+	return siteskuId;
+
+	}
+
+	public void setSiteskuId(int siteskuId) {
+	this.siteskuId = siteskuId;
+
+	}
+
 
 	public int getRecId() {
 		return recId;
