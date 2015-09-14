@@ -20,10 +20,14 @@ import org.springframework.stereotype.Service;
 
 import com.loukou.order.service.api.CoupService;
 import com.loukou.order.service.dao.CoupRuleDao;
+import com.loukou.order.service.dao.CoupTypeDao;
 import com.loukou.order.service.entity.CoupRule;
+import com.loukou.order.service.entity.CoupType;
 import com.loukou.order.service.enums.CoupTypeEnum;
 import com.loukou.order.service.enums.CoupUseScopeEnum;
 import com.loukou.order.service.req.dto.CoupRuleReqDto;
+import com.loukou.order.service.resp.dto.BkCouponTypeListDto;
+import com.loukou.order.service.resp.dto.BkCouponTypeListRespDto;
 import com.loukou.order.service.resp.dto.CoupRuleDto;
 import com.loukou.order.service.resp.dto.CoupRuleRespDto;
 import com.loukou.order.service.util.DateUtils;
@@ -32,6 +36,9 @@ import com.loukou.order.service.util.DateUtils;
 public class CoupServiceImpl implements CoupService{
 	@Autowired
 	private CoupRuleDao coupRuleDao;
+	
+	@Autowired
+	private CoupTypeDao coupTypeDao;
 
 	@Override
 	public CoupRuleRespDto queryCoupRule(final CoupRuleReqDto req, Integer pageNum, Integer pageSize) {
@@ -91,6 +98,33 @@ public class CoupServiceImpl implements CoupService{
 			dto.setCanuseday(coupRule.getCanuseday()+"天");
 		}
 		return dto;
+	}
+	
+	//优惠券类别列表
+	@Override
+	public BkCouponTypeListRespDto typeList(int pageNum, int pageSize) {
+		BkCouponTypeListRespDto result = new BkCouponTypeListRespDto(200,"");
+		
+		pageSize = pageNum*pageSize;
+		pageNum = pageNum-1;
+		List<CoupType> typeList=coupTypeDao.getCoupTypeList(0, pageNum, pageSize);
+		
+		List<BkCouponTypeListDto> orderListResult = new ArrayList<BkCouponTypeListDto>();
+		for(CoupType t:typeList){
+			BkCouponTypeListDto tt = new BkCouponTypeListDto();
+			tt.setId(t.getId());
+			tt.setTitle(t.getTitle());
+			tt.setDescription(t.getDescription());
+			tt.setTypeid(t.getTypeid());
+			tt.setUsenum(t.getUsenum());
+			tt.setNewuser(t.getNewuser());
+			tt.setStatus(t.getStatus());
+			tt.setSell_site(t.getSellSite());
+			orderListResult.add(tt);
+		}
+		
+		result.setBkCouponTypeList(orderListResult);
+		return result;
 	}
 }
 
