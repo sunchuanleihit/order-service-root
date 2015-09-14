@@ -12,4 +12,5 @@ public class OrderStateReturn {
 	
 	public static String INVALID = "无效";
 	
+	public static String REFUSED = "拒单";
 }

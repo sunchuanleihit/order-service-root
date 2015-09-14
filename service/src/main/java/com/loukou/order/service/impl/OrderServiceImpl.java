@@ -539,7 +539,10 @@ public class OrderServiceImpl implements OrderService {
 				) || (status == OrderStatusEnum.STATUS_NEW.getId() && 
 						order.getPayStatus() == PayStatusEnum.STATUS_PART_PAYED.getId()) ) {
 			state = OrderStateReturn.UN_PAY;
+		}else if(status == OrderStatusEnum.STATUS_REFUSED.getId()){
+			state = OrderStateReturn.REFUSED;
 		}
+		
 		return state;
 	}
 	
