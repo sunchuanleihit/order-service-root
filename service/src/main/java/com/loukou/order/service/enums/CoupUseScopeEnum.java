@@ -4,8 +4,9 @@ public enum CoupUseScopeEnum {
 	NONE(-1,""),
 	ALL(0,"全场券"),
 	SHOP(1,"店铺券"),
-	BAND(2,"品牌券"),
-	KIND(3,"分类券");
+	GOODS(2,"商品券"),
+	BAND(3,"品牌券"),
+	KIND(4,"分类券");
 	private int id;
 	private String name;
 	public int getId() {

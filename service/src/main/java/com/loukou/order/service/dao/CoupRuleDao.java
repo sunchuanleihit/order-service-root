@@ -22,5 +22,9 @@ public interface CoupRuleDao extends CrudRepository<CoupRule, Integer>, JpaSpeci
 	
 	CoupRule findByCommoncode(String commoncode);
 
+	@Transactional
+	@Modifying
+	@Query("UPDATE CoupRule SET issue=?2 WHERE id=?1")
+	void updateRuleIsuse(Integer ruleId, Integer isuse);
 	
 }

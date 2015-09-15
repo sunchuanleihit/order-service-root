@@ -14,10 +14,80 @@ public class CouponListDto implements Serializable{
 	private String starttime = "";
 	private String endtime = "";
 	private String couponMsg = "";
-	
+	private int id = 0;
+	private String userName = "";
+	private String userId = "" ;
+	private double minprice = 0.0;//最小金额
+	private String createtime = "";
+	private String usedtime = "";
+	private String canuse = "";//是否启用
+	private String isused = "";//是否使用
 	private String couponRange = "";//品类券的使用范围说明
 	private int isUsable = 0;//是否可用（0: 不限——过期和不过期的优惠券；1：可用优惠券）
 	
+	public String getCanuse() {
+		return canuse;
+	}
+
+	public void setCanuse(String canuse) {
+		this.canuse = canuse;
+	}
+
+	public String getIsused() {
+		return isused;
+	}
+
+	public void setIsused(String isused) {
+		this.isused = isused;
+	}
+
+	public String getUsedtime() {
+		return usedtime;
+	}
+
+	public void setUsedtime(String usedtime) {
+		this.usedtime = usedtime;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
+	}
+
+	public String getUserId() {
+		return userId;
+	}
+
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
+
+	public double getMinprice() {
+		return minprice;
+	}
+
+	public void setMinprice(double minprice) {
+		this.minprice = minprice;
+	}
+
+	public String getCreatetime() {
+		return createtime;
+	}
+
+	public void setCreatetime(String createtime) {
+		this.createtime = createtime;
+	}
 
 	public String getCouponRange() {
 		return couponRange;
