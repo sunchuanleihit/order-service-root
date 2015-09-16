@@ -139,7 +139,16 @@ public class CoupServiceImpl implements CoupService{
 	@Override
 	public BkCouponTypeListRespDto queryCoupType(Integer pageNum, Integer pageSize) {
 		Pageable pageable = new PageRequest(pageNum, pageSize);
-		Page<CoupType> coupTypePage = coupTypeDao.findAll(null, pageable);
+		Page<CoupType> coupTypePage = coupTypeDao.findAll(new Specification<CoupType>(){
+			@Override
+			public Predicate toPredicate(Root<CoupType> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+				List<Predicate> predicates = new ArrayList<>();
+				predicates.add(cb.equal(root.get("status"),0));
+				Predicate[] pre = new Predicate[predicates.size()];
+				return query.where(predicates.toArray(pre)).getRestriction();
+			}
+			
+		}, pageable);
 		BkCouponTypeListRespDto respDto = new BkCouponTypeListRespDto(200,"");
 		respDto.setCount(coupTypePage.getTotalElements());
 
@@ -154,6 +163,8 @@ public class CoupServiceImpl implements CoupService{
 				tt.setType(CoupTypeEnum.parseName(t.getTypeid()).getName());
 				tt.setUsenum(t.getUsenum());
 				tt.setNewuser(CoupNewUserEnum.parseName(t.getNewuser()).getName());
+				tt.setDescription(t.getDescription());
+				tt.setSell_site(t.getSellSite());
 				coupTypeDtoList.add(tt);
 			}
 		}
