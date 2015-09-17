@@ -26,6 +26,7 @@ import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderExtm;
 import com.loukou.order.service.entity.OrderGoods;
 import com.loukou.order.service.entity.OrderRefuse;
+import com.loukou.order.service.enums.OrderSourceEnum;
 import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.util.DateUtils;
@@ -94,8 +95,12 @@ public class OrderOperationProcessor {
             return new OResponseDto<String>(500, "错误的订单号成功");
         }
         createAction(order, OrderStatusEnum.STATUS_FINISHED.getId(), userName, "仓库回单" + gps);
-
-        sendMessage(order, String.format(ShortMessage.FINISH_ORDER_MESSAGE_MODEL, order.getTaoOrderSn()));
+        if(order.getSource() ==OrderSourceEnum.SOURCE_DITUI.getId()){
+            sendMessage(order, String.format(ShortMessage.FINISH_ORDER_SOURCE_QIANGTAN_MESSAGE_MODEL_, order.getTaoOrderSn()));
+        }else{
+            sendMessage(order, String.format(ShortMessage.FINISH_ORDER_MESSAGE_MODEL, order.getTaoOrderSn()));
+        }
+       
 
         return new OResponseDto<String>(200, "确认成功");
     }

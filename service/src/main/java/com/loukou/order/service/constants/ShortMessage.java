@@ -9,4 +9,8 @@ public class ShortMessage {
 
     //回单
     public static String FINISH_ORDER_MESSAGE_MODEL = "您的订单 %s 已签收,感谢您信任楼口.若未收到货,请拨打投诉热线400 678 0519";
+    
+    
+    //抢摊短信
+    public static String FINISH_ORDER_SOURCE_QIANGTAN_MESSAGE_MODEL_ ="";
 }
