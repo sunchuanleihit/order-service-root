@@ -154,6 +154,7 @@ import com.loukou.pos.client.txk.req.TxkCardRefundRespVO;
 import com.loukou.pos.client.vaccount.processor.VirtualAccountProcessor;
 import com.loukou.pos.client.vaccount.resp.VaccountUpdateRespVO;
 import com.loukou.search.service.api.ProductSearchService;
+import com.loukou.search.service.dto.product.SiteSkuDto;
 import com.loukou.search.service.dto.product.SkuDto;
 import com.serverstarted.cart.service.api.CartService;
 import com.serverstarted.cart.service.constants.PackageType;
@@ -971,9 +972,8 @@ public class OrderServiceImpl implements OrderService {
 			StoreRespDto store = null;
 			if (PackageType.SELF_SALES.equals(pl.getPackageType())) {
 				int specId = pl.getGoodsList().get(0).getSpecId();
-				SkuDto sku = productSearchService.getSku(specId);
-				// TODO getStoreId
-//				storeId = sku.getStoreId();
+				SiteSkuDto sku = productSearchService.getSku(specId);
+				storeId = sku.getStoreId();
 			}
 			store = storeService.getByStoreId(storeId);
 			order.setSellerId(storeId);
@@ -1043,15 +1043,18 @@ public class OrderServiceImpl implements OrderService {
 					// 整箱购商品，用标准规格的商品来记录
 					int stockBase = info.getStockBase();
 					
-					SkuDto sku = productSearchService.getSku(info.getStockSpecId());
+					SiteSkuDto sku = productSearchService.getSku(info.getStockSpecId());
 //					GoodsSpecRespDto goodsSpec = goodsSpecService.get(info.getStockSpecId());
 					g.setSpecId(sku.getSkuId());
 					g.setSpecName(sku.getAttributes().get(0));
 					g.setPrice(DoubleUtils.div(g.getPrice(), stockBase, 8));
 					g.setAmount(g.getAmount() * stockBase);
-					// TODO 获取taosku, bn
-//					g.setTaosku(sku.getTaosku());
-//					g.setBn(sku.getBn());
+
+					g.setTaosku(sku.getProductNum());
+					if (sku.getBarcodes().size() > 0) {
+						g.setBn(sku.getBarcodes().get(0));
+					}
+					
 				}
 				
 				
