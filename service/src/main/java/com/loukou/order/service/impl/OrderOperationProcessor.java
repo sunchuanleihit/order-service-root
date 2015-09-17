@@ -96,7 +96,7 @@ public class OrderOperationProcessor {
         }
         createAction(order, OrderStatusEnum.STATUS_FINISHED.getId(), userName, "仓库回单" + gps);
         if(order.getSource() ==OrderSourceEnum.SOURCE_DITUI.getId()){
-            sendMessage(order, String.format(ShortMessage.FINISH_ORDER_SOURCE_QIANGTAN_MESSAGE_MODEL_, order.getTaoOrderSn()));
+            sendMessage(order, ShortMessage.FINISH_ORDER_SOURCE_QIANGTAN_MESSAGE_MODEL);
         }else{
             sendMessage(order, String.format(ShortMessage.FINISH_ORDER_MESSAGE_MODEL, order.getTaoOrderSn()));
         }

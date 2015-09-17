@@ -12,5 +12,5 @@ public class ShortMessage {
     
     
     //抢摊短信
-    public static String FINISH_ORDER_SOURCE_QIANGTAN_MESSAGE_MODEL_ ="";
+    public static String FINISH_ORDER_SOURCE_QIANGTAN_MESSAGE_MODEL ="您的订单已签收，还有30元红包在路上，即时登录戳链接：http://dwz.cn/1IQGlv   真的可以花！退订回复TD";
 }
