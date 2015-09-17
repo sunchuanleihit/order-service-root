@@ -135,5 +135,8 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 	@Modifying
 	@Query("UPDATE Order set payId = ?1, payStatus = 1, payTime = addTime, orderPayed = goodsAmount+shippingFee where orderSnMain = ?2")
 	int updateOrderPayId(int payId,String orderSnMain);
+
+	@Query("SELECT orderId FROM Order WHERE buyerId=?1 AND addTime>?2 AND status IN (0, 3, 5, 6, 8, 13, 14, 15)")
+	List<Integer> getValidOrderId(int userId, int addTime);
 }
 
