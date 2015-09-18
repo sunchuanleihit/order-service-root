@@ -1,5 +1,7 @@
 package com.loukou.order.service.impl;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -26,6 +28,7 @@ import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.CoupTypeDao;
 import com.loukou.order.service.dao.MemberDao;
+import com.loukou.order.service.dao.StoreDao;
 import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.CoupType;
@@ -34,11 +37,14 @@ import com.loukou.order.service.enums.CoupNewUserEnum;
 import com.loukou.order.service.enums.CoupRuleTypeEnum;
 import com.loukou.order.service.enums.CoupTypeEnum;
 import com.loukou.order.service.enums.CoupUseScopeEnum;
+import com.loukou.order.service.req.dto.CoupRuleAddReqDto;
 import com.loukou.order.service.req.dto.CoupRuleReqDto;
 import com.loukou.order.service.resp.dto.BkCouponTypeListDto;
 import com.loukou.order.service.resp.dto.BkCouponTypeListRespDto;
 import com.loukou.order.service.resp.dto.CoupRuleDto;
 import com.loukou.order.service.resp.dto.CoupRuleRespDto;
+import com.loukou.order.service.resp.dto.CoupTypeDto;
+import com.loukou.order.service.resp.dto.CoupTypeRespDto;
 import com.loukou.order.service.resp.dto.CouponListDto;
 import com.loukou.order.service.util.DateUtils;
 
@@ -55,6 +61,9 @@ public class CoupServiceImpl implements CoupService{
 	
 	@Autowired
 	private MemberDao memberDao;
+	
+	@Autowired
+	private StoreDao storeDao;
 
 	@Override
 	public CoupRuleRespDto queryCoupRule(final CoupRuleReqDto req, Integer pageNum, Integer pageSize) {
@@ -182,6 +191,7 @@ public class CoupServiceImpl implements CoupService{
 				BkCouponTypeListDto dto = new BkCouponTypeListDto();
 				dto.setId(tmp.getId());
 				dto.setTitle(tmp.getTitle());
+				dto.setTypeId(tmp.getTypeid());
 				list.add(dto);
 			}
 		}
@@ -333,4 +343,98 @@ public class CoupServiceImpl implements CoupService{
 		}
 		return dto;
 	}
+
+
+	@Override
+	public String addCoupRule(CoupRuleAddReqDto dto) {
+		CoupRule rule = new CoupRule();
+		if(dto.getTypeId() == null){
+			return "规则分类不能为空";
+		}
+		CoupType type = coupTypeDao.findOne(dto.getTypeId());
+		if(type == null || type.getStatus() ==1 ){
+			return "优惠券规则所属分类不存在或已被删除";
+		}
+		rule.setTypeid(dto.getTypeId());
+		if(StringUtils.isBlank(dto.getCouponName())){
+			return "规则名称不能为空";
+		}
+		rule.setCouponName(dto.getCouponName());
+		rule.setIsnewuser(0);
+		rule.setIssue(1);
+		rule.setCanusetype(dto.getCanuseType());
+		if(dto.getCanuseType() == 1){
+			rule.setCanuseday(dto.getCanuseday());
+		}else if(dto.getCanuseType() == 0){
+			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			if(StringUtils.isNotBlank(dto.getBegintime())){
+				try {
+					rule.setBegintime(format.parse(dto.getBegintime()));
+				} catch (ParseException e) {
+					e.printStackTrace();
+					return "开始时间格式错误";
+				}
+			}
+			if(StringUtils.isNotBlank(dto.getEndtime())){
+				try {
+					rule.setEndtime(format.parse(dto.getEndtime()));
+				} catch (ParseException e) {
+					e.printStackTrace();
+					return "结束时间格式错误";
+				}
+			}
+		}
+		rule.setCoupontypeid(dto.getCoupontypeid());
+		if(type.getTypeid() == 2){
+			if(StringUtils.isNotBlank(dto.getCommoncode())){
+				String code = "LK"+dto.getCommoncode();
+				CoupRule coupRule = coupRuleDao.findByCommoncode(code);
+				if(coupRule!=null){
+					return "优惠券码已被使用";
+				}
+				rule.setCommoncode(code);
+			}else{
+				return "缺少公用优惠券码";
+			}
+		}else{
+			if(StringUtils.isNotBlank(dto.getPrefix())){
+				if(dto.getPrefix().startsWith("LK")){
+					return "前缀不能为LK";
+				}
+				rule.setPrefix(dto.getPrefix());
+			}else{
+				return "缺少券码前缀";
+			}
+		}
+		rule.setMaxnum(dto.getMaxnum());
+		rule.setLowemoney(dto.getLowemoney());
+		rule.setCouponType(dto.getCouponType());
+		coupRuleDao.save(rule);
+		return "success";
+	}
+
+
+	@Override
+	public CoupTypeRespDto findCoupType(Integer pageSize, Integer pageNum) {
+		Sort pageSort = new Sort(Sort.Direction.ASC,"id");
+		pageNum--;
+		Pageable pageable = new PageRequest(pageNum, pageSize, pageSort);
+		Page<CoupType> page = coupTypeDao.queryByPage(pageable);
+		List<CoupType> typeList = page.getContent();
+		CoupTypeRespDto respDto = new CoupTypeRespDto(200, "");
+		respDto.setCount(page.getTotalElements());
+		List<CoupTypeDto> dtoList = new ArrayList<CoupTypeDto>();
+		for(CoupType tmp: typeList){
+			CoupTypeDto dto = new CoupTypeDto();
+			dto.setId(tmp.getId());
+			dto.setNewuser(tmp.getNewuser());
+			dto.setTitle(tmp.getTitle());
+			dto.setTypeid(tmp.getTypeid());
+			dto.setUsenum(tmp.getUsenum());
+			dtoList.add(dto);
+		}
+		respDto.setCoupTypeList(dtoList);
+		return respDto;
+	}
+
 }

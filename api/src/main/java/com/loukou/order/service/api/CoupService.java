@@ -1,11 +1,13 @@
 package com.loukou.order.service.api;
 import java.util.List;
 
+import com.loukou.order.service.req.dto.CoupRuleAddReqDto;
 import com.loukou.order.service.req.dto.CoupRuleReqDto;
 import com.loukou.order.service.resp.dto.BkCouponTypeListDto;
 import com.loukou.order.service.resp.dto.BkCouponTypeListRespDto;
 import com.loukou.order.service.resp.dto.CoupRuleDto;
 import com.loukou.order.service.resp.dto.CoupRuleRespDto;
+import com.loukou.order.service.resp.dto.CoupTypeRespDto;
 import com.loukou.order.service.resp.dto.CouponListDto;
 
 public interface CoupService {
@@ -43,4 +45,13 @@ public interface CoupService {
 	 * @return
 	 */
 	List<CouponListDto> queryCoupListByRuleId(Integer ruleId);
+
+	/**
+	 * 添加优惠券规则
+	 * @param dto
+	 * @return
+	 */
+	String addCoupRule(CoupRuleAddReqDto dto);
+
+	CoupTypeRespDto findCoupType(Integer pageSize, Integer pageNum);
 }

@@ -2,6 +2,8 @@ package com.loukou.order.service.dao;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -15,4 +17,7 @@ public interface CoupTypeDao extends CrudRepository<CoupType, Integer>, JpaSpeci
 	
 	@Query("select c from CoupType c where c.status = 0")
 	List<CoupType> queryAll();
+	
+	@Query("select c from CoupType c where c.status = 0")
+	Page<CoupType> queryByPage(Pageable Pageable);
 }

@@ -9,8 +9,16 @@ public class BkCouponTypeListDto implements Serializable{
 	private String title;
 	private String description;
 	private String type;
+	private Integer typeId;
 	private Integer usenum;
 	private String newuser;
+	
+	public Integer getTypeId() {
+		return typeId;
+	}
+	public void setTypeId(Integer typeId) {
+		this.typeId = typeId;
+	}
 	public Integer getId() {
 		return id;
 	}
