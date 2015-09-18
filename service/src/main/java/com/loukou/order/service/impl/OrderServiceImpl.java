@@ -1112,6 +1112,7 @@ public class OrderServiceImpl implements OrderService {
 		OrderExtm orderExtm = new OrderExtm();
 		BeanUtils.copyProperties(address, orderExtm, "id");
 		orderExtm.setOrderSnMain(orderSnMain);
+		orderExtm.setAddress(address.getAddress()+address.getAddressDetail());
 		orderExtmDao.save(orderExtm);
 
 		String lnglat = String.format("lat:%s,lng:%s", address.getLatitude(),
