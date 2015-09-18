@@ -39,11 +39,11 @@ import com.loukou.order.service.enums.CoupTypeEnum;
 import com.loukou.order.service.enums.CoupUseScopeEnum;
 import com.loukou.order.service.req.dto.CoupRuleAddReqDto;
 import com.loukou.order.service.req.dto.CoupRuleReqDto;
+import com.loukou.order.service.req.dto.CoupTypeReqDto;
 import com.loukou.order.service.resp.dto.BkCouponTypeListDto;
 import com.loukou.order.service.resp.dto.BkCouponTypeListRespDto;
 import com.loukou.order.service.resp.dto.CoupRuleDto;
 import com.loukou.order.service.resp.dto.CoupRuleRespDto;
-import com.loukou.order.service.resp.dto.CoupTypeDto;
 import com.loukou.order.service.resp.dto.CoupTypeRespDto;
 import com.loukou.order.service.resp.dto.CouponListDto;
 import com.loukou.order.service.util.DateUtils;
@@ -171,7 +171,7 @@ public class CoupServiceImpl implements CoupService{
 				tt.setDescription(t.getDescription());
 				tt.setType(CoupTypeEnum.parseName(t.getTypeid()).getName());
 				tt.setUsenum(t.getUsenum());
-				tt.setNewuser(CoupNewUserEnum.parseName(t.getNewuser()).getName());
+				tt.setNewuser(t.getNewuser());
 				tt.setDescription(t.getDescription());
 				tt.setSell_site(t.getSellSite());
 				coupTypeDtoList.add(tt);
@@ -191,7 +191,7 @@ public class CoupServiceImpl implements CoupService{
 				BkCouponTypeListDto dto = new BkCouponTypeListDto();
 				dto.setId(tmp.getId());
 				dto.setTitle(tmp.getTitle());
-				dto.setTypeId(tmp.getTypeid());
+				dto.setTypeid(tmp.getTypeid());
 				list.add(dto);
 			}
 		}
@@ -417,24 +417,75 @@ public class CoupServiceImpl implements CoupService{
 	@Override
 	public CoupTypeRespDto findCoupType(Integer pageSize, Integer pageNum) {
 		Sort pageSort = new Sort(Sort.Direction.ASC,"id");
-		pageNum--;
 		Pageable pageable = new PageRequest(pageNum, pageSize, pageSort);
 		Page<CoupType> page = coupTypeDao.queryByPage(pageable);
 		List<CoupType> typeList = page.getContent();
 		CoupTypeRespDto respDto = new CoupTypeRespDto(200, "");
 		respDto.setCount(page.getTotalElements());
-		List<CoupTypeDto> dtoList = new ArrayList<CoupTypeDto>();
+		List<BkCouponTypeListDto> dtoList = new ArrayList<BkCouponTypeListDto>();
 		for(CoupType tmp: typeList){
-			CoupTypeDto dto = new CoupTypeDto();
-			dto.setId(tmp.getId());
-			dto.setNewuser(tmp.getNewuser());
-			dto.setTitle(tmp.getTitle());
-			dto.setTypeid(tmp.getTypeid());
-			dto.setUsenum(tmp.getUsenum());
+			BkCouponTypeListDto dto = createCoupTypeDto(tmp);
 			dtoList.add(dto);
 		}
 		respDto.setCoupTypeList(dtoList);
 		return respDto;
 	}
 
+	private BkCouponTypeListDto createCoupTypeDto(CoupType tmp){
+		BkCouponTypeListDto dto = new BkCouponTypeListDto();
+		dto.setId(tmp.getId());
+		dto.setNewuser(tmp.getNewuser());
+		dto.setTitle(tmp.getTitle());
+		dto.setTypeid(tmp.getTypeid());
+		dto.setUsenum(tmp.getUsenum());
+		dto.setDescription(tmp.getDescription());
+		return dto;
+	}
+	
+	@Override
+	public BkCouponTypeListDto queryCoupTypeById(Integer typeId) {
+		CoupType coupType = coupTypeDao.findOne(typeId);
+		if(coupType.getStatus() == 0){
+			BkCouponTypeListDto dto = createCoupTypeDto(coupType);
+			return dto;
+		}
+		return null;
+	}
+
+
+	@Override
+	public String addOrUpdateCoupType(CoupTypeReqDto typeDto) {
+		if(StringUtils.isBlank(typeDto.getTitle())){
+			return "类别名称不能为空";
+		}
+		if(typeDto.getTypeid() == null){
+			return "优惠券类别没有数值";
+		}
+		if(typeDto.getUsenum() == null){
+			return "互斥次数没有数值";
+		}
+		if(typeDto.getNewuser() ==null){
+			return "会员限制没有数值";
+		}
+		CoupType type = new CoupType();
+		type.setTitle(typeDto.getTitle());
+		type.setTypeid(typeDto.getTypeid());
+		type.setUsenum(typeDto.getUsenum());
+		type.setNewuser(typeDto.getNewuser());
+		type.setDescription(typeDto.getDescription());
+		type.setSellSite("cz0");
+		if(typeDto.getId() == null){
+			coupTypeDao.save(type);
+		}else{
+			coupTypeDao.updateType(typeDto.getId(), typeDto.getTitle(), typeDto.getTypeid(), typeDto.getUsenum(), typeDto.getNewuser(), typeDto.getDescription());
+		}
+		return "success";
+	}
+
+
+	@Override
+	public void deleteCoupType(Integer id) {
+		coupTypeDao.stopCoupType(id);
+		
+	}
 }

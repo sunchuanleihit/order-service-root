@@ -3,6 +3,7 @@ import java.util.List;
 
 import com.loukou.order.service.req.dto.CoupRuleAddReqDto;
 import com.loukou.order.service.req.dto.CoupRuleReqDto;
+import com.loukou.order.service.req.dto.CoupTypeReqDto;
 import com.loukou.order.service.resp.dto.BkCouponTypeListDto;
 import com.loukou.order.service.resp.dto.BkCouponTypeListRespDto;
 import com.loukou.order.service.resp.dto.CoupRuleDto;
@@ -54,4 +55,10 @@ public interface CoupService {
 	String addCoupRule(CoupRuleAddReqDto dto);
 
 	CoupTypeRespDto findCoupType(Integer pageSize, Integer pageNum);
+
+	BkCouponTypeListDto queryCoupTypeById(Integer typeId);
+
+	String addOrUpdateCoupType(CoupTypeReqDto typeDto);
+
+	void deleteCoupType(Integer id);
 }

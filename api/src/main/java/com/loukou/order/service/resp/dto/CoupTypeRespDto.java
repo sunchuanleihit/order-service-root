@@ -11,13 +11,14 @@ public class CoupTypeRespDto extends ResponseCodeDto implements Serializable{
 		super(code, message);
 	}
 	
-	List<CoupTypeDto> coupTypeList = new ArrayList<CoupTypeDto>();
+	List<BkCouponTypeListDto> coupTypeList = new ArrayList<BkCouponTypeListDto>();
 	long count = 0l;
 
-	public List<CoupTypeDto> getCoupTypeList() {
+	
+	public List<BkCouponTypeListDto> getCoupTypeList() {
 		return coupTypeList;
 	}
-	public void setCoupTypeList(List<CoupTypeDto> coupTypeList) {
+	public void setCoupTypeList(List<BkCouponTypeListDto> coupTypeList) {
 		this.coupTypeList = coupTypeList;
 	}
 	public long getCount() {

@@ -9,15 +9,15 @@ public class BkCouponTypeListDto implements Serializable{
 	private String title;
 	private String description;
 	private String type;
-	private Integer typeId;
+	private Integer typeid;
 	private Integer usenum;
-	private String newuser;
+	private Integer newuser;
 	
-	public Integer getTypeId() {
-		return typeId;
+	public Integer getTypeid() {
+		return typeid;
 	}
-	public void setTypeId(Integer typeId) {
-		this.typeId = typeId;
+	public void setTypeid(Integer typeid) {
+		this.typeid = typeid;
 	}
 	public Integer getId() {
 		return id;
@@ -49,10 +49,10 @@ public class BkCouponTypeListDto implements Serializable{
 	public void setUsenum(Integer usenum) {
 		this.usenum = usenum;
 	}
-	public String getNewuser() {
+	public Integer getNewuser() {
 		return newuser;
 	}
-	public void setNewuser(String newuser) {
+	public void setNewuser(Integer newuser) {
 		this.newuser = newuser;
 	}
 	public Integer getStatus() {

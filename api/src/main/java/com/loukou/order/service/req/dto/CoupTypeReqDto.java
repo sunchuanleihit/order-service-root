@@ -1,11 +1,16 @@
-package com.loukou.order.service.resp.dto;
+package com.loukou.order.service.req.dto;
 
-public class CoupTypeDto {
+import java.io.Serializable;
+
+public class CoupTypeReqDto implements Serializable{
+	private static final long serialVersionUID = 7909119777004367550L;
 	private Integer id;
 	private String title;
+	private String description;
 	private Integer typeid;
 	private Integer usenum;
 	private Integer newuser;
+	private Integer status;
 	public Integer getId() {
 		return id;
 	}
@@ -17,6 +22,12 @@ public class CoupTypeDto {
 	}
 	public void setTitle(String title) {
 		this.title = title;
+	}
+	public String getDescription() {
+		return description;
+	}
+	public void setDescription(String description) {
+		this.description = description;
 	}
 	public Integer getTypeid() {
 		return typeid;
@@ -36,6 +47,11 @@ public class CoupTypeDto {
 	public void setNewuser(Integer newuser) {
 		this.newuser = newuser;
 	}
-	
+	public Integer getStatus() {
+		return status;
+	}
+	public void setStatus(Integer status) {
+		this.status = status;
+	}
 
 }
