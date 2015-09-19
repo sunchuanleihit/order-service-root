@@ -1178,8 +1178,8 @@ public class OrderServiceImpl implements OrderService {
 			return false;
 		}
 		if (StringUtils.isEmpty(address.getConsignee())
-//				|| address.getRegionId() <= 0	不需要校验
-				|| StringUtils.isEmpty(address.getRegionName())
+//				|| address.getRegionId() <= 0	不需要
+//				|| StringUtils.isEmpty(address.getRegionName())
 				|| StringUtils.isEmpty(address.getAddress())
 				|| StringUtils.isEmpty(address.getPhoneMob())) {
 			return false;
