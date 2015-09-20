@@ -957,6 +957,20 @@ public class OrderServiceImpl implements OrderService {
 			String needShippingTime = null;
 			if (PackageType.MATERIAL.equals(pl.getPackageType())) {
 				needShippingTime = materialShippingTime.get(0);
+				// 配送时间与当前时间比较，选择比较后的时间
+				needShippingTime = needShippingTime.replace("定时达", "").trim();
+				String[] strs = needShippingTime.split(" ");
+				
+				if (DateUtils.date2DateStr(new Date()).equals(strs[0].trim())) {
+					int startHour = Integer.valueOf(strs[1].trim().split(":")[0]);
+					int currHour =DateUtils.getCurrentHour();
+					if (currHour >= startHour) {
+						String slot = String.format("%d:00-%d:00", currHour+1, currHour+2);
+						needShippingTime = String.format("%s %s", strs[0], slot);
+					}
+				}
+				
+				
 			} else if (PackageType.BOOKING.equals(pl.getPackageType())) {
 				int specId = pl.getGoodsList().get(0).getSpecId();
 				needShippingTime = bookingShippingTimeMap.get(specId);

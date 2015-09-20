@@ -46,7 +46,7 @@ public class OrderServiceImplTest extends AbstractTestObject {
 		req.setCityId(1);
 		req.setAddressId(128);
 		req.setOs("ios");
-		req.getShippingTimes().getMaterial().add("2015-08-05 13:32:00");
+		req.getShippingTimes().getMaterial().add("2015-09-20 13:32:00");
 		
 		SubmitOrderRespDto resp = orderService.submitOrder(req);
 		System.out.println(object2String(resp));
