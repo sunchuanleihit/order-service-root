@@ -1400,7 +1400,7 @@ public class OrderServiceImpl implements OrderService {
 				}
 			}
 			
-			if(order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
+			if(order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId() && shippingList.size() > 0) {
 				shippingList.get(0).setDescription("用户已收货，订单完成");
 			}
 		}
