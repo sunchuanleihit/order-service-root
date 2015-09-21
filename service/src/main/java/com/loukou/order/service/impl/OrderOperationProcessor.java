@@ -148,7 +148,7 @@ public class OrderOperationProcessor {
 
         Order order = orders.get(0);
 
-        int num = orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_REFUSED.getId());
+        int num = orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_INVALID.getId());
         if (num < 1) {
             return new OResponseDto<String>(500, "错误的订单号");
         }
@@ -172,11 +172,10 @@ public class OrderOperationProcessor {
         }
         orderRefuseDao.save(orderRefuse);
 
-        createAction(order, OrderStatusEnum.STATUS_REFUSED.getId(), userName, "拒收");
+        createAction(order, OrderStatusEnum.STATUS_INVALID.getId(), userName, "作废订单");
 
         sendMessage(order, String.format(ShortMessage.REFUSE_MESSAGE_MODEL, order.getTaoOrderSn()));
 
-        // 退款暂时不考虑 直接设置拒收状态 客服处理
 
         return new OResponseDto<String>(200, "成功");
     }

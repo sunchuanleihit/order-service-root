@@ -128,6 +128,7 @@ import com.loukou.order.service.resp.dto.OrderListDto;
 import com.loukou.order.service.resp.dto.OrderListInfoDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
 import com.loukou.order.service.resp.dto.OrderListResultDto;
+import com.loukou.order.service.resp.dto.OrderStatusCountRespDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.PayOrderGoodsListDto;
 import com.loukou.order.service.resp.dto.PayOrderMsgDto;
@@ -1995,6 +1996,15 @@ public class OrderServiceImpl implements OrderService {
       return orderOperationProcessor.confirmBookOrder(taoOrderSn, userName,senderId);
     }
 
+    /**
+     *  获取全部订单
+     */
+    @Override
+    public  OResponseDto<OrderListInfoDto> getWhAvailableOrders(OrderListParamDto param) {
+      return orderInfoService.getWhAvailableOrders(param);
+    }
+    
+    
 	/**
 	 * 退货入库
 	 */
@@ -2325,4 +2335,9 @@ public class OrderServiceImpl implements OrderService {
 	}
 	
 
+
+    @Override
+    public OResponseDto<OrderStatusCountRespDto> getOrderCount(int storeId) {
+        return  orderInfoService.getOrderCount(storeId);
+    }
 }

@@ -16,6 +16,7 @@ import com.loukou.order.service.resp.dto.OrderCancelRespDto;
 import com.loukou.order.service.resp.dto.OrderInfoDto;
 import com.loukou.order.service.resp.dto.OrderListInfoDto;
 import com.loukou.order.service.resp.dto.OrderListRespDto;
+import com.loukou.order.service.resp.dto.OrderStatusCountRespDto;
 import com.loukou.order.service.resp.dto.PayBeforeRespDto;
 import com.loukou.order.service.resp.dto.PayOrderResultRespDto;
 import com.loukou.order.service.resp.dto.ResponseDto;
@@ -148,7 +149,10 @@ public interface OrderService {
 	 *     确认预售订单到货
 	 */
 	public OResponseDto<String> confirmBookOrder(String taoOrderSn,String userName,int senderId);
+	
+	public OResponseDto<OrderListInfoDto> getWhAvailableOrders(OrderListParamDto params);
 
+	public OResponseDto<OrderStatusCountRespDto> getOrderCount(int storeId);
 	/** 
 	 * @return 
 	 */
