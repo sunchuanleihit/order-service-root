@@ -6,6 +6,7 @@ import com.loukou.order.service.req.dto.CoupRuleReqDto;
 import com.loukou.order.service.req.dto.CoupTypeReqDto;
 import com.loukou.order.service.resp.dto.BkCouponTypeListDto;
 import com.loukou.order.service.resp.dto.BkCouponTypeListRespDto;
+import com.loukou.order.service.resp.dto.BkRespDto;
 import com.loukou.order.service.resp.dto.CoupRuleDto;
 import com.loukou.order.service.resp.dto.CoupRuleRespDto;
 import com.loukou.order.service.resp.dto.CoupTypeRespDto;
@@ -56,9 +57,48 @@ public interface CoupService {
 
 	CoupTypeRespDto findCoupType(Integer pageSize, Integer pageNum);
 
+	/**
+	 * 根据ID查找优惠券类型
+	 * @param typeId
+	 * @return
+	 */
 	BkCouponTypeListDto queryCoupTypeById(Integer typeId);
-
+	
+	/**
+	 * 添加或修改优惠券类型
+	 * @param typeDto
+	 * @return
+	 */
 	String addOrUpdateCoupType(CoupTypeReqDto typeDto);
 
+	/**
+	 * 停用优惠券规则
+	 * @param id
+	 */
 	void deleteCoupType(Integer id);
+
+	/**
+	 * 查找优惠券
+	 * @param commoncode
+	 * @param username
+	 * @param pageSize
+	 * @param pageNum
+	 * @return
+	 */
+	BkRespDto queryCoupList(Integer ruleId, String commoncode, String username, Integer pageSize, Integer pageNum);
+
+	/**
+	 * 优惠券发放
+	 * @param id
+	 * @param username
+	 * @return
+	 */
+	String sendCoupon(Integer id, String username);
+
+	/**
+	 * 删除优惠券
+	 * @param id
+	 * @return
+	 */
+	String deleteCoup(Integer id);
 }

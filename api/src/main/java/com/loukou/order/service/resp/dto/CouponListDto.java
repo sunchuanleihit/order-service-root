@@ -21,24 +21,24 @@ public class CouponListDto implements Serializable{
 	private String createtime = "";
 	private String usedtime = "";
 	private String canuse = "";//是否启用
-	private String isused = "";//是否使用
+	private String ischecked ;
 	private String couponRange = "";//品类券的使用范围说明
 	private int isUsable = 0;//是否可用（0: 不限——过期和不过期的优惠券；1：可用优惠券）
 	
+	public String getIschecked() {
+		return ischecked;
+	}
+
+	public void setIschecked(String ischecked) {
+		this.ischecked = ischecked;
+	}
+
 	public String getCanuse() {
 		return canuse;
 	}
 
 	public void setCanuse(String canuse) {
 		this.canuse = canuse;
-	}
-
-	public String getIsused() {
-		return isused;
-	}
-
-	public void setIsused(String isused) {
-		this.isused = isused;
 	}
 
 	public String getUsedtime() {

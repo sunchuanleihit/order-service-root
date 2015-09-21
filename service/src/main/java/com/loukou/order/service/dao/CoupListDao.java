@@ -5,15 +5,17 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.loukou.order.service.entity.CoupList;
+import com.loukou.order.service.entity.Order;
 
 
-public interface CoupListDao extends CrudRepository<CoupList, Integer>{
+public interface CoupListDao extends CrudRepository<CoupList, Integer>, JpaSpecificationExecutor<CoupList>{
 
 	List<CoupList> findByUserIdAndIssueAndIschecked(int userId, int issue, int ischecked);
 
@@ -75,5 +77,15 @@ public interface CoupListDao extends CrudRepository<CoupList, Integer>{
 	int update(int userId, Date beginTime, Date endTime, String openId, String commoncode);
 	
 	List<CoupList> findByCouponId(int couponId);
+
+	@Transactional
+	@Modifying
+	@Query("UPDATE CoupList set userId=?2, begintime=?3, endtime=?4, createtime=NOW() where id=?1")
+	void sendCoup(Integer id, Integer userId, Date begintime, Date endtime);
+
+	@Transactional
+	@Modifying
+	@Query("UPDATE CoupList set issue = 2 where id = ?1")
+	void deleteCoup(Integer id);
 	
 }

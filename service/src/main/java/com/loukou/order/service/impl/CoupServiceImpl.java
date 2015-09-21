@@ -3,8 +3,11 @@ package com.loukou.order.service.impl;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -28,12 +31,10 @@ import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.CoupTypeDao;
 import com.loukou.order.service.dao.MemberDao;
-import com.loukou.order.service.dao.StoreDao;
 import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.CoupType;
 import com.loukou.order.service.entity.Member;
-import com.loukou.order.service.enums.CoupNewUserEnum;
 import com.loukou.order.service.enums.CoupRuleTypeEnum;
 import com.loukou.order.service.enums.CoupTypeEnum;
 import com.loukou.order.service.enums.CoupUseScopeEnum;
@@ -42,6 +43,7 @@ import com.loukou.order.service.req.dto.CoupRuleReqDto;
 import com.loukou.order.service.req.dto.CoupTypeReqDto;
 import com.loukou.order.service.resp.dto.BkCouponTypeListDto;
 import com.loukou.order.service.resp.dto.BkCouponTypeListRespDto;
+import com.loukou.order.service.resp.dto.BkRespDto;
 import com.loukou.order.service.resp.dto.CoupRuleDto;
 import com.loukou.order.service.resp.dto.CoupRuleRespDto;
 import com.loukou.order.service.resp.dto.CoupTypeRespDto;
@@ -62,9 +64,6 @@ public class CoupServiceImpl implements CoupService{
 	@Autowired
 	private MemberDao memberDao;
 	
-	@Autowired
-	private StoreDao storeDao;
-
 	@Override
 	public CoupRuleRespDto queryCoupRule(final CoupRuleReqDto req, Integer pageNum, Integer pageSize) {
 		Sort pageSort = new Sort(Sort.Direction.ASC,"id");
@@ -302,6 +301,7 @@ public class CoupServiceImpl implements CoupService{
 	private CouponListDto createCouponListDto(CoupList tmp) {
 		CouponListDto dto = new CouponListDto();
 		dto.setId(tmp.getId());
+		dto.setCouponId(tmp.getCouponId());
 		dto.setUserId(""+tmp.getUserId());
 		if(tmp.getUserId()!=0){
 			Member member = memberDao.findOne(tmp.getUserId());
@@ -322,6 +322,11 @@ public class CoupServiceImpl implements CoupService{
 		dto.setCommoncode(tmp.getCommoncode());
 		dto.setMoney(tmp.getMoney());
 		dto.setMinprice(tmp.getMinprice());
+		if(tmp.getIschecked() == 0){
+			dto.setIschecked("未使用");
+		}else if(tmp.getIschecked() == 1){
+			dto.setIschecked("已使用");
+		}
 		if(tmp.getCreatetime() == null){
 			dto.setCreatetime("");
 		}else{
@@ -329,10 +334,8 @@ public class CoupServiceImpl implements CoupService{
 		}
 		if(tmp.getUsedtime()==null){
 			dto.setUsedtime("");
-			dto.setIsused("未使用");
 		}else{
 			dto.setUsedtime(DateUtils.date2DateStr(tmp.getUsedtime()));
-			dto.setIsused("已使用");
 		}
 		if(tmp.getIssue()==0){
 			dto.setCanuse("未启用");
@@ -487,5 +490,132 @@ public class CoupServiceImpl implements CoupService{
 	public void deleteCoupType(Integer id) {
 		coupTypeDao.stopCoupType(id);
 		
+	}
+
+
+	@Override
+	public BkRespDto queryCoupList(final Integer ruleId, final String commoncode, String username, Integer pageSize, Integer pageNum) {
+		BkRespDto resultDto = new BkRespDto();
+		Integer userIdTemp = null;
+		List<Integer> userIds = new ArrayList<Integer>();//记录用户ID，后面查询用户名
+		if(StringUtils.isNotBlank(username)){
+			List<Member> memberList = memberDao.findByUserName(username);
+			if(memberList == null || memberList.size() ==0){
+				return resultDto;
+			}
+			userIdTemp = memberList.get(0).getUserId();
+		}
+		final Integer userId = userIdTemp;
+		if(userId!=null){
+			userIds.add(userId);
+		}
+		Sort pageSort = new Sort(Sort.Direction.DESC,"id");
+		Pageable pageable = new PageRequest(pageNum, pageSize, pageSort);
+		Page<CoupList> coupPage = coupListDao.findAll(new Specification<CoupList>(){
+			@Override
+			public Predicate toPredicate(Root<CoupList> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+				List<Predicate> predicates = new ArrayList<>();
+				if(ruleId != null){
+					predicates.add(cb.equal(root.get("couponId"), ruleId));
+				}
+				if(userId != null){
+					predicates.add(cb.equal(root.get("userId"), userId));
+				}
+				if(StringUtils.isNotBlank(commoncode)){
+					predicates.add(cb.equal(root.get("commoncode"), commoncode));
+				}
+				Predicate[] pre = new Predicate[predicates.size()];
+				return query.where(predicates.toArray(pre)).getRestriction();
+			}
+		},pageable);
+		resultDto.setCount(coupPage.getTotalElements());
+		List<CouponListDto> coupDtoList = new ArrayList<CouponListDto>();
+		List<CoupList> coupList = coupPage.getContent();
+		List<Integer> coupRuleIds = new ArrayList<Integer>();//优惠券规则
+		for(CoupList tmp: coupList){
+			CouponListDto dto = this.createCouponListDto(tmp);
+			if(!userIds.contains(tmp.getUserId())){
+				userIds.add(tmp.getUserId());
+			}
+			if(!coupRuleIds.contains(tmp.getCouponId())){
+				coupRuleIds.add(tmp.getCouponId());
+			}
+			coupDtoList.add(dto);
+		}
+		List<Member> memberList = new ArrayList<Member>();
+		if(userIds.size()>0){
+			memberList = memberDao.findByUserIdIn(userIds);
+		}
+		List<CoupRule> ruleList = new ArrayList<CoupRule>();
+		if(coupRuleIds.size()>0){
+			ruleList = coupRuleDao.findByIdIn(coupRuleIds);
+		}
+		Map<Integer, Member> memberMap = new HashMap<Integer, Member>();
+		Map<Integer, CoupRule> ruleMap = new HashMap<Integer, CoupRule>();
+		for(Member member: memberList){
+			memberMap.put(member.getUserId(), member);
+		}
+		for(CoupRule rule: ruleList){
+			ruleMap.put(rule.getId(), rule);
+		}
+		for(CouponListDto tmp: coupDtoList){
+			Member member = memberMap.get(tmp.getUserId());
+			if(member!=null){
+				tmp.setUserName(member.getUserName());
+			}
+			CoupRule rule = ruleMap.get(tmp.getCouponId());
+			if(rule!=null){
+				tmp.setCouponName(rule.getCouponName());
+			}
+		}
+		resultDto.setList(coupDtoList);
+		return resultDto;
+	}
+
+
+	@Override
+	public String sendCoupon(Integer id, String username) {
+		List<Member> memberList = memberDao.findByUserName(username);
+		if(memberList == null || memberList.size() == 0 ){
+			return "会员不存在";
+		}
+		CoupList coup = coupListDao.findOne(id);
+		if(coup.getUserId() != 0){
+			return "优惠券已被发放过";
+		}
+		CoupRule rule = coupRuleDao.findOne(coup.getCouponId());
+		if(rule == null){
+			return "规则不存在";
+		}
+		Integer userId = memberList.get(0).getUserId();
+		Date begintime = null;
+		Date endtime = null;
+		if(rule.getCanusetype() == 0){
+			begintime = rule.getBegintime();
+			endtime = rule.getEndtime();
+		}else if(rule.getCanusetype() == 1){
+			Calendar calendar = Calendar.getInstance();
+			Date now = new Date();
+			calendar.setTime(now);
+			calendar.add(Calendar.DAY_OF_MONTH, rule.getCanuseday());
+			Date endDate = calendar.getTime();
+			begintime = DateUtils.getStartofDate(now);
+			endtime = DateUtils.getEndofDate(endDate);
+		}
+		coupListDao.sendCoup(id, userId, begintime, endtime);
+		return "success";
+	}
+
+	@Override
+	public String deleteCoup(Integer id) {
+		CoupList coup = coupListDao.findOne(id);
+		if(coup == null){
+			return "优惠券不存在";
+		}
+		if(coup.getIschecked() == 1){
+			return "优惠券已被使用";
+		}
+		coupListDao.deleteCoup(id);
+		return "success";
 	}
 }
