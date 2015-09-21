@@ -1413,8 +1413,8 @@ public class BkOrderServiceImpl implements BkOrderService{
 		for(OrderExtm orderExtm: orderExtmList){
 			orderExtmMap.put(orderExtm.getOrderSnMain(), orderExtm);
 		}
-		
 		List<BkOrderListDto> bkOrderList = new ArrayList<BkOrderListDto>();
+		
 		for(Order tmp : orderList) {
 			BkOrderListDto orderListDto = new BkOrderListDto();
 			BkOrderListBaseDto baseDto = createBkOrderBaseDto(tmp);
@@ -1431,6 +1431,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		resp.setResult(resultDto);
 		return resp;
 	}
+	
 	private BkExtmMsgDto createExtmMsg(OrderExtm orderExtm) {
 		BkExtmMsgDto dto = new BkExtmMsgDto();
 		if(orderExtm!=null){
