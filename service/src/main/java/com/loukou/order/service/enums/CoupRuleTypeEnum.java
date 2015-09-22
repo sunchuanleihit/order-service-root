@@ -3,10 +3,7 @@ package com.loukou.order.service.enums;
 public enum CoupRuleTypeEnum {
 	NONE(-1, ""),
 	ENOUGH(0, "满减券"),
-	CASH(1, "现金券"),
-	DISCOUNT(2, "折扣券"),
-	OFFLINE(3,"线下券"),
-	SELFGET(4,"自提点专用");
+	CASH(1, "现金券");
 	private int id;
 	private String name;
 	public int getId() {

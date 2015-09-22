@@ -410,7 +410,13 @@ public class CoupServiceImpl implements CoupService{
 			}
 		}
 		rule.setMaxnum(dto.getMaxnum());
-		rule.setLowemoney(dto.getLowemoney());
+		if(dto.getCoupontypeid() == CoupRuleTypeEnum.ENOUGH.getId()){
+			if(dto.getLowemoney() == null){
+				return "缺少最低消费金额";
+			}
+			rule.setLowemoney(dto.getLowemoney());
+		}
+		rule.setMoney(dto.getMoney());
 		rule.setCouponType(dto.getCouponType());
 		if(dto.getCouponType() == CoupUseScopeEnum.KIND.getId()){//如果是分类券
 			rule.setOutId(""+dto.getCategory());
