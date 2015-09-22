@@ -46,6 +46,12 @@ public class WeiCangGoodsStore {
 	@Column(name = "update_time")
 	private Date updateTime = new Date();
 
+    @Column(name = "product_id")
+    private int productId = 0;
+
+    @Column(name = "sitesku_id")
+    private int siteskuId = 0;
+    
 	public int getGsId() {
 		return gsId;
 	}

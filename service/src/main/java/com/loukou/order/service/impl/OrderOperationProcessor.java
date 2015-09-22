@@ -121,7 +121,7 @@ public class OrderOperationProcessor {
 
         List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
         for (OrderGoods good : goods) {
-            lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(good.getSpecId(), good.getStoreId(), new Date(),
+            lkWhGoodsStoreDao.updateFreezstockAndStockSBySpecIdAndStoreId(good.getSiteskuId(), good.getStoreId(), new Date(),
                     good.getQuantity(), good.getQuantity());
         }
         LkWhDeliveryOrder lkWhDeliveryOrder = new LkWhDeliveryOrder();
@@ -155,8 +155,7 @@ public class OrderOperationProcessor {
 
         List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
         for (OrderGoods good : goods) {
-            lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(good.getSpecId(), good.getStoreId(), new Date(),
-                    good.getQuantity(), good.getQuantity());
+            lkWhGoodsStoreDao.updateFreezStockBySiteSkuIdAndStoreId(good.getSiteskuId(), good.getStoreId(), good.getQuantity(),new Date());
         }
 
         OrderRefuse orderRefuse = new OrderRefuse();
