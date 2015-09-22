@@ -17,7 +17,21 @@ public class CoupRuleDto implements Serializable{
 	private String type;//券码类型
 	private String scope;//使用范围
 	private String canuseday;//有效期
+	private String outId;
+	private String categoryName;
 	
+	public String getOutId() {
+		return outId;
+	}
+	public void setOutId(String outId) {
+		this.outId = outId;
+	}
+	public String getCategoryName() {
+		return categoryName;
+	}
+	public void setCategoryName(String categoryName) {
+		this.categoryName = categoryName;
+	}
 	public String getCommoncode() {
 		return commoncode;
 	}

@@ -230,7 +230,7 @@ public class CoupServiceImpl implements CoupService{
 		result.setMoney(rule.getMoney());
 		result.setLowemoney(rule.getLowemoney());
 		result.setScope(CoupUseScopeEnum.parseName(rule.getCouponType()).getName());
-		result.setReturnMoney(rule.getReturnmoney());
+		result.setOutId(rule.getOutId());
 		return result;
 	}
 
@@ -412,10 +412,12 @@ public class CoupServiceImpl implements CoupService{
 		rule.setMaxnum(dto.getMaxnum());
 		rule.setLowemoney(dto.getLowemoney());
 		rule.setCouponType(dto.getCouponType());
+		if(dto.getCouponType() == CoupUseScopeEnum.KIND.getId()){//如果是分类券
+			rule.setOutId(""+dto.getCategory());
+		}
 		coupRuleDao.save(rule);
 		return "success";
 	}
-
 
 	@Override
 	public CoupTypeRespDto findCoupType(Integer pageSize, Integer pageNum) {

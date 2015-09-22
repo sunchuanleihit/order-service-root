@@ -16,9 +16,16 @@ public class CoupRuleAddReqDto implements Serializable{
 	private String begintime;//开始日期
 	private String endtime;//结束时间
 	private Integer couponType;//使用范围
+	private Integer category;//优惠分类
 	private String commoncode;
 	private String prefix;
 	
+	public Integer getCategory() {
+		return category;
+	}
+	public void setCategory(Integer category) {
+		this.category = category;
+	}
 	public String getCommoncode() {
 		return commoncode;
 	}
