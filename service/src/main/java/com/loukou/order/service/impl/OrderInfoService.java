@@ -85,8 +85,8 @@ public class OrderInfoService {
         List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
         for (OrderGoods good : goods) {
             SpecDto spec = new SpecDto();
-            spec.setGoodsInfo(new GoodsInfoDto(good.getGoodsId(), good.getGoodsName(), good.getGoodsImage()));
-            spec.setSpecId(good.getSpecId());
+            spec.setGoodsInfo(new GoodsInfoDto(good.getProductId(), good.getGoodsName(), good.getGoodsImage()));
+            spec.setSpecId(good.getSiteskuId());
             spec.setBuyNum(good.getQuantity());
             spec.setSpecName(good.getGoodsName());
             spec.setSellPrice(good.getPricePurchase());
@@ -271,8 +271,8 @@ public class OrderInfoService {
                     continue;
                 }
                 SpecDto spec = new SpecDto();
-                spec.setGoodsInfo(new GoodsInfoDto(ordergood.getGoodsId(), ordergood.getGoodsName(), ordergood.getGoodsImage()));
-                spec.setSpecId(ordergood.getSpecId());
+                spec.setGoodsInfo(new GoodsInfoDto(ordergood.getProductId(), ordergood.getGoodsName(), ordergood.getGoodsImage()));
+                spec.setSpecId(ordergood.getSiteskuId());
                 spec.setBuyNum(ordergood.getQuantity());
                 spec.setSellPrice(ordergood.getPricePurchase());
                 value.getSpecList().add(spec);
@@ -462,8 +462,8 @@ public class OrderInfoService {
                     continue;
                 }
                 SpecDto spec = new SpecDto();
-                spec.setGoodsInfo(new GoodsInfoDto(ordergood.getGoodsId(), ordergood.getGoodsName(), ordergood.getGoodsImage()));
-                spec.setSpecId(ordergood.getSpecId());
+                spec.setGoodsInfo(new GoodsInfoDto(ordergood.getProductId(), ordergood.getGoodsName(), ordergood.getGoodsImage()));
+                spec.setSpecId(ordergood.getSiteskuId());
                 spec.setBuyNum(ordergood.getQuantity());
                 spec.setSellPrice(ordergood.getPricePurchase());
                 value.getSpecList().add(spec);
