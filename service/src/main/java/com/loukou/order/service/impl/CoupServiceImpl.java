@@ -419,7 +419,7 @@ public class CoupServiceImpl implements CoupService{
 		rule.setMoney(dto.getMoney());
 		rule.setCouponType(dto.getCouponType());
 		if(dto.getCouponType() == CoupUseScopeEnum.KIND.getId()){//如果是分类券
-			rule.setOutId(""+dto.getCategory());
+			rule.setOutId(dto.getCategory());
 		}
 		coupRuleDao.save(rule);
 		return "success";
