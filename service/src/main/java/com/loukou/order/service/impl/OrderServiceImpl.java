@@ -1248,17 +1248,18 @@ public class OrderServiceImpl implements OrderService {
 		//
 		// /* 如果有重复的，则重新生成 */
 		// return $this->_gen_order_sn();
-		int now = DateUtils.getTime();
-		Calendar calendar = Calendar.getInstance();
-		int year = calendar.get(Calendar.DAY_OF_YEAR)%100;
-		int z = calendar.get(Calendar.DAY_OF_YEAR)%100;
-		String orderSn = String.format("%s", year);
-		List<Order> orders = orderDao.findByOrderSn(orderSn);
-		// 如果orderSn 已经存在，递归
-		if (orders.size() > 0) {
-			return generateOrderSn();
-		}
-		return orderSn;
+//		int now = DateUtils.getTime();
+//		Calendar calendar = Calendar.getInstance();
+//		int year = calendar.get(Calendar.DAY_OF_YEAR)%100;
+//		int z = calendar.get(Calendar.DAY_OF_YEAR)%100;
+//		String orderSn = String.format("%s", year);
+//		List<Order> orders = orderDao.findByOrderSn(orderSn);
+//		// 如果orderSn 已经存在，递归
+//		if (orders.size() > 0) {
+//			return generateOrderSn();
+//		}
+//		return orderSn;
+		return "";
 	}
 
 	@Override
