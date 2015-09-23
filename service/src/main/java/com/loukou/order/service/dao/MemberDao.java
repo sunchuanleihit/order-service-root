@@ -57,4 +57,8 @@ public interface MemberDao extends CrudRepository<Member, Integer> {
 	@Query("UPDATE Member SET phoneCheckCode=?2 WHERE userId=?1")
 	int updatePhoneCheckCode(int userId, String verificationCode);
 
+	List<Member> findByUserName(String username);
+
+	List<Member> findByUserIdIn(List<Integer> userIds);
+
 }

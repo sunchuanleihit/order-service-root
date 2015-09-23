@@ -18,6 +18,8 @@ import com.loukou.order.service.entity.Order;
 public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, JpaSpecificationExecutor<Order>{
 	List<Order> findByTaoOrderSn(String taoOrderSn);
 	
+	List<Order> findByOrderSn(String orderSn);
+	
 	List<Order> findByOrderSnMain(String orderSnMain);
 
 	@Query("SELECT o FROM Order o WHERE shippingId=?1 AND status=15 AND finishedTime>=?2 AND finishedTime<=?3")
@@ -128,8 +130,8 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 	
 	@Transactional(value="transactionManagerMall")
 	@Modifying
-	@Query("UPDATE Order set needShiptime = ?2,needShiptimeSlot=?3 where orderSnMain = ?1")
-	int updateNeedShipTimeByOrderSnMain(String orderSnMain,Date needShiptime, String needShiptimeSlot);
+	@Query("UPDATE Order set needShiptime = ?2,needShiptimeSlot=?3,invoiceHeader=?4 where orderSnMain = ?1")
+	int updateNeedShipTimeByOrderSnMain(String orderSnMain,Date needShiptime, String needShiptimeSlot,String invoiceHeader);
 	
 	@Transactional
 	@Modifying
