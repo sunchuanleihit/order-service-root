@@ -18,6 +18,8 @@ import com.loukou.order.service.entity.Order;
 public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, JpaSpecificationExecutor<Order>{
 	List<Order> findByTaoOrderSn(String taoOrderSn);
 	
+	List<Order> findByOrderSn(String orderSn);
+	
 	List<Order> findByOrderSnMain(String orderSnMain);
 
 	@Query("SELECT o FROM Order o WHERE shippingId=?1 AND status=15 AND finishedTime>=?2 AND finishedTime<=?3")

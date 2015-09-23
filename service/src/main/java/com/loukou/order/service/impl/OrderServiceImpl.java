@@ -1,6 +1,5 @@
 package com.loukou.order.service.impl;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
@@ -745,9 +744,9 @@ public class OrderServiceImpl implements OrderService {
 				.append(DigestUtils.md5DigestAsHex(md5time.toString()
 						.getBytes()));
 		ShareDto shareDto = new ShareDto();
-		shareDto.setTitle("“楼口”1小时送货到家，还送30元红包，下载“楼口”app，享受便利到家生活！");
-		shareDto.setContent("红包可以直接抵扣支付金额。“楼口”让您享受1小时到家生活！");
-		shareDto.setIcon("http://pic2.taocz.cn//201505121544252619.png");
+		shareDto.setTitle("红包拿到手，便利有楼口");
+		shareDto.setContent("拥有楼口APP，油盐酱醋任你挑，美食生鲜任你选，1小时送货上门，便利实惠到家");
+		shareDto.setIcon("http://img.taocz.cn//201509231737077053.png");
 		shareDto.setUrl(shareUrl.toString());
 		return shareDto;
 	}
@@ -1249,7 +1248,17 @@ public class OrderServiceImpl implements OrderService {
 		//
 		// /* 如果有重复的，则重新生成 */
 		// return $this->_gen_order_sn();
-		return "";
+		int now = DateUtils.getTime();
+		Calendar calendar = Calendar.getInstance();
+		int year = calendar.get(Calendar.DAY_OF_YEAR)%100;
+		int z = calendar.get(Calendar.DAY_OF_YEAR)%100;
+		String orderSn = String.format("%s", year);
+		List<Order> orders = orderDao.findByOrderSn(orderSn);
+		// 如果orderSn 已经存在，递归
+		if (orders.size() > 0) {
+			return generateOrderSn();
+		}
+		return orderSn;
 	}
 
 	@Override
