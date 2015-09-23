@@ -15,9 +15,10 @@
 	<import resource="classpath*:dubbo-ext-appcontext.xml" />
 	
 	<!-- 注册中心配置 -->  
-<!--   	<dubbo:registry address="${dubbo.registry.address}" /> -->
-  	<!-- 本地调试使用 -->
-    <dubbo:registry address="zookeeper://127.0.0.1:2181" />
+  	<dubbo:registry address="${dubbo.registry.address}" />
+  	<!-- 本地调试使用 
+    <dubbo:registry address="zookeeper://127.0.0.1:2181" />-->
+
 	<dubbo:application name="order-service" />
   	<dubbo:protocol name="dubbo" port="${dubbo.protocol.port.order.service}" />
 	
@@ -26,7 +27,6 @@
 	<dubbo:service ref="payService" interface="com.loukou.order.service.api.PayService" retries="0" timeout="5000"  />
 	<dubbo:service ref="bkOrderService" interface="com.loukou.order.service.api.BkOrderService" retries="0" timeout="5000"  />
 	<dubbo:service ref="InviteService" interface="com.loukou.order.service.api.InviteService" retries="0" timeout="5000"  />
-	<dubbo:service ref="coupService" interface="com.loukou.order.service.api.CoupService" retries="0" timeout="5000"  />
 	
 	<!-- 引用的服务 -->
 	<dubbo:reference id="userService" interface="com.serverstarted.user.api.UserService" retries="0" timeout="5000" />
