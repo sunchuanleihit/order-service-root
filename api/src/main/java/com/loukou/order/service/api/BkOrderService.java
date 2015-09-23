@@ -9,13 +9,13 @@ import com.loukou.order.service.resp.dto.BkCouponListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderActionRespDto;
 import com.loukou.order.service.resp.dto.BkOrderListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderPayDto;
+import com.loukou.order.service.resp.dto.BkOrderRemarkDto;
 import com.loukou.order.service.resp.dto.BkOrderRemarkListRespDto;
 import com.loukou.order.service.resp.dto.BkOrderReturnDto;
 import com.loukou.order.service.resp.dto.BkOrderReturnListRespDto;
 import com.loukou.order.service.resp.dto.BkTxkDto;
 import com.loukou.order.service.resp.dto.BkTxkRecordListRespDto;
 import com.loukou.order.service.resp.dto.BkVaccountListResultRespDto;
-import com.loukou.order.service.resp.dto.BkOrderRemarkDto;
 import com.loukou.order.service.resp.dto.GoodsListDto;
 
 /**

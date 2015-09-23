@@ -61,7 +61,6 @@ import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.SiteCityDao;
 import com.loukou.order.service.dao.StoreDao;
-import com.loukou.order.service.dao.TosuHandleDao;
 import com.loukou.order.service.dao.WeiCangGoodsStoreDao;
 import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupRule;
@@ -1294,7 +1293,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 	}
 
 	@Override
-	public BkOrderListRespDto queryBkOrderList(int pageNum, int pageSize, final CssOrderReqDto cssOrderReqDto) {
+	public synchronized BkOrderListRespDto queryBkOrderList(int pageNum, int pageSize, final CssOrderReqDto cssOrderReqDto) {
 		BkOrderListRespDto resp = new BkOrderListRespDto(200, "");
 		List<Order> orderList = new ArrayList<Order>();
 		//先从收货人中查出所有相关的订单
@@ -1414,8 +1413,8 @@ public class BkOrderServiceImpl implements BkOrderService{
 		for(OrderExtm orderExtm: orderExtmList){
 			orderExtmMap.put(orderExtm.getOrderSnMain(), orderExtm);
 		}
-		
 		List<BkOrderListDto> bkOrderList = new ArrayList<BkOrderListDto>();
+		
 		for(Order tmp : orderList) {
 			BkOrderListDto orderListDto = new BkOrderListDto();
 			BkOrderListBaseDto baseDto = createBkOrderBaseDto(tmp);
@@ -1432,6 +1431,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		resp.setResult(resultDto);
 		return resp;
 	}
+	
 	private BkExtmMsgDto createExtmMsg(OrderExtm orderExtm) {
 		BkExtmMsgDto dto = new BkExtmMsgDto();
 		if(orderExtm!=null){
@@ -1489,7 +1489,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 	 * 查找未生成退款单
 	 */
 	@Override
-	public BkOrderListRespDto queryBkOrderNoReturnList(String sort, String order, int pageNum, int pageSize,
+	public  BkOrderListRespDto queryBkOrderNoReturnList(String sort, String order, int pageNum, int pageSize,
 			final CssOrderReqDto cssOrderReqDto) {
 		BkOrderListRespDto resp = new BkOrderListRespDto(200, "");
 		Sort pageSort = new Sort(Sort.Direction.DESC,"orderId");
