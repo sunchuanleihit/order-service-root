@@ -2350,6 +2350,37 @@ public class OrderServiceImpl implements OrderService {
 		    		 0, "", i.getMoney());
 		}
 	}
+
+	@Override
+	public int getTodayGoodsCount(int userId, int specId) {
+		int count = 0;
+		if (userId <= 0 && specId <= 0) {
+			return 0;
+		}
+		Date date = DateUtils.getStartofDate(new Date());
+		int addTime = (int)(date.getTime()/1000);
+		List<Integer> orderIds = orderDao.getValidOrderId(userId, addTime);
+		if (orderIds.size() <= 0) {
+			return count;
+		}
+		
+		count = orderGoodsDao.sumGoods(orderIds, specId);
+		
+		return count;
+	}
+
+	@Override
+	public int getTodayStoreGoodsCount(int storeId, int specId) {
+		int count = 0;
+		if (storeId <= 0 || specId <= 0) {
+			return count;
+		}
+		
+		Date date = DateUtils.getStartofDate(new Date());
+		count = orderGoodsDao.sumGoods(storeId, specId, date);
+		
+		return count;
+	}
 	
 
 }

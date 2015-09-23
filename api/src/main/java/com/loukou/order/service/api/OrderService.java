@@ -3,12 +3,10 @@ package com.loukou.order.service.api;
 import java.util.List;
 import java.util.Map;
 
-import com.loukou.order.service.req.dto.InviteInfoReqdto;
 import com.loukou.order.service.req.dto.OrderListParamDto;
 import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
-import com.loukou.order.service.resp.dto.InviteInfoRespDto;
 import com.loukou.order.service.resp.dto.LkStatusItemDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderBonusRespDto;
@@ -171,5 +169,20 @@ public interface OrderService {
 	
 	public void sendNewUserRegisterCoupon(int userId, String phone);
 	
+	/**
+	 * 获取用户当天购买某商品的个数 (全部的有效订单，排除订单状态为无效、取消、拒单的订单)
+	 * @param userId
+	 * @param specId 
+	 * @return
+	 */
+	public int getTodayGoodsCount(int userId, int specId);
+	
+	/**
+	 * 获取店铺当天某商品的销量 (全部的订单)
+	 * @param storeId
+	 * @param specId
+	 * @return
+	 */
+	public int getTodayStoreGoodsCount(int storeId, int specId);
 
 }
