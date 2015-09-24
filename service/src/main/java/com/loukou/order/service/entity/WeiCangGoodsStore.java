@@ -124,4 +124,20 @@ public class WeiCangGoodsStore {
 		this.updateTime = updateTime;
 	}
 
+	public int getProductId() {
+		return productId;
+	}
+
+	public void setProductId(int productId) {
+		this.productId = productId;
+	}
+
+	public int getSiteskuId() {
+		return siteskuId;
+	}
+
+	public void setSiteskuId(int siteskuId) {
+		this.siteskuId = siteskuId;
+	}
+
 }

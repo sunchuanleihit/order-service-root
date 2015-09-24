@@ -25,6 +25,12 @@ public class LKWhStockInGoods {
 	
 	@Column(name="stock")
 	private int stock;
+	
+	@Column(name="product_id")
+	private int productId;
+	
+	@Column(name="sitesku_id")
+	private int siteSkuId;
 
 	public int getInGoodsId() {
 		return inGoodsId;
@@ -64,6 +70,22 @@ public class LKWhStockInGoods {
 
 	public void setStock(int stock) {
 		this.stock = stock;
+	}
+
+	public int getProductId() {
+		return productId;
+	}
+
+	public void setProductId(int productId) {
+		this.productId = productId;
+	}
+
+	public int getSiteSkuId() {
+		return siteSkuId;
+	}
+
+	public void setSiteSkuId(int siteSkuId) {
+		this.siteSkuId = siteSkuId;
 	}
 	
 	
