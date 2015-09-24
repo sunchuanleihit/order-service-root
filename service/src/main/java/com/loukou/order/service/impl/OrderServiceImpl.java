@@ -398,6 +398,7 @@ public class OrderServiceImpl implements OrderService {
 			
 			for(OrderGoods og : orderGoodsList) {
 				if(og.getOrderId() == order.getOrderId()) {
+				    //TODO productgoods 
 					GoodsListDto goodsListDto = new GoodsListDto();
 					BeanUtils.copyProperties(og, goodsListDto);
 					goodsListDtoList.add(goodsListDto);
@@ -636,6 +637,7 @@ public class OrderServiceImpl implements OrderService {
 			for(OrderGoods og : orderGoodsList) {
 				if(og.getOrderId() == order.getOrderId()) {
 					GoodsListDto goodsListDto = new GoodsListDto();
+					//TODO product goods 
 					BeanUtils.copyProperties(og, goodsListDto);
 					//add
 					goodsListDto.setPriceDiscount(DoubleUtils.round(og.getPriceDiscount(), 2));
@@ -1048,8 +1050,8 @@ public class OrderServiceImpl implements OrderService {
 
 				OrderGoods orderGoods = new OrderGoods();
 				orderGoods.setOrderId(newOrder.getOrderId());
-				orderGoods.setGoodsId(g.getGoodsId());
-				orderGoods.setSpecId(g.getSpecId());
+				orderGoods.setSiteskuId((g.getSpecId()));
+				orderGoods.setProductId(g.getGoodsId());
 				orderGoods.setGoodsName(g.getGoodsName());
 				orderGoods.setSpecification(g.getSpecName());
 				orderGoods.setStoreId(storeId);
@@ -1695,6 +1697,7 @@ public class OrderServiceImpl implements OrderService {
 					// GoodsSpec goodsSpec =
 					// goodsSpecDao.findBySpecId(orderGoods.getSpecId());
 					if (operateType == OpearteTypeEnum.OPEARTE_CHECK_DELIVER.getType()) {// 发货
+					    //TODO ? product goods how to
 						goodsSpecDao.updateBySpecId(orderGoods.getSpecId(),
 								orderGoods.getQuantity(),
 								orderGoods.getQuantity());
@@ -2028,7 +2031,7 @@ public class OrderServiceImpl implements OrderService {
 		bonusDto.setFeedbackDelivery(feedbackDelivery);
 		bonusDto.setTimeStr(String.format("%d年%d月", currentYear, currentMonth ));
 		
-		return new RespDto(200, "ok", bonusDto);
+		return new RespDto<OrderBonusRespDto>(200, "ok", bonusDto);
 	}
 	
 	private Map<Integer,LkStatus> getLkStatusMap(){

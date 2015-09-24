@@ -12,6 +12,7 @@ import com.loukou.order.service.entity.GoodsSpec;
 
 public interface GoodsSpecDao extends PagingAndSortingRepository<GoodsSpec, Integer> {
 
+    @Deprecated
 	List<GoodsSpec> findBySpecIdIn(List<Integer> specIds);
 	
 	@Deprecated
@@ -32,6 +33,7 @@ public interface GoodsSpecDao extends PagingAndSortingRepository<GoodsSpec, Inte
 	@Deprecated
 	List<GoodsSpec> findByGoodsId(int goodsId);
 	
+	@Deprecated
 	List<GoodsSpec> findByBn(String bn);
 
 	@Deprecated

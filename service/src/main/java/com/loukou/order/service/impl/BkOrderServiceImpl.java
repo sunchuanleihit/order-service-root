@@ -46,7 +46,6 @@ import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.CoupTypeDao;
 import com.loukou.order.service.dao.ExpressDao;
-import com.loukou.order.service.dao.GoodsDao;
 import com.loukou.order.service.dao.GoodsSpecDao;
 import com.loukou.order.service.dao.MemberDao;
 import com.loukou.order.service.dao.OrderActionDao;
@@ -178,8 +177,6 @@ public class BkOrderServiceImpl implements BkOrderService{
     @Autowired
     private GoodsSpecDao goodsSpecDao;
     
-    @Autowired
-    private GoodsDao goodsDao;
     
     @Autowired
     private TosuDao tosuDao;
