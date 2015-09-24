@@ -259,16 +259,6 @@ public class OrderServiceImpl implements OrderService {
 	private OrderGoodsRDao orderGoodsRDao;
 	
 	@Autowired
-	private LkWhDeliveryOrderDao lkWhDeliveryOrderDao;
-	
-	@Autowired
-	private LkWhDeliveryDao lkWhDeliveryDao;
-	
-
-	@Autowired
-	private OrderRefuseDao orderRefuseDao;
-	
-	@Autowired
 	private OrderShareNewUserDao orderShareNewUserDao;
 	
 	@Autowired
