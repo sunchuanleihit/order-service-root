@@ -121,7 +121,7 @@ public class OrderOperationProcessor {
 
         List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
         for (OrderGoods good : goods) {
-            lkWhGoodsStoreDao.updateFreezstockAndStockSBySpecIdAndStoreId(good.getSiteskuId(), good.getStoreId(), new Date(),
+            lkWhGoodsStoreDao.updateFreezstockAndStockSBySiteskuIdAndStoreId(good.getSiteskuId(), good.getStoreId(), new Date(),
                     good.getQuantity(), good.getQuantity());
         }
         LkWhDeliveryOrder lkWhDeliveryOrder = new LkWhDeliveryOrder();
