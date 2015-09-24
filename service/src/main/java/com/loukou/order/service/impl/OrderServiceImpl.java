@@ -50,8 +50,6 @@ import com.loukou.order.service.dao.LKWhStockInGoodsDao;
 import com.loukou.order.service.dao.LkConfigureDao;
 import com.loukou.order.service.dao.LkStatusDao;
 import com.loukou.order.service.dao.LkStatusItemDao;
-import com.loukou.order.service.dao.LkWhDeliveryDao;
-import com.loukou.order.service.dao.LkWhDeliveryOrderDao;
 import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
 import com.loukou.order.service.dao.OrderExtmDao;
@@ -60,7 +58,6 @@ import com.loukou.order.service.dao.OrderGoodsRDao;
 import com.loukou.order.service.dao.OrderLnglatDao;
 import com.loukou.order.service.dao.OrderPayDao;
 import com.loukou.order.service.dao.OrderPayRDao;
-import com.loukou.order.service.dao.OrderRefuseDao;
 import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.OrderShareNewUserDao;
 import com.loukou.order.service.dao.OrderUserDao;
@@ -70,12 +67,9 @@ import com.loukou.order.service.dao.StoreDao;
 import com.loukou.order.service.dao.TczcountRechargeDao;
 import com.loukou.order.service.dao.WeiCangGoodsStoreDao;
 import com.loukou.order.service.entity.Address;
-import com.loukou.order.service.entity.AsyncTask;
 import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.Express;
-import com.loukou.order.service.entity.LKWhStockIn;
-import com.loukou.order.service.entity.LKWhStockInGoods;
 import com.loukou.order.service.entity.LkConfigure;
 import com.loukou.order.service.entity.LkStatus;
 import com.loukou.order.service.entity.LkStatusItem;
@@ -91,14 +85,10 @@ import com.loukou.order.service.entity.OrderShareNewUser;
 import com.loukou.order.service.entity.OrderUser;
 import com.loukou.order.service.entity.Site;
 import com.loukou.order.service.entity.Store;
-import com.loukou.order.service.entity.WeiCangGoodsStore;
-import com.loukou.order.service.enums.AsyncTaskActionEnum;
-import com.loukou.order.service.enums.AsyncTaskStatusEnum;
 import com.loukou.order.service.enums.CoupListReqTypeEnum;
 import com.loukou.order.service.enums.OpearteTypeEnum;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
 import com.loukou.order.service.enums.OrderPayTypeEnum;
-import com.loukou.order.service.enums.OrderReturnGoodsStatusEnum;
 import com.loukou.order.service.enums.OrderReturnGoodsType;
 import com.loukou.order.service.enums.OrderSourceEnum;
 import com.loukou.order.service.enums.OrderStatusEnum;
@@ -108,9 +98,7 @@ import com.loukou.order.service.enums.PaymentEnum;
 import com.loukou.order.service.enums.ReturnGoodsStatus;
 import com.loukou.order.service.enums.ReturnOrderStatus;
 import com.loukou.order.service.enums.ReturnStatusEnum;
-import com.loukou.order.service.enums.WeiCangGoodsStoreStatusEnum;
 import com.loukou.order.service.req.dto.OrderListParamDto;
-import com.loukou.order.service.req.dto.ReturnStorageGoodsReqDto;
 import com.loukou.order.service.req.dto.ReturnStorageReqDto;
 import com.loukou.order.service.req.dto.SpecShippingTime;
 import com.loukou.order.service.req.dto.SubmitOrderReqDto;
@@ -156,7 +144,6 @@ import com.loukou.pos.client.vaccount.processor.VirtualAccountProcessor;
 import com.loukou.pos.client.vaccount.resp.VaccountUpdateRespVO;
 import com.loukou.search.service.api.ProductSearchService;
 import com.loukou.search.service.dto.product.SiteSkuDto;
-import com.loukou.search.service.dto.product.SkuDto;
 import com.serverstarted.cart.service.api.CartService;
 import com.serverstarted.cart.service.constants.PackageType;
 import com.serverstarted.cart.service.resp.dto.CartGoodsRespDto;
@@ -294,6 +281,7 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired
 	private OrderUserDao orderUserDao;
 
+	//获取数量这么写不对吧?
 	@Override
 	public UserOrderNumRespDto getOrderNum(int userId) {
 		UserOrderNumRespDto resp = new UserOrderNumRespDto();
@@ -2004,24 +1992,6 @@ public class OrderServiceImpl implements OrderService {
     	return orderOperationProcessor.returnStorage(returnStorageReqDto);
 	}
 	
-	/**
-	 * 创建异步任务
-	 * @param order
-	 * @param action
-	 */
-	private AsyncTask createAsyncTask(Order order,int actionKey,AsyncTaskActionEnum action){
-		AsyncTask task = new AsyncTask();
-		task.setAction(action.getId());
-		task.setCreateTime(new Date());
-		task.setActionKey(actionKey);
-		task.setOrderId(order.getOrderId());
-		task.setOrderSnMain(order.getOrderSnMain());
-		task.setTaoOrderSn(order.getTaoOrderSn());
-		task.setStatus(AsyncTaskStatusEnum.STATUS_NEW.getId());
-		asyncTaskDao.save(task);
-		
-		return task;
-	}
 
 	@Override
 	public RespDto<OrderBonusRespDto> getCurrentMonthBonusInfo(int storeId) {
