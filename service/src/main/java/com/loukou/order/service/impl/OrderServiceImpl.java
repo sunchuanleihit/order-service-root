@@ -358,6 +358,7 @@ public class OrderServiceImpl implements OrderService {
 		Sort sort = new Sort(Direction.DESC, "orderId");
 		Pageable pageable = new PageRequest(pageNum - 1, pageSize, sort);
 		if(flag == FlagType.ALL) {
+			//未支付的地推订单不显示
 			orderPageList = orderDao.findByBuyerIdAndIsDel(userId, 0, pageable);
 			List<Order> orders = orderPageList.getContent();
 			for(Order order : orders)
@@ -375,10 +376,11 @@ public class OrderServiceImpl implements OrderService {
 				}
 			}
 		} else if (flag == FlagType.TO_PAY) {
+			//未支付的地推订单不显示
 			statusList.add(OrderStatusEnum.STATUS_NEW.getId());
-			orderPageList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusInAndSource(userId, 0, 
+			orderPageList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusInAndSourceNot(userId, 0, 
 					PayStatusEnum.STATUS_UNPAY.getId(), statusList, OrderSourceEnum.SOURCE_DITUI.getId(),pageable);
-			partPayList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusInAndSource(
+			partPayList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusInAndSourceNot(
 					userId, 0, PayStatusEnum.STATUS_PART_PAYED.getId(), statusList, OrderSourceEnum.SOURCE_DITUI.getId(), pageable);
 			orderList.addAll(orderPageList.getContent());
 			if(!CollectionUtils.isEmpty(partPayList.getContent())) {

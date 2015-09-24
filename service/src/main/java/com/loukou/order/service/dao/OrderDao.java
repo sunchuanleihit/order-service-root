@@ -91,7 +91,7 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 
 	Page<Order> findByBuyerIdAndIsDelAndPayStatusAndStatusIn(int userId, int isDel, int payStatus,
 			List<Integer> statusList, Pageable pagealbe);
-	Page<Order> findByBuyerIdAndIsDelAndPayStatusAndStatusInAndSource(int userId, int isDel, int payStatus,
+	Page<Order> findByBuyerIdAndIsDelAndPayStatusAndStatusInAndSourceNot(int userId, int isDel, int payStatus,
 			List<Integer> statusList,int source, Pageable pagealbe);
 	
 	List<Order> findByOrderSnMainAndPayStatus(String orderSnMain, int payStatus);
