@@ -358,14 +358,30 @@ public class OrderServiceImpl implements OrderService {
 		Sort sort = new Sort(Direction.DESC, "orderId");
 		Pageable pageable = new PageRequest(pageNum - 1, pageSize, sort);
 		if(flag == FlagType.ALL) {
+			//未支付的地推订单不显示
 			orderPageList = orderDao.findByBuyerIdAndIsDel(userId, 0, pageable);
-			orderList.addAll(orderPageList.getContent());
+			List<Order> orders = orderPageList.getContent();
+			for(Order order : orders)
+			{
+				if(order.getSource() == OrderSourceEnum.SOURCE_DITUI.getId())
+				{
+					if(order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId() )
+					{
+						orderList.add(order);
+					}
+				}
+				else
+				{
+					orderList.add(order);
+				}
+			}
 		} else if (flag == FlagType.TO_PAY) {
+			//未支付的地推订单不显示
 			statusList.add(OrderStatusEnum.STATUS_NEW.getId());
-			orderPageList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusIn(userId, 0, 
-					PayStatusEnum.STATUS_UNPAY.getId(), statusList, pageable);
-			partPayList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusIn(
-					userId, 0, PayStatusEnum.STATUS_PART_PAYED.getId(), statusList, pageable);
+			orderPageList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusInAndSourceNot(userId, 0, 
+					PayStatusEnum.STATUS_UNPAY.getId(), statusList, OrderSourceEnum.SOURCE_DITUI.getId(),pageable);
+			partPayList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusInAndSourceNot(
+					userId, 0, PayStatusEnum.STATUS_PART_PAYED.getId(), statusList, OrderSourceEnum.SOURCE_DITUI.getId(), pageable);
 			orderList.addAll(orderPageList.getContent());
 			if(!CollectionUtils.isEmpty(partPayList.getContent())) {
 				orderList.addAll(partPayList.getContent());
