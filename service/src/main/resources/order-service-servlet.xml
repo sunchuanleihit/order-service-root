@@ -27,6 +27,7 @@
 	<dubbo:service ref="payService" interface="com.loukou.order.service.api.PayService" retries="0" timeout="5000"  />
 	<dubbo:service ref="bkOrderService" interface="com.loukou.order.service.api.BkOrderService" retries="0" timeout="5000"  />
 	<dubbo:service ref="InviteService" interface="com.loukou.order.service.api.InviteService" retries="0" timeout="5000"  />
+	<dubbo:service ref="coupService" interface="com.loukou.order.service.api.CoupService" retries="0" timeout="5000" />
 	
 	<!-- 引用的服务 -->
 	<dubbo:reference id="userService" interface="com.serverstarted.user.api.UserService" retries="0" timeout="5000" />
