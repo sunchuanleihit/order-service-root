@@ -63,6 +63,8 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 
 	Page<Order> findByBuyerIdAndIsDel(int userId, int isDel, Pageable pageable);
 	
+	Page<Order> findByBuyerIdAndIsDelAndPayStatusInAndSource(int userId, int isDel, List<Integer> payStatusList,int source,Pageable pageable);
+	
 	Page<Order> findByBuyerId(int userId, Pageable pageable);
 
 	@Transactional
@@ -89,7 +91,9 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 
 	Page<Order> findByBuyerIdAndIsDelAndPayStatusAndStatusIn(int userId, int isDel, int payStatus,
 			List<Integer> statusList, Pageable pagealbe);
-
+	Page<Order> findByBuyerIdAndIsDelAndPayStatusAndStatusInAndSource(int userId, int isDel, int payStatus,
+			List<Integer> statusList,int source, Pageable pagealbe);
+	
 	List<Order> findByOrderSnMainAndPayStatus(String orderSnMain, int payStatus);
 
 	Page<Order> findBySellerIdAndStatusAndTypeIn(int sellerId,int status,List<String> types,Pageable page);
