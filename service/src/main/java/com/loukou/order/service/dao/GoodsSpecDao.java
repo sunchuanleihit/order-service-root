@@ -14,6 +14,7 @@ public interface GoodsSpecDao extends PagingAndSortingRepository<GoodsSpec, Inte
 
 	List<GoodsSpec> findBySpecIdIn(List<Integer> specIds);
 	
+	@Deprecated
 	@Transactional
 	@Modifying
 	@Query("UPDATE GoodsSpec SET freezstock=freezstock+?2 WHERE specId = ?1")
@@ -21,27 +22,34 @@ public interface GoodsSpecDao extends PagingAndSortingRepository<GoodsSpec, Inte
 
 	public GoodsSpec findByTaosku(String taosku);
 
+	@Deprecated
 	List<GoodsSpec> findByGoodsIdInAndIsDel(Iterable<Integer> goodsIds, int isDel);
 
+	@Deprecated
 	List<GoodsSpec> findByGoodsIdInAndIsDelAndIsshow(Iterable<Integer> goodsIds,
 			int isDel, int isShow);
 
+	@Deprecated
 	List<GoodsSpec> findByGoodsId(int goodsId);
 	
 	List<GoodsSpec> findByBn(String bn);
 
+	@Deprecated
 	GoodsSpec findBySpecId(int specId);
 
+	@Deprecated
 	@Transactional
 	@Modifying
 	@Query("UPDATE GoodsSpec SET freezstock=freezstock-?3, taostock=taostock-?2 WHERE specId = ?1")
 	int updateBySpecId(int specId, int taostock, int freezestock);
 
+	@Deprecated
 	@Transactional
 	@Modifying
 	@Query("UPDATE GoodsSpec SET freezstock=freezstock-?2 WHERE specId = ?1")
 	void updateBySpecId(int specId, int quantity);
 	
+	@Deprecated
 	@Transactional
 	@Modifying
 	@Query("UPDATE GoodsSpec SET freezstock=freezstock+?2 WHERE specId = ?1")

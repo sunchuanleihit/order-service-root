@@ -52,6 +52,13 @@ public class GoodsSpec {
 	@Column(name = "is_onespec")
 	private int isOnespec = 0;	// 是否是基础规格 0普通规格  1基础规格
 	
+	@Column(name="product_id")
+	private long productId;
+	
+	@Column(name="sitesku_id")
+	private long siteskuId;
+	
+	
 	public String getTaosku() {
 		return taosku;
 	}
@@ -59,10 +66,11 @@ public class GoodsSpec {
 	public void setTaosku(String taosku) {
 		this.taosku = taosku;
 	}
+	@Deprecated
 	public int getSpecId() {
 		return specId;
 	}
-
+	@Deprecated
 	public void setSpecId(int specId) {
 		this.specId = specId;
 	}
@@ -98,11 +106,11 @@ public class GoodsSpec {
 	public void setPrice(double price) {
 		this.price = price;
 	}
-
+	@Deprecated
 	public int getGoodsId() {
 		return goodsId;
 	}
-
+	@Deprecated
 	public void setGoodsId(int goodsId) {
 		this.goodsId = goodsId;
 	}
@@ -154,5 +162,21 @@ public class GoodsSpec {
 	public void setIsOnespec(int isOnespec) {
 		this.isOnespec = isOnespec;
 	}
+
+    public long getProductId() {
+        return productId;
+    }
+
+    public void setProductId(long productId) {
+        this.productId = productId;
+    }
+
+    public long getSiteskuId() {
+        return siteskuId;
+    }
+
+    public void setSiteskuId(long siteskuId) {
+        this.siteskuId = siteskuId;
+    }
 	
 }

@@ -1702,15 +1702,15 @@ public class OrderServiceImpl implements OrderService {
 //					String updateTime = DateUtils.date2DateStr2(new Date());
 					if (operateType == OpearteTypeEnum.OPEARTE_CHECK_DELIVER.getType()) {// 发货
 						
-						lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(
-								orderGoods.getSpecId(), order.getSellerId(),
+						lkWhGoodsStoreDao.updateFreezstockAndStockSBySiteskuIdAndStoreId(
+								orderGoods.getSiteskuId(), order.getSellerId(),
 								new Date(),
 								orderGoods.getQuantity(),
 								orderGoods.getQuantity());
 					} else {
 						
-						lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(
-								orderGoods.getSpecId(), order.getSellerId(),
+						lkWhGoodsStoreDao.updateFreezStockBySiteSkuIdAndStoreId(
+								orderGoods.getSiteskuId(), order.getSellerId(),
 								orderGoods.getQuantity(), new Date());
 					}
 				} else {
