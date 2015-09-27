@@ -42,7 +42,9 @@ import com.loukou.order.service.resp.dto.CouponListResultDto;
 import com.loukou.order.service.resp.dto.ResponseDto;
 import com.loukou.order.service.util.DateUtils;
 import com.loukou.search.service.api.GoodsSearchService;
+import com.loukou.search.service.api.ProductSearchService;
 import com.loukou.search.service.dto.GoodsCateDto;
+import com.loukou.search.service.dto.product.CategoryDto;
 import com.serverstarted.cart.service.api.CartService;
 import com.serverstarted.cart.service.resp.dto.CartGoodsRespDto;
 import com.serverstarted.cart.service.resp.dto.CartRespDto;
@@ -76,7 +78,7 @@ public class CouponOperationProcessor {
 	private OrderDao orderDao;
 	
 	@Autowired 
-	private GoodsSearchService goodsSearchService;
+	private ProductSearchService productSearchService;
 	
 	@Autowired
 	private GCategoryNewDao gCategoryNewDao;
@@ -329,9 +331,9 @@ public class CouponOperationProcessor {
 			// 如果商品包含其他分类的商品，不能使用分类优惠券
 			List<Integer> cateIds = getOutId(coupRule);
 			// 获取所有一级类目
-			List<GoodsCateDto> cateOnes = goodsSearchService.getSubCateGoodsList(cityId, storeId, 0);
+			List<CategoryDto> cateOnes = productSearchService.querySubCateList(cityId, storeId, 0);
 			Set<Integer> cateOneIds = Sets.newHashSet();
-			for (GoodsCateDto g: cateOnes) {
+			for (CategoryDto g: cateOnes) {
 				cateOneIds.add(g.getCateId());
 			}
 			
@@ -339,8 +341,8 @@ public class CouponOperationProcessor {
 			for (Integer c: cateIds) {
 				if (cateOneIds.contains(c)) {
 					// 一级分类获取二级分类
-					List<GoodsCateDto> cateTwos = goodsSearchService.getSubCateGoodsList(cityId, storeId, c);
-					for (GoodsCateDto g: cateTwos) {
+					List<CategoryDto> cateTwos = productSearchService.querySubCateList(cityId, storeId, c);
+					for (CategoryDto g: cateTwos) {
 						validsCateIds.add(g.getCateId());
 					}
 				}

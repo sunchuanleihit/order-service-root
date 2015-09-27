@@ -29,7 +29,7 @@
 		<dependency>
 	    	<groupId>com.loukou</groupId>
 	    	<artifactId>search-client</artifactId>
-	    	<version>0.2.8-SNAPSHOT</version>
+	    	<version>0.2.12-SNAPSHOT</version>
 	    </dependency>
     
 		<!-- order-pay-client -->
@@ -42,7 +42,7 @@
 		<dependency>
 			<groupId>com.serverstarted</groupId>
 			<artifactId>goods-api</artifactId>
-			<version>0.5.0</version>
+			<version>0.6.0-SNAPSHOT</version>
 		</dependency>
 		<!-- dubbo-ext -->
 		<dependency>

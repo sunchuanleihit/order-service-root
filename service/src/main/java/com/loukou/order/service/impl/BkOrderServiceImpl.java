@@ -46,7 +46,6 @@ import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.CoupTypeDao;
 import com.loukou.order.service.dao.ExpressDao;
-import com.loukou.order.service.dao.GoodsSpecDao;
 import com.loukou.order.service.dao.MemberDao;
 import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
@@ -67,7 +66,6 @@ import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.CoupType;
 import com.loukou.order.service.entity.Express;
-import com.loukou.order.service.entity.Goods;
 import com.loukou.order.service.entity.Member;
 import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
@@ -174,8 +172,8 @@ public class BkOrderServiceImpl implements BkOrderService{
     @Autowired
     private WeiCangGoodsStoreDao weiCangGoodsStoreDao;
     
-    @Autowired
-    private GoodsSpecDao goodsSpecDao;
+//    @Autowired
+//    private GoodsSpecDao goodsSpecDao;
     
     
     @Autowired
@@ -819,11 +817,12 @@ public class BkOrderServiceImpl implements BkOrderService{
 		for(Order o:orderList){
 			List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(o.getOrderId());
 			for(OrderGoods og:orderGoodsList){
-				Goods goodsMsg=goodsDao.findByGoodsId(og.getGoodsId());
-				int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),goodsMsg.getStoreId());
-				if(stock<og.getQuantity()){
-					errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
-				}
+				// TODO FIX
+//				Goods goodsMsg=goodsDao.findByGoodsId(og.getGoodsId());
+//				int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),goodsMsg.getStoreId());
+//				if(stock<og.getQuantity()){
+//					errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
+//				}
 			}
 		}
 		
@@ -888,7 +887,8 @@ public class BkOrderServiceImpl implements BkOrderService{
 			if(orderMsg.getType() == "wei_wh" || orderMsg.getType() == "wei_self"){
 				weiCangGoodsStoreDao.updateAddBySpecIdAndStoreId(og.getSpecId(), og.getStoreId(), og.getQuantity());
 			}else{
-				goodsSpecDao.updateAddBySpecId(og.getSpecId(), og.getQuantity());
+				// TODO FIX
+//				goodsSpecDao.updateAddBySpecId(og.getSpecId(), og.getQuantity());
 			}
 		}
 		return;
@@ -914,11 +914,12 @@ public class BkOrderServiceImpl implements BkOrderService{
 					weiCangGoodsStoreDao.updateBySpecIdAndStoreId(og.getSpecId(), og.getStoreId(), og.getQuantity());
 				}
 			}else{
-				if(operateType==6){//发货
-					goodsSpecDao.updateBySpecId(og.getSpecId(), og.getQuantity(), og.getQuantity());
-				}else{//取消
-					goodsSpecDao.updateBySpecId(og.getSpecId(), og.getQuantity());
-				}
+				// TODO FIX
+//				if(operateType==6){//发货
+//					goodsSpecDao.updateBySpecId(og.getSpecId(), og.getQuantity(), og.getQuantity());
+//				}else{//取消
+//					goodsSpecDao.updateBySpecId(og.getSpecId(), og.getQuantity());
+//				}
 			}
 		}
 		
@@ -2184,11 +2185,12 @@ public class BkOrderServiceImpl implements BkOrderService{
 		String errorMessage="";
 		List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(orderId);
 		for(OrderGoods og:orderGoodsList){
-			Goods goodsMsg=goodsDao.findByGoodsId(og.getGoodsId());
-			int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),goodsMsg.getStoreId());
-			if(stock<og.getQuantity()){
-				errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
-			}
+			// TODO FIX
+//			Goods goodsMsg=goodsDao.findByGoodsId(og.getGoodsId());
+//			int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),goodsMsg.getStoreId());
+//			if(stock<og.getQuantity()){
+//				errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
+//			}
 		}
 		
 		if(errorMessage!=""){

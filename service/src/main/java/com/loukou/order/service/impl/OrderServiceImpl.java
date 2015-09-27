@@ -44,7 +44,6 @@ import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.CoupTypeDao;
 import com.loukou.order.service.dao.ExpressDao;
-import com.loukou.order.service.dao.GoodsSpecDao;
 import com.loukou.order.service.dao.LKWhStockInDao;
 import com.loukou.order.service.dao.LKWhStockInGoodsDao;
 import com.loukou.order.service.dao.LkConfigureDao;
@@ -206,8 +205,8 @@ public class OrderServiceImpl implements OrderService {
 	@Autowired
 	private SiteDao siteDao;
 
-	@Autowired
-	private GoodsSpecDao goodsSpecDao;
+//	@Autowired
+//	private GoodsSpecDao goodsSpecDao;
 
 	@Autowired
 	private WeiCangGoodsStoreDao lkWhGoodsStoreDao;
@@ -953,7 +952,7 @@ public class OrderServiceImpl implements OrderService {
 			StoreRespDto store = null;
 			if (PackageType.SELF_SALES.equals(pl.getPackageType())) {
 				int specId = pl.getGoodsList().get(0).getSpecId();
-				SiteSkuDto sku = productSearchService.getSku(specId);
+				SiteSkuDto sku = productSearchService.getSku(specId, storeId);
 				storeId = sku.getStoreId();
 			}
 			store = storeService.getByStoreId(storeId);
@@ -1024,7 +1023,7 @@ public class OrderServiceImpl implements OrderService {
 					// 整箱购商品，用标准规格的商品来记录
 					int stockBase = info.getStockBase();
 					
-					SiteSkuDto sku = productSearchService.getSku(info.getStockSpecId());
+					SiteSkuDto sku = productSearchService.getSku(info.getStockSpecId(), storeId);
 //					GoodsSpecRespDto goodsSpec = goodsSpecService.get(info.getStockSpecId());
 					g.setSpecId(sku.getSkuId());
 					g.setSpecName(sku.getAttributes().get(0));
@@ -1694,16 +1693,17 @@ public class OrderServiceImpl implements OrderService {
 								orderGoods.getQuantity(), new Date());
 					}
 				} else {
+					// TODO FIX
 					// GoodsSpec goodsSpec =
 					// goodsSpecDao.findBySpecId(orderGoods.getSpecId());
-					if (operateType == OpearteTypeEnum.OPEARTE_CHECK_DELIVER.getType()) {// 发货
-					    //TODO ? product goods how to
-						goodsSpecDao.updateBySpecId(orderGoods.getSpecId(),
-								orderGoods.getQuantity(),
-								orderGoods.getQuantity());
-					} else { // 取消
-						goodsSpecDao.updateBySpecId(orderGoods.getSpecId(), orderGoods.getQuantity());
-					}
+//					if (operateType == OpearteTypeEnum.OPEARTE_CHECK_DELIVER.getType()) {// 发货
+//					    //TODO ? product goods how to
+//						goodsSpecDao.updateBySpecId(orderGoods.getSpecId(),
+//								orderGoods.getQuantity(),
+//								orderGoods.getQuantity());
+//					} else { // 取消
+//						goodsSpecDao.updateBySpecId(orderGoods.getSpecId(), orderGoods.getQuantity());
+//					}
 				}
 			}
 			return true;
