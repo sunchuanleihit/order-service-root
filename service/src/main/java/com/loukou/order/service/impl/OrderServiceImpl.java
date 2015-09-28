@@ -1018,7 +1018,7 @@ public class OrderServiceImpl implements OrderService {
 			double priceDiscount = 0.0; // 商品折扣后的价格
 			for (CartGoodsRespDto g : pl.getGoodsList()) {
 				// 为了兼容老系统，如果是打包商品(整箱购) 订单商品要转成标准规格的商品
-				GoodsStockInfoRespDto info = goodsSpecService.getGoodsStockInfo(g.getGoodsId(), g.getSpecId());
+				GoodsStockInfoRespDto info = goodsSpecService.getGoodsStockInfo(g.getGoodsId(), g.getSpecId(), storeId);
 				if (info.getStockSpecId() != g.getSpecId()) {
 					// 整箱购商品，用标准规格的商品来记录
 					int stockBase = info.getStockBase();
