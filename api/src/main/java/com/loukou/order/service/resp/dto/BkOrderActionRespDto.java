@@ -8,6 +8,7 @@ public class BkOrderActionRespDto implements Serializable{
 	private String actionTime;
 	private String note;
 	private String actor;
+	private int action;
 	public String getActionTime() {
 		return actionTime;
 	}
@@ -26,5 +27,10 @@ public class BkOrderActionRespDto implements Serializable{
 	public void setActor(String actor) {
 		this.actor = actor;
 	}
-	
+	public int getAction() {
+		return action;
+	}
+	public void setAction(int action) {
+		this.action = action;
+	}
 }

@@ -336,14 +336,30 @@ public class OrderServiceImpl implements OrderService {
 		Sort sort = new Sort(Direction.DESC, "orderId");
 		Pageable pageable = new PageRequest(pageNum - 1, pageSize, sort);
 		if(flag == FlagType.ALL) {
+			//未支付的地推订单不显示
 			orderPageList = orderDao.findByBuyerIdAndIsDel(userId, 0, pageable);
-			orderList.addAll(orderPageList.getContent());
+			List<Order> orders = orderPageList.getContent();
+			for(Order order : orders)
+			{
+				if(order.getSource() == OrderSourceEnum.SOURCE_DITUI.getId())
+				{
+					if(order.getPayStatus() == PayStatusEnum.STATUS_PAYED.getId() )
+					{
+						orderList.add(order);
+					}
+				}
+				else
+				{
+					orderList.add(order);
+				}
+			}
 		} else if (flag == FlagType.TO_PAY) {
+			//未支付的地推订单不显示
 			statusList.add(OrderStatusEnum.STATUS_NEW.getId());
-			orderPageList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusIn(userId, 0, 
-					PayStatusEnum.STATUS_UNPAY.getId(), statusList, pageable);
-			partPayList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusIn(
-					userId, 0, PayStatusEnum.STATUS_PART_PAYED.getId(), statusList, pageable);
+			orderPageList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusInAndSourceNot(userId, 0, 
+					PayStatusEnum.STATUS_UNPAY.getId(), statusList, OrderSourceEnum.SOURCE_DITUI.getId(),pageable);
+			partPayList = orderDao.findByBuyerIdAndIsDelAndPayStatusAndStatusInAndSourceNot(
+					userId, 0, PayStatusEnum.STATUS_PART_PAYED.getId(), statusList, OrderSourceEnum.SOURCE_DITUI.getId(), pageable);
 			orderList.addAll(orderPageList.getContent());
 			if(!CollectionUtils.isEmpty(partPayList.getContent())) {
 				orderList.addAll(partPayList.getContent());
@@ -517,7 +533,10 @@ public class OrderServiceImpl implements OrderService {
 				) || (status == OrderStatusEnum.STATUS_NEW.getId() && 
 						order.getPayStatus() == PayStatusEnum.STATUS_PART_PAYED.getId()) ) {
 			state = OrderStateReturn.UN_PAY;
+		}else if(status == OrderStatusEnum.STATUS_REFUSED.getId()){
+			state = OrderStateReturn.REFUSED;
 		}
+		
 		return state;
 	}
 	
@@ -724,9 +743,9 @@ public class OrderServiceImpl implements OrderService {
 				.append(DigestUtils.md5DigestAsHex(md5time.toString()
 						.getBytes()));
 		ShareDto shareDto = new ShareDto();
-		shareDto.setTitle("“楼口”1小时送货到家，还送30元红包，下载“楼口”app，享受便利到家生活！");
-		shareDto.setContent("红包可以直接抵扣支付金额。“楼口”让您享受1小时到家生活！");
-		shareDto.setIcon("http://pic2.taocz.cn//201505121544252619.png");
+		shareDto.setTitle("红包拿到手，便利有楼口");
+		shareDto.setContent("拥有楼口APP，油盐酱醋任你挑，美食生鲜任你选，1小时送货上门，便利实惠到家");
+		shareDto.setIcon("http://img.taocz.cn//201509231737077053.png");
 		shareDto.setUrl(shareUrl.toString());
 		return shareDto;
 	}
@@ -936,6 +955,20 @@ public class OrderServiceImpl implements OrderService {
 			String needShippingTime = null;
 			if (PackageType.MATERIAL.equals(pl.getPackageType())) {
 				needShippingTime = materialShippingTime.get(0);
+				// 配送时间与当前时间比较，选择比较后的时间
+				needShippingTime = needShippingTime.replace("定时达", "").trim();
+				String[] strs = needShippingTime.split(" ");
+				
+				if (DateUtils.date2DateStr(new Date()).equals(strs[0].trim())) {
+					int startHour = Integer.valueOf(strs[1].trim().split(":")[0]);
+					int currHour =DateUtils.getCurrentHour();
+					if (currHour >= startHour) {
+						String slot = String.format("%d:00-%d:00", currHour+1, currHour+2);
+						needShippingTime = String.format("%s %s", strs[0], slot);
+					}
+				}
+				
+				
 			} else if (PackageType.BOOKING.equals(pl.getPackageType())) {
 				int specId = pl.getGoodsList().get(0).getSpecId();
 				needShippingTime = bookingShippingTimeMap.get(specId);
@@ -1093,6 +1126,7 @@ public class OrderServiceImpl implements OrderService {
 		OrderExtm orderExtm = new OrderExtm();
 		BeanUtils.copyProperties(address, orderExtm, "id");
 		orderExtm.setOrderSnMain(orderSnMain);
+		orderExtm.setAddress(String.format("%s %s", address.getAddress(), address.getAddressDetail()));
 		orderExtmDao.save(orderExtm);
 
 		String lnglat = String.format("lat:%s,lng:%s", address.getLatitude(),
@@ -1158,8 +1192,8 @@ public class OrderServiceImpl implements OrderService {
 			return false;
 		}
 		if (StringUtils.isEmpty(address.getConsignee())
-				|| address.getRegionId() <= 0
-				|| StringUtils.isEmpty(address.getRegionName())
+//				|| address.getRegionId() <= 0	不需要
+//				|| StringUtils.isEmpty(address.getRegionName())
 				|| StringUtils.isEmpty(address.getAddress())
 				|| StringUtils.isEmpty(address.getPhoneMob())) {
 			return false;
@@ -1215,6 +1249,17 @@ public class OrderServiceImpl implements OrderService {
 		//
 		// /* 如果有重复的，则重新生成 */
 		// return $this->_gen_order_sn();
+//		int now = DateUtils.getTime();
+//		Calendar calendar = Calendar.getInstance();
+//		int year = calendar.get(Calendar.DAY_OF_YEAR)%100;
+//		int z = calendar.get(Calendar.DAY_OF_YEAR)%100;
+//		String orderSn = String.format("%s", year);
+//		List<Order> orders = orderDao.findByOrderSn(orderSn);
+//		// 如果orderSn 已经存在，递归
+//		if (orders.size() > 0) {
+//			return generateOrderSn();
+//		}
+//		return orderSn;
 		return "";
 	}
 
@@ -1366,7 +1411,7 @@ public class OrderServiceImpl implements OrderService {
 				}
 			}
 			
-			if(order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId()) {
+			if(order.getStatus() == OrderStatusEnum.STATUS_FINISHED.getId() && shippingList.size() > 0) {
 				shippingList.get(0).setDescription("用户已收货，订单完成");
 			}
 		}
@@ -2134,6 +2179,37 @@ public class OrderServiceImpl implements OrderService {
 			couponOperationProcessor.createCouponCode(userId, 1, 1, false, 
 		    		 0, "", i.getMoney());
 		}
+	}
+
+	@Override
+	public int getTodayGoodsCount(int userId, int specId) {
+		int count = 0;
+		if (userId <= 0 && specId <= 0) {
+			return 0;
+		}
+		Date date = DateUtils.getStartofDate(new Date());
+		int addTime = (int)(date.getTime()/1000);
+		List<Integer> orderIds = orderDao.getValidOrderId(userId, addTime);
+		if (orderIds.size() <= 0) {
+			return count;
+		}
+		
+		count = orderGoodsDao.sumGoods(orderIds, specId);
+		
+		return count;
+	}
+
+	@Override
+	public int getTodayStoreGoodsCount(int storeId, int specId) {
+		int count = 0;
+		if (storeId <= 0 || specId <= 0) {
+			return count;
+		}
+		
+		Date date = DateUtils.getStartofDate(new Date());
+		count = orderGoodsDao.sumGoods(storeId, specId, date);
+		
+		return count;
 	}
 	
 

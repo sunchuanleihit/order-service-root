@@ -36,6 +36,7 @@ import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.WeiCangGoodsStore;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
 import com.loukou.order.service.enums.OrderReturnGoodsStatusEnum;
+import com.loukou.order.service.enums.OrderSourceEnum;
 import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.enums.WeiCangGoodsStoreStatusEnum;
 import com.loukou.order.service.req.dto.ReturnStorageGoodsReqDto;
@@ -115,8 +116,12 @@ public class OrderOperationProcessor {
             return new OResponseDto<String>(500, "错误的订单号成功");
         }
         createAction(order, OrderStatusEnum.STATUS_FINISHED.getId(), userName, "仓库回单" + gps);
-
-        sendMessage(order, String.format(ShortMessage.FINISH_ORDER_MESSAGE_MODEL, order.getTaoOrderSn()));
+        if(order.getSource() ==OrderSourceEnum.SOURCE_DITUI.getId()){
+            sendMessage(order, ShortMessage.FINISH_ORDER_SOURCE_QIANGTAN_MESSAGE_MODEL);
+        }else{
+            sendMessage(order, String.format(ShortMessage.FINISH_ORDER_MESSAGE_MODEL, order.getTaoOrderSn()));
+        }
+       
 
         return new OResponseDto<String>(200, "确认成功");
     }
@@ -144,6 +149,7 @@ public class OrderOperationProcessor {
         for (OrderGoods good : goods) {
             lkWhGoodsStoreDao.updateFreezstockAndStockSBySiteskuIdAndStoreId(good.getSiteskuId(), good.getStoreId(), new Date(),
                     good.getQuantity(), good.getQuantity());
+          
         }
         LkWhDeliveryOrder lkWhDeliveryOrder = new LkWhDeliveryOrder();
         lkWhDeliveryOrder.setOrderId(order.getOrderId());
