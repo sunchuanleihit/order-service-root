@@ -105,9 +105,9 @@ public interface BkOrderService {
 	BkOrderListRespDto orderReturnMsg(String orderSnMain);
 	
 	public BaseRes<String> generateReturn(String actor,int orderId,String postScript,String orderSnMain,int returnType,int payId,double shippingFee,
-	int[] checkedGoodsList,
-	int[] goodsIdList,
-	int[] specIdList,
+	int[] checkedProductList,
+	int[] productIdList,
+	int[] siteskuList,
 	int[] proTypeList,
 	int[] recIdList,
 	int[] goodsReturnNumList,

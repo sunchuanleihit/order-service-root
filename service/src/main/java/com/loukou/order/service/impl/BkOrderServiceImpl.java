@@ -80,6 +80,7 @@ import com.loukou.order.service.entity.Store;
 import com.loukou.order.service.enums.BkOrderPayTypeEnum;
 import com.loukou.order.service.enums.BkOrderSourceEnum;
 import com.loukou.order.service.enums.BkOrderStatusEnum;
+import com.loukou.order.service.enums.OpearteTypeEnum;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
 import com.loukou.order.service.enums.OrderPayTypeEnum;
 import com.loukou.order.service.enums.OrderReturnGoodsType;
@@ -189,7 +190,7 @@ public class BkOrderServiceImpl implements BkOrderService{
     
     @Autowired
     private OrderRemarkDao orderRemarkDao;
-	
+    
 	//订单详情
 	@Override
 	public BkOrderListRespDto orderDetail(String orderSnMain) {
@@ -390,7 +391,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 							goodsListDto.setReturnMoney(Math.floor(og.getQuantity()*og.getPriceDiscount()*10)/10);
 						}else{
 							for(OrderGoodsR ogr : orderGoodsRList){
-								if(og.getSpecId()==ogr.getSpecId() && og.getProType()==ogr.getProType()){
+								if(og.getProductId()==ogr.getProductId() && og.getSiteskuId() == ogr.getSiteskuId() && og.getProType()==ogr.getProType()){
 									if(goodsListDto.getReturnQuantity()==null){
 										goodsListDto.setReturnQuantity(og.getQuantity()-ogr.getGoodsNum());
 										goodsListDto.setReturnMoney(Math.floor(og.getQuantity()*og.getPriceDiscount()*10)/10-ogr.getGoodsAmount());
@@ -490,9 +491,9 @@ public class BkOrderServiceImpl implements BkOrderService{
 	
 	//生成退款单
 	public BaseRes<String> generateReturn(String actor,int orderId,String postScript,String orderSnMain,int returnType,int payId,double shippingFee,
-			int[] checkedGoodsList,
-			int[] goodsIdList,
-			int[] specIdList,
+			int[] checkedProductList,
+			int[] productIdList,
+			int[] siteSkuIdList,
 			int[] proTypeList,
 			int[] recIdList,
 			int[] goodsReturnNumList,
@@ -509,7 +510,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			return result;
 		}
 		
-		if(goodsIdList.length<=0 || specIdList.length<=0){
+		if(productIdList.length<=0 || siteSkuIdList.length<=0){
 			result.setCode("400");
 			result.setMessage("未选择订单商品列表");
 			return result;
@@ -517,17 +518,17 @@ public class BkOrderServiceImpl implements BkOrderService{
 		
 		//处理退款单商品
 		List<ReturnOrderGoodsBo> returnOrderGoodsList=new ArrayList<ReturnOrderGoodsBo>();
-		for(int i=0;i<goodsIdList.length;i++){
+		for(int i=0;i<productIdList.length;i++){
 			int has=0;
-			for(int cg:checkedGoodsList){
-				if(goodsIdList[i]==cg){
+			for(int cg:checkedProductList){
+				if(productIdList[i]==cg){
 					has=1;
 				}
 			}
 			if(has==1){
 				ReturnOrderGoodsBo returnOrderGoods=new ReturnOrderGoodsBo();
-				returnOrderGoods.setGoodsId(goodsIdList[i]);
-				returnOrderGoods.setSpecId(specIdList[i]);
+				returnOrderGoods.setProductId(productIdList[i]);
+				returnOrderGoods.setSiteskuId(siteSkuIdList[i]);
 				returnOrderGoods.setProType(proTypeList[i]);
 				returnOrderGoods.setRecId(recIdList[i]);
 				returnOrderGoods.setGoodsNum(goodsReturnNumList[i]);
@@ -559,7 +560,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		List<GoodsListDto> goodsCouldReturn = dealReturnOrderGoods(orderId);
 		for(GoodsListDto gcr:goodsCouldReturn){
 			for(ReturnOrderGoodsBo rog:returnOrderGoodsList){
-				if(gcr.getSpecId()==rog.getSpecId() && gcr.getProType()==rog.getProType() && (gcr.getReturnQuantity()-rog.getGoodsNum()<0)){
+				if(gcr.getProductId() == rog.getProductId() && gcr.getSiteskuId() == rog.getSiteskuId() && gcr.getProType()==rog.getProType() && (gcr.getReturnQuantity()-rog.getGoodsNum()<0)){
 					result.setCode("400");
 					result.setMessage("所填商品个数超出购买商品个数");
 					return result;
@@ -626,11 +627,13 @@ public class BkOrderServiceImpl implements BkOrderService{
 		for(ReturnOrderGoodsBo rog:returnOrderGoodsList){
 			orderGoodsRData.setGoodsNum(rog.getGoodsNum());
 			orderGoodsRData.setGoodsAmount(rog.getGoodsAmount());
-			orderGoodsRData.setGoodsId(rog.getGoodsId());
-			orderGoodsRData.setSpecId(rog.getSpecId());
+//			orderGoodsRData.setGoodsId(rog.getGoodsId());
+//			orderGoodsRData.setSpecId(rog.getSpecId());
+			orderGoodsRData.setProductId(rog.getProductId());
+			orderGoodsRData.setSiteskuId(rog.getSiteskuId());
 			orderGoodsRData.setOrderId(orderId);
 			for(OrderGoods og:orderGoodsList){
-				if(rog.getSpecId()==og.getSpecId() && rog.getProType()==og.getProType()){
+				if(rog.getProductId() == og.getProductId() && rog.getSiteskuId() == og.getSiteskuId() && rog.getProType()==og.getProType()){
 					orderGoodsRData.setPrice(og.getPriceDiscount());
 					orderGoodsRData.setGoodsName(og.getGoodsName());
 				}
@@ -690,9 +693,10 @@ public class BkOrderServiceImpl implements BkOrderService{
 			if(!CollectionUtils.isEmpty(orderGoodsRList)){
 				for(OrderGoodsR orderGoodsR:orderGoodsRList){
 					ReturnOrderGoodsBo returnGoods=new ReturnOrderGoodsBo();
-					returnGoods.setSpecId(orderGoodsR.getSpecId());
 					returnGoods.setGoodsNum(orderGoodsR.getGoodsNum());
 					returnGoods.setProType(orderGoodsR.getProType());
+					returnGoods.setProductId(orderGoodsR.getProductId());
+					returnGoods.setSiteskuId(orderGoodsR.getSiteskuId());
 					returnGoodsList.add(returnGoods);
 				}
 			}
@@ -717,7 +721,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		
 		for(GoodsListDto og:result){
 			for(ReturnOrderGoodsBo rg:returnGoodsList){
-				if(og.getSpecId()!=rg.getSpecId() || og.getProType()!=rg.getProType()){
+				if(og.getProductId()!=rg.getProductId() || og.getSiteskuId()!=rg.getSiteskuId() || og.getProType()!=rg.getProType()){
 					continue;
 				}
 				if(og.getReturnQuantity()==null){
@@ -821,13 +825,17 @@ public class BkOrderServiceImpl implements BkOrderService{
 		for(Order o:orderList){
 			List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(o.getOrderId());
 			for(OrderGoods og:orderGoodsList){
-				// TODO FIX
 //				Goods goodsMsg=goodsDao.findByGoodsId(og.getGoodsId());
 //				int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),goodsMsg.getStoreId());
 //				if(stock<og.getQuantity()){
 //					errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
 //				}
-
+				
+				int stock = goodsSpecService.getStock(og.getProductId(), og.getSiteskuId(), og.getStoreId());
+				if(stock<og.getQuantity()){
+					errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
+				}
+				
 			}
 		}
 		
@@ -889,12 +897,15 @@ public class BkOrderServiceImpl implements BkOrderService{
 			return;
 		}
 		for(OrderGoods og:orderGoodsList){
-			if(orderMsg.getType() == "wei_wh" || orderMsg.getType() == "wei_self"){
-				weiCangGoodsStoreDao.updateAddBySpecIdAndStoreId(og.getSpecId(), og.getStoreId(), og.getQuantity());
-			}else{
-				// TODO FIX
-//				goodsSpecDao.updateAddBySpecId(og.getSpecId(), og.getQuantity());
-			}
+			goodsSpecService.freeStock(og.getProductId(), og.getSiteskuId(), og.getStoreId(), og.getQuantity());
+			
+//			if(orderMsg.getType() == "wei_wh" || orderMsg.getType() == "wei_self"){
+//////////		weiCangGoodsStoreDao.updateAddBySpecIdAndStoreId(og.getSpecId(), og.getStoreId(), og.getQuantity());
+//				
+//			}else{
+//				
+////				goodsSpecDao.updateAddBySpecId(og.getSpecId(), og.getQuantity());
+//			}
 		}
 		return;
 	}
@@ -912,20 +923,26 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		
 		for(OrderGoods og:orderGoodsList){
-			if(orderMsg.getType().equals("wei_wh") || orderMsg.getType().equals("wei_self")){
-				if(operateType==6){//发货
-					weiCangGoodsStoreDao.updateBySpecIdAndStoreId(og.getSpecId(), og.getStoreId(), og.getQuantity(), og.getQuantity());
-				}else{//取消
-					weiCangGoodsStoreDao.updateBySpecIdAndStoreId(og.getSpecId(), og.getStoreId(), og.getQuantity());
-				}
+			if(operateType == OpearteTypeEnum.OPEARTE_CHECK_DELIVER.getType()){
+				goodsSpecService.releaseFreezStockAndReduceStock(og.getProductId(), og.getSiteskuId(), og.getStoreId(), og.getQuantity());
 			}else{
-				// TODO FIX
-//				if(operateType==6){//发货
-//					goodsSpecDao.updateBySpecId(og.getSpecId(), og.getQuantity(), og.getQuantity());
-//				}else{//取消
-//					goodsSpecDao.updateBySpecId(og.getSpecId(), og.getQuantity());
-//				}
+				goodsSpecService.releaseFreezStock(og.getProductId(), og.getSiteskuId(), og.getStoreId(), og.getQuantity());
 			}
+			
+//			if(orderMsg.getType() == "wei_wh" || orderMsg.getType() == "wei_self"){
+//				if(operateType==6){//发货
+//					//weiCangGoodsStoreDao.updateBySpecIdAndStoreId(og.getSpecId(), og.getStoreId(), og.getQuantity(), og.getQuantity());
+//					
+//				}else{//取消
+//					//weiCangGoodsStoreDao.updateBySpecIdAndStoreId(og.getSpecId(), og.getStoreId(), og.getQuantity());
+//				}
+//			}else{
+////				if(operateType==6){//发货
+////					goodsSpecDao.updateBySpecId(og.getSpecId(), og.getQuantity(), og.getQuantity());
+////				}else{//取消
+////					goodsSpecDao.updateBySpecId(og.getSpecId(), og.getQuantity());
+////				}
+//			}
 		}
 		
 		return;
@@ -2170,12 +2187,17 @@ public class BkOrderServiceImpl implements BkOrderService{
 		String errorMessage="";
 		List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(orderId);
 		for(OrderGoods og:orderGoodsList){
-			// TODO FIX
+			
 //			Goods goodsMsg=goodsDao.findByGoodsId(og.getGoodsId());
 //			int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),goodsMsg.getStoreId());
 //			if(stock<og.getQuantity()){
 //				errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
 //			}
+			
+			int stock = goodsSpecService.getStock(og.getProductId(), og.getSiteskuId(), og.getStoreId());
+			if(stock < og.getQuantity()){
+				errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
+			}
 		}
 		
 		if(errorMessage!=""){

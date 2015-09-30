@@ -14,6 +14,8 @@ public class ReturnOrderGoodsBo {
 	private int goodsReasonId;//退货理由ID
 	private String goodsReason;//退货理由
 	private String goodsName;//退货商品名称
+	private int productId;
+	private int siteskuId;
 	
 	private List<ReturnOrderGoodsBo> purchaseDetailBo = new ArrayList<ReturnOrderGoodsBo>();
 
@@ -95,6 +97,22 @@ public class ReturnOrderGoodsBo {
 
 	public void setPurchaseDetailBo(List<ReturnOrderGoodsBo> purchaseDetailBo) {
 		this.purchaseDetailBo = purchaseDetailBo;
+	}
+
+	public int getProductId() {
+		return productId;
+	}
+
+	public void setProductId(int productId) {
+		this.productId = productId;
+	}
+
+	public int getSiteskuId() {
+		return siteskuId;
+	}
+
+	public void setSiteskuId(int siteskuId) {
+		this.siteskuId = siteskuId;
 	}
 	
 }
