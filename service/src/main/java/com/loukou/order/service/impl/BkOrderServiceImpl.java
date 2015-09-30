@@ -1320,7 +1320,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		List<Order> orderList = new ArrayList<Order>();
 		//先从收货人中查出所有相关的订单
 		String cityCode = "";
-		List<OrderExtm> orderExtmResultList = null;
+		List<OrderExtm> orderExtmResultList = new ArrayList<OrderExtm>();
 		final Set<String> orderSnMainSet = new HashSet<String>();
 		if(StringUtils.isNotBlank(cssOrderReqDto.getQueryContent()) && StringUtils.isNotBlank(cssOrderReqDto.getQueryType())){
 			if(cssOrderReqDto.getQueryType().equals("consignee")){
@@ -1329,12 +1329,27 @@ public class BkOrderServiceImpl implements BkOrderService{
 				orderExtmResultList = orderExtmDao.findByPhoneMob(cssOrderReqDto.getQueryContent());
 			}else if(cssOrderReqDto.getQueryType().equals("phoneTel")){
 				orderExtmResultList = orderExtmDao.findByPhoneTel(cssOrderReqDto.getQueryContent());
-			}
-			if(orderExtmResultList != null && orderExtmResultList.size() > 0){
-				for(OrderExtm tmp: orderExtmResultList){
-					orderSnMainSet.add(tmp.getOrderSnMain());
+			}else if(cssOrderReqDto.getQueryType().equals("address")){
+				Sort pageSort = new Sort(Sort.Direction.DESC,"id");
+				Pageable pageable = new PageRequest(0, 400, pageSort);
+				orderExtmResultList = orderExtmDao.findByAddressLike("%"+cssOrderReqDto.getQueryContent()+"%",pageable);
+			}else if(cssOrderReqDto.getQueryType().equals("goodsName")){
+				Sort pageSort = new Sort(Sort.Direction.DESC,"orderId");
+				Pageable pageable = new PageRequest(0, 400, pageSort);
+				List<OrderGoods> orderGoodsList = orderGoodsDao.findByGoodsNameLike("%"+cssOrderReqDto.getQueryContent()+"%", pageable);
+				List<Integer> orderIdList = new ArrayList<Integer>();
+				for(OrderGoods orderGoods: orderGoodsList){
+					orderIdList.add(orderGoods.getOrderId());
 				}
-			}else if(!cssOrderReqDto.getQueryType().equals("city")){
+				List<Order> orders = orderDao.findByOrderIdIn(orderIdList);
+				for(Order order:orders){
+					orderSnMainSet.add(order.getOrderSnMain());
+				}
+			}
+			for(OrderExtm tmp: orderExtmResultList){
+				orderSnMainSet.add(tmp.getOrderSnMain());
+			}
+			if(!cssOrderReqDto.getQueryType().equals("city") && !cssOrderReqDto.getQueryType().equals("useCouponNo") && orderSnMainSet.size()==0){
 				//如果根据收货人没查到则订单也没有
 				return resp;
 			}
@@ -1351,14 +1366,13 @@ public class BkOrderServiceImpl implements BkOrderService{
 			}
 		}
 		final String cityCodeFinal = cityCode;
-		//不好意思了，这么写也是醉了
 		String qlStr = "select DISTINCT(o.orderSnMain) from Order o where 1=1 ";
 		String whereStr = "";
 		if(cssOrderReqDto.getIsDel()!=null){
 			whereStr += " and o.isDel = " + cssOrderReqDto.getIsDel();
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
-			whereStr += " and o.orderSnMain = '"+cssOrderReqDto.getOrderSnMain()+"'";
+			whereStr += " and o.orderSnMain like '%"+cssOrderReqDto.getOrderSnMain()+"%'";
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getBuyerName())){
 			whereStr += " and o.buyerName = '"+cssOrderReqDto.getBuyerName()+"'";
@@ -1377,6 +1391,9 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		if(cssOrderReqDto.getPayStatus()!=null){
 			whereStr += " and o.payStatus = " + cssOrderReqDto.getPayStatus();
+		}
+		if(StringUtils.isNotBlank(cssOrderReqDto.getQueryContent()) && "useCouponNo".equals(cssOrderReqDto.getQueryType())){
+			whereStr += " and o.useCouponNo = '"+cssOrderReqDto.getQueryContent()+"' ";
 		}
 		if(StringUtils.isNotBlank(cityCodeFinal) && StringUtils.isNotBlank(cssOrderReqDto.getQueryContent())){
 			whereStr += " and o.sellSite = '"+cityCodeFinal+"'";
@@ -1494,7 +1511,11 @@ public class BkOrderServiceImpl implements BkOrderService{
 		baseDto.setInvoiceHeader(order.getInvoiceHeader());
 		baseDto.setBuyerName(order.getBuyerName());
 		baseDto.setPayType(order.getPayType());
-		baseDto.setPayName(BkOrderPayTypeEnum.parseType(order.getPayType()).getPayType());
+		if(StringUtils.isNotBlank(order.getPayName())){
+			baseDto.setPayName(order.getPayName());
+		}else{
+			baseDto.setPayName(BkOrderPayTypeEnum.parseType(order.getPayId()).getPayType());
+		}
 		baseDto.setOrderAmount(order.getOrderAmount());
 		baseDto.setGoodsAmount(order.getGoodsAmount());
 		baseDto.setOrderPaid(order.getOrderPayed());
