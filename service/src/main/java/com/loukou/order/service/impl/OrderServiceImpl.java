@@ -416,6 +416,9 @@ public class OrderServiceImpl implements OrderService {
 				    //TODO productgoods 
 					GoodsListDto goodsListDto = new GoodsListDto();
 					BeanUtils.copyProperties(og, goodsListDto);
+					goodsListDto.setGoodsId(og.getProductId());
+					goodsListDto.setSpecId(og.getSiteskuId());
+					
 					goodsListDtoList.add(goodsListDto);
 				}
 			}
@@ -657,6 +660,9 @@ public class OrderServiceImpl implements OrderService {
 					GoodsListDto goodsListDto = new GoodsListDto();
 					//TODO product goods 
 					BeanUtils.copyProperties(og, goodsListDto);
+					goodsListDto.setGoodsId(og.getProductId());
+					goodsListDto.setSpecId(og.getSiteskuId());
+					
 					//add
 					goodsListDto.setPriceDiscount(DoubleUtils.round(og.getPriceDiscount(), 2));
 					goodsListDto.setPricePurchase(DoubleUtils.round(og.getPricePurchase(), 2));
