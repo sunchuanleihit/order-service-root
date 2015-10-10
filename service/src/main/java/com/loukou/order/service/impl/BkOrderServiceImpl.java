@@ -59,7 +59,6 @@ import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.SiteCityDao;
 import com.loukou.order.service.dao.StoreDao;
-import com.loukou.order.service.dao.WeiCangGoodsStoreDao;
 import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.CoupType;
@@ -165,13 +164,6 @@ public class BkOrderServiceImpl implements BkOrderService{
     
     @Autowired
     private SiteCityDao siteCityDao;
-    
-    @Autowired
-    private WeiCangGoodsStoreDao weiCangGoodsStoreDao;
-    
-//    @Autowired
-//    private GoodsSpecDao goodsSpecDao;
-    
     
     @Autowired
     private EntityManagerFactory entityManagerFactory;
@@ -891,7 +883,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 	 * operateType 操作类型,1取消作废
 	 */
 	private void addFreezStock(int orderId){
-		Order orderMsg=orderDao.findByOrderId(orderId);
 		List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(orderId);
 		if(CollectionUtils.isEmpty(orderGoodsList)){
 			return;
@@ -916,7 +907,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 	 * operateType 操作类型,1取消,2作废,6核验/发货
 	 */
 	private void releaseFreezStock(int orderId,int operateType){
-		Order orderMsg=orderDao.findByOrderId(orderId);
 		List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(orderId);
 		if(CollectionUtils.isEmpty(orderGoodsList)){
 			return;
@@ -1500,7 +1490,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		if(order.getNeedShiptime()!=null){
 			needShipTime += DateUtils.date2DateStr(order.getNeedShiptime());
 		}
-		if(StringUtils.isNoneBlank(order.getNeedShiptimeSlot())){
+		if(StringUtils.isNotBlank(order.getNeedShiptimeSlot())){
 			needShipTime += " "+order.getNeedShiptimeSlot();
 		}
 		baseDto.setNeedShipTime(needShipTime);
@@ -1599,10 +1589,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 		return resp;
 	}
 	
-	private Integer getLastFourMonth(){
-		return DateUtils.getTime()-10368000;//返回120天前的时间戳
-	}
-
 	@Override
 	public BkOrderReturnListRespDto queryBkOrderToReturn(String sort, String order, int pageNum, int pageSize,
 			final CssOrderReqDto cssOrderReqDto) {

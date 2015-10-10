@@ -68,6 +68,16 @@ public class CoupServiceImpl implements CoupService{
 	public CoupRuleRespDto queryCoupRule(final CoupRuleReqDto req, Integer pageNum, Integer pageSize) {
 		Sort pageSort = new Sort(Sort.Direction.ASC,"id");
 		Pageable pageable = new PageRequest(pageNum, pageSize, pageSort);
+		Map<Integer, String> coupTypeMap = new HashMap<Integer, String>();
+		if(req.getRuleType() != null){
+			CoupType type = coupTypeDao.findOne(req.getRuleType());
+			coupTypeMap.put(type.getId(), type.getTitle());
+		}else{
+			List<CoupType> typeList = coupTypeDao.queryAll();
+			for(CoupType type: typeList){
+				coupTypeMap.put(type.getId(), type.getTitle());
+			}
+		}
 		Page<CoupRule> coupRulePage = coupRuleDao.findAll(new Specification<CoupRule>(){
 			@Override
 			public Predicate toPredicate(Root<CoupRule> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
@@ -111,6 +121,7 @@ public class CoupServiceImpl implements CoupService{
 		if(coupRuleList!=null && coupRuleList.size()>0){
 			for(CoupRule tmp: coupRuleList){
 				CoupRuleDto dto = createCoupRuleDto(tmp);
+				dto.setCategoryName(coupTypeMap.get(tmp.getTypeid()));
 				coupRuleDtoList.add(dto);
 			}
 		}
@@ -240,7 +251,6 @@ public class CoupServiceImpl implements CoupService{
 		coupRuleDao.updateRuleIsuse(ruleId, isuse);
 	}
 
-
 	//增加优惠券
 	@Override
 	public String addCouponNumber(Integer ruleId, Integer number) {
@@ -249,6 +259,16 @@ public class CoupServiceImpl implements CoupService{
 			return "公有券不能添加券码";
 		}
 		String pre = rule.getPrefix();
+		List<CoupList> couponList = coupListDao.findByCouponId(ruleId);
+		if(rule.getMaxnum() >0){
+			int oldNum = 0;
+			if(couponList != null){
+				oldNum = couponList.size();
+			}
+			if((oldNum+number) > rule.getMaxnum()){
+				return "本优惠券最多发放量为:"+rule.getMaxnum()+"，已发："+oldNum+",最多可发："+(rule.getMaxnum()-oldNum);
+			}
+		}
 		for(int i=0; i<number; i++){
 			String code = mkCode(pre);
 			CoupList coup = new CoupList();
