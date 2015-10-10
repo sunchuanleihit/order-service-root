@@ -21,7 +21,7 @@
 	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
 		init-method="init" destroy-method="close">
 		<property name="url"
-			value="${database.jdbc.url}" />
+			value="jdbc:mysql://10.11.1.28:3306/loukou_new?useUnicode=true&amp;characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull" />
 		<property name="username"
 			value="${database.jdbc.username}" />
 		<property name="password"
