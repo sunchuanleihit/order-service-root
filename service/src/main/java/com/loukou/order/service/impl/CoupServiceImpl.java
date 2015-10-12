@@ -607,10 +607,10 @@ public class CoupServiceImpl implements CoupService{
 			CoupRule rule = ruleMap.get(tmp.getCouponId());
 			if(rule!=null){
 				tmp.setCouponName(rule.getCouponName());
-			}
-			CoupType type = typeMap.get(rule.getTypeid());
-			if(type!=null){
-				tmp.setTitle(type.getTitle());
+				CoupType type = typeMap.get(rule.getTypeid());
+				if(type!=null){
+					tmp.setTitle(type.getTitle());
+				}
 			}
 		}
 		resultDto.setList(coupDtoList);
