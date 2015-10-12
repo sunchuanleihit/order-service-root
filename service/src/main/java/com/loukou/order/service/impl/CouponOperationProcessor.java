@@ -18,37 +18,32 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.loukou.order.service.constants.CouponFormType;
 import com.loukou.order.service.constants.CouponType;
-import com.loukou.order.service.constants.InviteConstans;
 import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupLogDao;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.CoupTypeDao;
-import com.loukou.order.service.dao.GCategoryNewDao;
 import com.loukou.order.service.dao.MemberDao;
 import com.loukou.order.service.dao.OrderDao;
 import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupLog;
 import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.CoupType;
-import com.loukou.order.service.entity.GCategoryNew;
 import com.loukou.order.service.entity.Member;
-import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.enums.ActivateCouponMessage;
 import com.loukou.order.service.enums.CoupListReqTypeEnum;
-import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.resp.dto.CouponListDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.CouponListResultDto;
 import com.loukou.order.service.resp.dto.ResponseDto;
 import com.loukou.order.service.util.DateUtils;
-import com.loukou.search.service.api.GoodsSearchService;
 import com.loukou.search.service.api.ProductSearchService;
-import com.loukou.search.service.dto.GoodsCateDto;
 import com.loukou.search.service.dto.product.CategoryDto;
 import com.serverstarted.cart.service.api.CartService;
 import com.serverstarted.cart.service.resp.dto.CartGoodsRespDto;
 import com.serverstarted.cart.service.resp.dto.CartRespDto;
 import com.serverstarted.cart.service.resp.dto.PackageRespDto;
+import com.serverstarted.product.service.api.CategoryService;
+import com.serverstarted.product.service.resp.dto.CategoryRespDto;
 
 @Service
 public class CouponOperationProcessor {
@@ -81,7 +76,7 @@ public class CouponOperationProcessor {
 	private ProductSearchService productSearchService;
 	
 	@Autowired
-	private GCategoryNewDao gCategoryNewDao;
+	private CategoryService categoryService;
 	
 	@Autowired
 	private InviteOperationProcessor inviteOperationProcessor;
@@ -281,15 +276,15 @@ public class CouponOperationProcessor {
 		String resultStr = "";
 		StringBuilder returnResultStr = new StringBuilder();
 		if (coupRule.getCouponType() == CouponType.CATE) {
-			List<GCategoryNew> gCateNews = null;
+			List<CategoryRespDto> categories = null;
 			List<Integer> cateIds = getOutId(coupRule);
 			if (CollectionUtils.isNotEmpty(cateIds)) {
-				gCateNews = gCategoryNewDao.findByCateIdIn(cateIds);
+				categories = categoryService.getCategoryByIds(cateIds).getResult();
 			}
-			if (CollectionUtils.isNotEmpty(gCateNews)) {
+			if (CollectionUtils.isNotEmpty(categories)) {
 				result.append("限");
-				for (GCategoryNew g : gCateNews) {
-					result.append(g.getCateName()).append("、");
+				for (CategoryRespDto c: categories) {
+					result.append(c.getName()).append("、");
 				}
 				resultStr = result.toString();
 				returnResultStr.append(StringUtils.removeEnd(resultStr, "、"));
