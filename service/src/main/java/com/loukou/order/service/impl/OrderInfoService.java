@@ -123,6 +123,7 @@ public class OrderInfoService {
         orderInfoDto.setShippingFee(order.getShippingFee());
         orderInfoDto.setSpecList(specList);
         orderInfoDto.setDeliveryInfo(deliveryInfo);
+        orderInfoDto.setStoreId(order.getSellerId());
 
         if (!Strings.isNullOrEmpty(order.getShippingNo())) {
             orderInfoDto.setShippingNo(order.getShippingNo());
