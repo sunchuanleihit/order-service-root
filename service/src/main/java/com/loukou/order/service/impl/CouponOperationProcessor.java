@@ -18,7 +18,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.loukou.order.service.constants.CouponFormType;
 import com.loukou.order.service.constants.CouponType;
-import com.loukou.order.service.constants.InviteConstans;
 import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupLogDao;
 import com.loukou.order.service.dao.CoupRuleDao;
@@ -32,15 +31,14 @@ import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.CoupType;
 import com.loukou.order.service.entity.GCategoryNew;
 import com.loukou.order.service.entity.Member;
-import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.enums.ActivateCouponMessage;
 import com.loukou.order.service.enums.CoupListReqTypeEnum;
-import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.resp.dto.CouponListDto;
 import com.loukou.order.service.resp.dto.CouponListRespDto;
 import com.loukou.order.service.resp.dto.CouponListResultDto;
 import com.loukou.order.service.resp.dto.ResponseDto;
 import com.loukou.order.service.util.DateUtils;
+import com.loukou.order.service.util.DoubleUtils;
 import com.loukou.search.service.api.GoodsSearchService;
 import com.loukou.search.service.dto.GoodsCateDto;
 import com.serverstarted.cart.service.api.CartService;
@@ -304,8 +302,18 @@ public class CouponOperationProcessor {
 		if (coupList == null || coupRule == null || cart == null) {
 			return false;
 		}
-				
-		if (cart.getTotalPrice() < coupList.getMinprice()) {
+		
+		double goodsPrice = cart.getTotalPrice();
+		// 商品金额需要扣除代买服务的类目，代买服务二级类目cate_id = 75559，75563
+		for (PackageRespDto p: cart.getPackageList()) {
+			for (CartGoodsRespDto g: p.getGoodsList()) {
+				if (g.getNewCateIdTwo() == 75559 || g.getNewCateIdTwo() == 75563) {
+					goodsPrice = DoubleUtils.sub(goodsPrice, DoubleUtils.mul(g.getPrice(), g.getAmount()));
+				}
+			}
+		}
+
+		if (goodsPrice < coupList.getMinprice()) {
 			// 商品金额不足优惠券最小金额
 			return false;
 		}
