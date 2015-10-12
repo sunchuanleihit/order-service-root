@@ -24,6 +24,7 @@ public class CouponListDto implements Serializable{
 	private String ischecked ;
 	private String couponRange = "";//品类券的使用范围说明
 	private int isUsable = 0;//是否可用（0: 不限——过期和不过期的优惠券；1：可用优惠券）
+	private String title;//优惠券所属分类
 	
 	public String getIschecked() {
 		return ischecked;
@@ -160,6 +161,14 @@ public class CouponListDto implements Serializable{
 
 	public void setStarttime(String starttime) {
 		this.starttime = starttime;
+	}
+
+	public String getTitle() {
+		return title;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
 	}
 
 }

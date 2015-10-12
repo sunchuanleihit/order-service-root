@@ -2307,6 +2307,9 @@ public class BkOrderServiceImpl implements BkOrderService{
 			result.setCode("200");
 			result.setMessage("支付成功");
 			return result;
+		}else{
+			result.setCode("400");
+			result.setMessage("未选支付方式");
 		}
 		
 		result.setCode("200");

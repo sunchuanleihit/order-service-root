@@ -583,8 +583,21 @@ public class CoupServiceImpl implements CoupService{
 		for(Member member: memberList){
 			memberMap.put(member.getUserId(), member);
 		}
+		List<Integer> coupTypeIds = new ArrayList<Integer>();
+		
 		for(CoupRule rule: ruleList){
 			ruleMap.put(rule.getId(), rule);
+			if(!coupTypeIds.contains(rule.getTypeid())){
+				coupTypeIds.add(rule.getTypeid());
+			}
+		}
+		List<CoupType> typeList = new ArrayList<CoupType>();
+		if(coupTypeIds.size()>0){
+			typeList = coupTypeDao.findByIdIn(coupTypeIds);
+		}
+		Map<Integer, CoupType> typeMap = new HashMap<Integer, CoupType>();
+		for(CoupType type: typeList){
+			typeMap.put(type.getId(), type);
 		}
 		for(CouponListDto tmp: coupDtoList){
 			Member member = memberMap.get(tmp.getUserId());
@@ -594,6 +607,10 @@ public class CoupServiceImpl implements CoupService{
 			CoupRule rule = ruleMap.get(tmp.getCouponId());
 			if(rule!=null){
 				tmp.setCouponName(rule.getCouponName());
+			}
+			CoupType type = typeMap.get(rule.getTypeid());
+			if(type!=null){
+				tmp.setTitle(type.getTitle());
 			}
 		}
 		resultDto.setList(coupDtoList);
@@ -645,5 +662,26 @@ public class CoupServiceImpl implements CoupService{
 		}
 		coupListDao.deleteCoup(id);
 		return "success";
+	}
+
+
+	@Override
+	public boolean isCallCenterCoup(Integer id) {
+		CoupList coup = coupListDao.findOne(id);
+		if(coup == null){
+			return false;
+		}
+		CoupRule rule = coupRuleDao.findOne(coup.getCouponId());
+		if(rule == null){
+			return false;
+		}
+		CoupType type = coupTypeDao.findOne(rule.getTypeid());
+		if(type == null){
+			return false;
+		}
+		if("客服专用".equals(type.getTitle())){
+			return true;
+		}
+		return false;
 	}
 }
