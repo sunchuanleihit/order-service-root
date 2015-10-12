@@ -416,6 +416,9 @@ public class OrderServiceImpl implements OrderService {
 				    //TODO productgoods 
 					GoodsListDto goodsListDto = new GoodsListDto();
 					BeanUtils.copyProperties(og, goodsListDto);
+					goodsListDto.setGoodsId(og.getProductId());
+					goodsListDto.setSpecId(og.getSiteskuId());
+					
 					goodsListDtoList.add(goodsListDto);
 				}
 			}
@@ -657,6 +660,9 @@ public class OrderServiceImpl implements OrderService {
 					GoodsListDto goodsListDto = new GoodsListDto();
 					//TODO product goods 
 					BeanUtils.copyProperties(og, goodsListDto);
+					goodsListDto.setGoodsId(og.getProductId());
+					goodsListDto.setSpecId(og.getSiteskuId());
+					
 					//add
 					goodsListDto.setPriceDiscount(DoubleUtils.round(og.getPriceDiscount(), 2));
 					goodsListDto.setPricePurchase(DoubleUtils.round(og.getPricePurchase(), 2));
@@ -1718,7 +1724,8 @@ public class OrderServiceImpl implements OrderService {
 		if (order.getSellerId() > 0 && !CollectionUtils.isEmpty(orderGoodsList)) {
 			for (OrderGoods orderGoods : orderGoodsList) {
 				if (StringUtils.equals(orderType, OrderTypeEnums.TYPE_WEI_WH.getType())
-						|| StringUtils.equals(orderType, OrderTypeEnums.TYPE_WEI_SELF.getType())) {
+						|| StringUtils.equals(orderType, OrderTypeEnums.TYPE_WEI_SELF.getType())
+						|| StringUtils.equals(orderType, OrderTypeEnums.TYPE_SELF_SALES.getType())) {
 					// 微仓订单
 					// LkWhGoodsStore whStore = lkWhGoodsStoreDao.
 					// findBySpecIdAndStoreId(orderGoods.getSpecId(),
@@ -1738,9 +1745,8 @@ public class OrderServiceImpl implements OrderService {
 								orderGoods.getQuantity(), new Date());
 					}
 				} else {
-					// TODO FIX
-					// GoodsSpec goodsSpec =
-					// goodsSpecDao.findBySpecId(orderGoods.getSpecId());
+					// TODO FIX 预售商品处理总仓库存
+//					int mainStoreId = storeService.getMainStoreId(order.getSellerId());
 //					if (operateType == OpearteTypeEnum.OPEARTE_CHECK_DELIVER.getType()) {// 发货
 //					    //TODO ? product goods how to
 //						goodsSpecDao.updateBySpecId(orderGoods.getSpecId(),
