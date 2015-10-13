@@ -2,6 +2,7 @@ package com.loukou.order.service.dao;
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -29,4 +30,6 @@ public interface OrderExtmDao extends CrudRepository<OrderExtm, Integer>,JpaSpec
 	@Modifying
 	@Query("UPDATE OrderExtm set phoneMob = ?2 where orderSnMain = ?1")
 	int updateExtmByOrderSnMain(String orderSnMain,String phoneMob);
+
+	List<OrderExtm> findByAddressLike(String queryContent,  Pageable pageable);
 }

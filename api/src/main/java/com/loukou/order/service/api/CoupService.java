@@ -101,4 +101,11 @@ public interface CoupService {
 	 * @return
 	 */
 	String deleteCoup(Integer id);
+	
+	/**
+	 * 判断是否是客服专用券
+	 * @param id
+	 * @return
+	 */
+	boolean isCallCenterCoup(Integer id);
 }
