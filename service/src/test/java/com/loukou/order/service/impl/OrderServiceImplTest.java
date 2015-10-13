@@ -62,7 +62,7 @@ public class OrderServiceImplTest extends AbstractTestObject {
 		int storeId = 18055;
 		String openId = "test-openId";
 		CouponListRespDto resp = orderService.getCouponList(cityId, userId,
-				storeId, openId, 0);
+				storeId, openId, 1);
 		System.out.println(object2String(resp));
 	}
 
