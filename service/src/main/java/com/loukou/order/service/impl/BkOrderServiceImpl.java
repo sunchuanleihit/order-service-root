@@ -1984,9 +1984,19 @@ public class BkOrderServiceImpl implements BkOrderService{
 	}
 	
 	
-	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot,String invoiceHeader,String phoneMob){
+	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot,String invoiceHeader,String phoneMob, String actor){
 		BaseRes<String> result=new BaseRes<String>();
 		Date needShiptimeDate=DateUtils.str2Date(needShiptime);
+		List<Order> orderList = orderDao.findByOrderSnMain(orderSnMain);
+		List<OrderExtm> extmList = orderExtmDao.findByOrderSnMain(orderSnMain);
+		Order order = null;
+		OrderExtm orderExtm = null;
+		if(orderList != null && orderList.size() >0){
+			order = orderList.get(0);
+		}
+		if(extmList !=null && extmList.size()>0){
+			orderExtm = extmList.get(0);
+		}
 		int orderResult=orderDao.updateNeedShipTimeByOrderSnMain(orderSnMain, needShiptimeDate, needShiptimeSlot,invoiceHeader);
 		if(orderResult<1){
 			result.setCode("400");
@@ -1994,7 +2004,51 @@ public class BkOrderServiceImpl implements BkOrderService{
 			return result;
 		}
 		orderExtmDao.updateExtmByOrderSnMain(orderSnMain,phoneMob);
-		
+		String oldNeedShiptime = "";
+		String oldInvoiceHeader = "";
+		String oldPhoneMob = "";
+		if(order != null){
+			if(order.getNeedShiptime() != null){
+				oldNeedShiptime = DateUtils.date2DateStr(order.getNeedShiptime()) +" "+ order.getNeedShiptimeSlot();
+			}
+			if(StringUtils.isNotBlank(order.getInvoiceHeader())){
+				oldInvoiceHeader = order.getInvoiceHeader();
+			}
+		}
+		if(orderExtm != null && StringUtils.isNotBlank(orderExtm.getPhoneMob())){
+			oldPhoneMob = orderExtm.getPhoneMob();
+		}
+		String notes = "";
+		if(StringUtils.isBlank(needShiptime)){
+			needShiptime = "";
+		}
+		if(StringUtils.isBlank(needShiptimeSlot)){
+			needShiptimeSlot = "";
+		}
+		if(!oldNeedShiptime.equals(needShiptime+" "+needShiptimeSlot)){
+			notes += "修改期望送达时间：" + oldNeedShiptime + " 至 " + needShiptime + " " + needShiptimeSlot + "。";
+		}
+		if(StringUtils.isBlank(invoiceHeader)){
+			invoiceHeader = "";
+		}
+		if(!oldInvoiceHeader.equals(invoiceHeader)){
+			notes += "修改发票抬头：" + oldInvoiceHeader + " 至 " + invoiceHeader + "。";
+		}
+		if(StringUtils.isBlank(phoneMob)){
+			phoneMob = "";
+		}
+		if(!oldPhoneMob.equals(phoneMob)){
+			notes += "修改手机号：" + oldPhoneMob + " 至 " + phoneMob + "。";
+		}
+		OrderAction oa = new OrderAction();
+		oa.setAction(33);
+		oa.setActionTime(new Date());
+		oa.setOrderSnMain(orderSnMain);
+		oa.setOrderId(order.getOrderId());
+		oa.setTaoOrderSn(order.getTaoOrderSn());
+		oa.setActor(actor);
+		oa.setNotes(notes);
+		orderActionDao.save(oa);
 		result.setCode("200");
 		result.setMessage("保存成功");
 		return result;
