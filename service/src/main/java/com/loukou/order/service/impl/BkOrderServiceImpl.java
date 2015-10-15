@@ -1026,10 +1026,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			result.setMessage("请选择退款方式");
 			return result;
 		}
-		
-		for(double r:returnAmountList){
-			returnAmount+=r;
-		}
+
 		if(returnAmount>hasPaid){
 			result.setCode("400");
 			result.setMessage("退款金额大于需退金额");
