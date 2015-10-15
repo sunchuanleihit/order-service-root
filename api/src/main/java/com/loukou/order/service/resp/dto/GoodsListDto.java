@@ -21,6 +21,8 @@ public class GoodsListDto implements Serializable {
 	private String taosku = "";
 	private double returnMoney = 0.0;
 	private int recId;
+	private int productId;
+	private int siteskuId;
 
 	public String getGoodsImage() {
 		return goodsImage;
@@ -140,4 +142,21 @@ public class GoodsListDto implements Serializable {
 	public void setRecId(int recId) {
 		this.recId = recId;
 	}
+
+	public int getProductId() {
+		return productId;
+	}
+
+	public void setProductId(int productId) {
+		this.productId = productId;
+	}
+
+	public int getSiteskuId() {
+		return siteskuId;
+	}
+
+	public void setSiteskuId(int siteskuId) {
+		this.siteskuId = siteskuId;
+	}
+	
 }

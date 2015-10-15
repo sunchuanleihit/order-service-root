@@ -15,7 +15,9 @@
 	<context:annotation-config />
 	<context:component-scan base-package="com.loukou.order" />
 	
-<bean id="goodsSearchService" class="com.loukou.search.service.impl.GoodsSearchServiceImpl" />
+	<!-- 搜索 -->
+	<bean id="productSearchService" class="com.loukou.search.service.impl.ProductSearchServiceImpl" />
+
 	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
 		init-method="init" destroy-method="close">
 		<property name="url"

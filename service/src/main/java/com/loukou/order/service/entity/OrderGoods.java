@@ -26,6 +26,7 @@ public class OrderGoods {
 	/*
 	 * 产品号，goods表goods_id字段
 	 */
+	@Deprecated
 	@Column(name = "goods_id")
 	private int goodsId = 0;
 	
@@ -38,6 +39,7 @@ public class OrderGoods {
 	/*
 	 * 商品号，goods_spec表spec_id字段
 	 */
+	@Deprecated
 	@Column(name = "spec_id")
 	private int specId = 0;
 	
@@ -176,6 +178,34 @@ public class OrderGoods {
 	 */
 	@Column(name = "del_flag")
 	private int delFlag = 0;
+	
+	@Column(name = "product_id")
+	private int productId = 0;
+
+	@Column(name = "sitesku_id")
+	private int siteskuId = 0;
+
+
+	public int getProductId() {
+	return productId;
+
+	}
+
+	public void setProductId(int productId) {
+	this.productId = productId;
+
+	}
+
+	public int getSiteskuId() {
+	return siteskuId;
+
+	}
+
+	public void setSiteskuId(int siteskuId) {
+	this.siteskuId = siteskuId;
+
+	}
+
 
 	public int getRecId() {
 		return recId;
@@ -192,11 +222,11 @@ public class OrderGoods {
 	public void setOrderId(int orderId) {
 		this.orderId = orderId;
 	}
-
+	@Deprecated
 	public int getGoodsId() {
 		return goodsId;
 	}
-
+	@Deprecated
 	public void setGoodsId(int goodsId) {
 		this.goodsId = goodsId;
 	}
@@ -208,11 +238,11 @@ public class OrderGoods {
 	public void setGoodsName(String goodsName) {
 		this.goodsName = goodsName;
 	}
-
+	@Deprecated
 	public int getSpecId() {
 		return specId;
 	}
-
+	@Deprecated
 	public void setSpecId(int specId) {
 		this.specId = specId;
 	}

@@ -98,6 +98,8 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 
 	Page<Order> findBySellerIdAndStatusAndTypeIn(int sellerId,int status,List<String> types,Pageable page);
 	
+	Page<Order> findBySellerIdAndStatusIn(int sellerId,List<Integer> status,Pageable page);
+	
 	Page<Order> findBySellerIdAndStatusAndFinishedTimeBetweenAndTypeIn(int sellerId,int status,int startTime,int endTime,List<String> types,Pageable page);
 	
 	Page<Order> findBysellerIdAndStatusAndPayStatusInAndTypeIn(int storeId, int orderStatus, List<Integer> payed,
@@ -141,8 +143,14 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 	@Modifying
 	@Query("UPDATE Order set payId = ?1, payStatus = 1, payTime = addTime, orderPayed = goodsAmount+shippingFee where orderSnMain = ?2")
 	int updateOrderPayId(int payId,String orderSnMain);
+	
+	@Query("SELECT COUNT(*) from Order o where o.sellerId = ?1 and o.status= ?2 and o.type in ?3")
+	int findCount(int storeId,int status,List<String> type);
 
 	@Query("SELECT orderId FROM Order WHERE buyerId=?1 AND addTime>?2 AND status IN (0, 3, 5, 6, 8, 13, 14, 15)")
 	List<Integer> getValidOrderId(int userId, int addTime);
+
+	List<Order> findByOrderIdIn(List<Integer> orderIdList);
+
 }
 
