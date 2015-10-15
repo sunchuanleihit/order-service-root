@@ -105,9 +105,9 @@ public interface BkOrderService {
 	BkOrderListRespDto orderReturnMsg(String orderSnMain);
 	
 	public BaseRes<String> generateReturn(String actor,int orderId,String postScript,String orderSnMain,int returnType,int payId,double shippingFee,
-	int[] checkedGoodsList,
-	int[] goodsIdList,
-	int[] specIdList,
+	int[] checkedProductList,
+	int[] productIdList,
+	int[] siteskuList,
 	int[] proTypeList,
 	int[] recIdList,
 	int[] goodsReturnNumList,
@@ -127,7 +127,7 @@ public interface BkOrderService {
 	
 	public BaseRes<String> generateSpecialPaymentRefund(int reason,String actor,String orderSnMain,String postScript,int[] paymentIdList,double[] returnAmountList);
 		
-	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot,String invoiceHeader,String phoneMob);
+	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot,String invoiceHeader,String phoneMob, String actor);
 	
 	/**
 	 * 查询订单交接

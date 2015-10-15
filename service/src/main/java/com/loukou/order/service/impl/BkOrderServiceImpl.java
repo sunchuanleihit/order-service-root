@@ -46,8 +46,6 @@ import com.loukou.order.service.dao.CoupListDao;
 import com.loukou.order.service.dao.CoupRuleDao;
 import com.loukou.order.service.dao.CoupTypeDao;
 import com.loukou.order.service.dao.ExpressDao;
-import com.loukou.order.service.dao.GoodsDao;
-import com.loukou.order.service.dao.GoodsSpecDao;
 import com.loukou.order.service.dao.MemberDao;
 import com.loukou.order.service.dao.OrderActionDao;
 import com.loukou.order.service.dao.OrderDao;
@@ -61,12 +59,10 @@ import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.SiteCityDao;
 import com.loukou.order.service.dao.StoreDao;
-import com.loukou.order.service.dao.WeiCangGoodsStoreDao;
 import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupRule;
 import com.loukou.order.service.entity.CoupType;
 import com.loukou.order.service.entity.Express;
-import com.loukou.order.service.entity.Goods;
 import com.loukou.order.service.entity.Member;
 import com.loukou.order.service.entity.Order;
 import com.loukou.order.service.entity.OrderAction;
@@ -83,6 +79,7 @@ import com.loukou.order.service.entity.Store;
 import com.loukou.order.service.enums.BkOrderPayTypeEnum;
 import com.loukou.order.service.enums.BkOrderSourceEnum;
 import com.loukou.order.service.enums.BkOrderStatusEnum;
+import com.loukou.order.service.enums.OpearteTypeEnum;
 import com.loukou.order.service.enums.OrderActionTypeEnum;
 import com.loukou.order.service.enums.OrderPayTypeEnum;
 import com.loukou.order.service.enums.OrderReturnGoodsType;
@@ -169,15 +166,6 @@ public class BkOrderServiceImpl implements BkOrderService{
     private SiteCityDao siteCityDao;
     
     @Autowired
-    private WeiCangGoodsStoreDao weiCangGoodsStoreDao;
-    
-    @Autowired
-    private GoodsSpecDao goodsSpecDao;
-    
-    @Autowired
-    private GoodsDao goodsDao;
-    
-    @Autowired
     private EntityManagerFactory entityManagerFactory;
     
     @Autowired
@@ -194,7 +182,7 @@ public class BkOrderServiceImpl implements BkOrderService{
     
     @Autowired
     private OrderRemarkDao orderRemarkDao;
-	
+    
 	//订单详情
 	@Override
 	public BkOrderListRespDto orderDetail(String orderSnMain) {
@@ -395,7 +383,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 							goodsListDto.setReturnMoney(Math.floor(og.getQuantity()*og.getPriceDiscount()*10)/10);
 						}else{
 							for(OrderGoodsR ogr : orderGoodsRList){
-								if(og.getSpecId()==ogr.getSpecId() && og.getProType()==ogr.getProType()){
+								if(og.getProductId()==ogr.getProductId() && og.getSiteskuId() == ogr.getSiteskuId() && og.getProType()==ogr.getProType()){
 									if(goodsListDto.getReturnQuantity()==null){
 										goodsListDto.setReturnQuantity(og.getQuantity()-ogr.getGoodsNum());
 										goodsListDto.setReturnMoney(Math.floor(og.getQuantity()*og.getPriceDiscount()*10)/10-ogr.getGoodsAmount());
@@ -495,9 +483,9 @@ public class BkOrderServiceImpl implements BkOrderService{
 	
 	//生成退款单
 	public BaseRes<String> generateReturn(String actor,int orderId,String postScript,String orderSnMain,int returnType,int payId,double shippingFee,
-			int[] checkedGoodsList,
-			int[] goodsIdList,
-			int[] specIdList,
+			int[] checkedProductList,
+			int[] productIdList,
+			int[] siteSkuIdList,
 			int[] proTypeList,
 			int[] recIdList,
 			int[] goodsReturnNumList,
@@ -514,7 +502,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			return result;
 		}
 		
-		if(goodsIdList.length<=0 || specIdList.length<=0){
+		if(productIdList.length<=0 || siteSkuIdList.length<=0){
 			result.setCode("400");
 			result.setMessage("未选择订单商品列表");
 			return result;
@@ -522,17 +510,17 @@ public class BkOrderServiceImpl implements BkOrderService{
 		
 		//处理退款单商品
 		List<ReturnOrderGoodsBo> returnOrderGoodsList=new ArrayList<ReturnOrderGoodsBo>();
-		for(int i=0;i<goodsIdList.length;i++){
+		for(int i=0;i<productIdList.length;i++){
 			int has=0;
-			for(int cg:checkedGoodsList){
-				if(goodsIdList[i]==cg){
+			for(int cg:checkedProductList){
+				if(productIdList[i]==cg){
 					has=1;
 				}
 			}
 			if(has==1){
 				ReturnOrderGoodsBo returnOrderGoods=new ReturnOrderGoodsBo();
-				returnOrderGoods.setGoodsId(goodsIdList[i]);
-				returnOrderGoods.setSpecId(specIdList[i]);
+				returnOrderGoods.setProductId(productIdList[i]);
+				returnOrderGoods.setSiteskuId(siteSkuIdList[i]);
 				returnOrderGoods.setProType(proTypeList[i]);
 				returnOrderGoods.setRecId(recIdList[i]);
 				returnOrderGoods.setGoodsNum(goodsReturnNumList[i]);
@@ -564,7 +552,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		List<GoodsListDto> goodsCouldReturn = dealReturnOrderGoods(orderId);
 		for(GoodsListDto gcr:goodsCouldReturn){
 			for(ReturnOrderGoodsBo rog:returnOrderGoodsList){
-				if(gcr.getSpecId()==rog.getSpecId() && gcr.getProType()==rog.getProType() && (gcr.getReturnQuantity()-rog.getGoodsNum()<0)){
+				if(gcr.getProductId() == rog.getProductId() && gcr.getSiteskuId() == rog.getSiteskuId() && gcr.getProType()==rog.getProType() && (gcr.getReturnQuantity()-rog.getGoodsNum()<0)){
 					result.setCode("400");
 					result.setMessage("所填商品个数超出购买商品个数");
 					return result;
@@ -631,11 +619,13 @@ public class BkOrderServiceImpl implements BkOrderService{
 		for(ReturnOrderGoodsBo rog:returnOrderGoodsList){
 			orderGoodsRData.setGoodsNum(rog.getGoodsNum());
 			orderGoodsRData.setGoodsAmount(rog.getGoodsAmount());
-			orderGoodsRData.setGoodsId(rog.getGoodsId());
-			orderGoodsRData.setSpecId(rog.getSpecId());
+//			orderGoodsRData.setGoodsId(rog.getGoodsId());
+//			orderGoodsRData.setSpecId(rog.getSpecId());
+			orderGoodsRData.setProductId(rog.getProductId());
+			orderGoodsRData.setSiteskuId(rog.getSiteskuId());
 			orderGoodsRData.setOrderId(orderId);
 			for(OrderGoods og:orderGoodsList){
-				if(rog.getSpecId()==og.getSpecId() && rog.getProType()==og.getProType()){
+				if(rog.getProductId() == og.getProductId() && rog.getSiteskuId() == og.getSiteskuId() && rog.getProType()==og.getProType()){
 					orderGoodsRData.setPrice(og.getPriceDiscount());
 					orderGoodsRData.setGoodsName(og.getGoodsName());
 				}
@@ -695,9 +685,10 @@ public class BkOrderServiceImpl implements BkOrderService{
 			if(!CollectionUtils.isEmpty(orderGoodsRList)){
 				for(OrderGoodsR orderGoodsR:orderGoodsRList){
 					ReturnOrderGoodsBo returnGoods=new ReturnOrderGoodsBo();
-					returnGoods.setSpecId(orderGoodsR.getSpecId());
 					returnGoods.setGoodsNum(orderGoodsR.getGoodsNum());
 					returnGoods.setProType(orderGoodsR.getProType());
+					returnGoods.setProductId(orderGoodsR.getProductId());
+					returnGoods.setSiteskuId(orderGoodsR.getSiteskuId());
 					returnGoodsList.add(returnGoods);
 				}
 			}
@@ -722,7 +713,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		
 		for(GoodsListDto og:result){
 			for(ReturnOrderGoodsBo rg:returnGoodsList){
-				if(og.getSpecId()!=rg.getSpecId() || og.getProType()!=rg.getProType()){
+				if(og.getProductId()!=rg.getProductId() || og.getSiteskuId()!=rg.getSiteskuId() || og.getProType()!=rg.getProType()){
 					continue;
 				}
 				if(og.getReturnQuantity()==null){
@@ -826,10 +817,17 @@ public class BkOrderServiceImpl implements BkOrderService{
 		for(Order o:orderList){
 			List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(o.getOrderId());
 			for(OrderGoods og:orderGoodsList){
-				int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),o.getSellerId());
+//				Goods goodsMsg=goodsDao.findByGoodsId(og.getGoodsId());
+//				int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),goodsMsg.getStoreId());
+//				if(stock<og.getQuantity()){
+//					errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
+//				}
+				
+				int stock = goodsSpecService.getStock(og.getProductId(), og.getSiteskuId(), og.getStoreId());
 				if(stock<og.getQuantity()){
 					errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
 				}
+				
 			}
 		}
 		
@@ -885,17 +883,20 @@ public class BkOrderServiceImpl implements BkOrderService{
 	 * operateType 操作类型,1取消作废
 	 */
 	private void addFreezStock(int orderId){
-		Order orderMsg=orderDao.findByOrderId(orderId);
 		List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(orderId);
 		if(CollectionUtils.isEmpty(orderGoodsList)){
 			return;
 		}
 		for(OrderGoods og:orderGoodsList){
-			if(orderMsg.getType() == "wei_wh" || orderMsg.getType() == "wei_self"){
-				weiCangGoodsStoreDao.updateAddBySpecIdAndStoreId(og.getSpecId(), og.getStoreId(), og.getQuantity());
-			}else{
-				goodsSpecDao.updateAddBySpecId(og.getSpecId(), og.getQuantity());
-			}
+			goodsSpecService.freeStock(og.getProductId(), og.getSiteskuId(), og.getStoreId(), og.getQuantity());
+			
+//			if(orderMsg.getType() == "wei_wh" || orderMsg.getType() == "wei_self"){
+//////////		weiCangGoodsStoreDao.updateAddBySpecIdAndStoreId(og.getSpecId(), og.getStoreId(), og.getQuantity());
+//				
+//			}else{
+//				
+////				goodsSpecDao.updateAddBySpecId(og.getSpecId(), og.getQuantity());
+//			}
 		}
 		return;
 	}
@@ -906,26 +907,32 @@ public class BkOrderServiceImpl implements BkOrderService{
 	 * operateType 操作类型,1取消,2作废,6核验/发货
 	 */
 	private void releaseFreezStock(int orderId,int operateType){
-		Order orderMsg=orderDao.findByOrderId(orderId);
 		List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(orderId);
 		if(CollectionUtils.isEmpty(orderGoodsList)){
 			return;
 		}
 		
 		for(OrderGoods og:orderGoodsList){
-			if(orderMsg.getType().equals("wei_wh") || orderMsg.getType().equals("wei_self")){
-				if(operateType==6){//发货
-					weiCangGoodsStoreDao.updateBySpecIdAndStoreId(og.getSpecId(), og.getStoreId(), og.getQuantity(), og.getQuantity());
-				}else{//取消
-					weiCangGoodsStoreDao.updateBySpecIdAndStoreId(og.getSpecId(), og.getStoreId(), og.getQuantity());
-				}
+			if(operateType == OpearteTypeEnum.OPEARTE_CHECK_DELIVER.getType()){
+				goodsSpecService.releaseFreezStockAndReduceStock(og.getProductId(), og.getSiteskuId(), og.getStoreId(), og.getQuantity());
 			}else{
-				if(operateType==6){//发货
-					goodsSpecDao.updateBySpecId(og.getSpecId(), og.getQuantity(), og.getQuantity());
-				}else{//取消
-					goodsSpecDao.updateBySpecId(og.getSpecId(), og.getQuantity());
-				}
+				goodsSpecService.releaseFreezStock(og.getProductId(), og.getSiteskuId(), og.getStoreId(), og.getQuantity());
 			}
+			
+//			if(orderMsg.getType() == "wei_wh" || orderMsg.getType() == "wei_self"){
+//				if(operateType==6){//发货
+//					//weiCangGoodsStoreDao.updateBySpecIdAndStoreId(og.getSpecId(), og.getStoreId(), og.getQuantity(), og.getQuantity());
+//					
+//				}else{//取消
+//					//weiCangGoodsStoreDao.updateBySpecIdAndStoreId(og.getSpecId(), og.getStoreId(), og.getQuantity());
+//				}
+//			}else{
+////				if(operateType==6){//发货
+////					goodsSpecDao.updateBySpecId(og.getSpecId(), og.getQuantity(), og.getQuantity());
+////				}else{//取消
+////					goodsSpecDao.updateBySpecId(og.getSpecId(), og.getQuantity());
+////				}
+//			}
 		}
 		
 		return;
@@ -1303,7 +1310,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		List<Order> orderList = new ArrayList<Order>();
 		//先从收货人中查出所有相关的订单
 		String cityCode = "";
-		List<OrderExtm> orderExtmResultList = null;
+		List<OrderExtm> orderExtmResultList = new ArrayList<OrderExtm>();
 		final Set<String> orderSnMainSet = new HashSet<String>();
 		if(StringUtils.isNotBlank(cssOrderReqDto.getQueryContent()) && StringUtils.isNotBlank(cssOrderReqDto.getQueryType())){
 			if(cssOrderReqDto.getQueryType().equals("consignee")){
@@ -1312,12 +1319,27 @@ public class BkOrderServiceImpl implements BkOrderService{
 				orderExtmResultList = orderExtmDao.findByPhoneMob(cssOrderReqDto.getQueryContent());
 			}else if(cssOrderReqDto.getQueryType().equals("phoneTel")){
 				orderExtmResultList = orderExtmDao.findByPhoneTel(cssOrderReqDto.getQueryContent());
-			}
-			if(orderExtmResultList != null && orderExtmResultList.size() > 0){
-				for(OrderExtm tmp: orderExtmResultList){
-					orderSnMainSet.add(tmp.getOrderSnMain());
+			}else if(cssOrderReqDto.getQueryType().equals("address")){
+				Sort pageSort = new Sort(Sort.Direction.DESC,"id");
+				Pageable pageable = new PageRequest(0, 400, pageSort);
+				orderExtmResultList = orderExtmDao.findByAddressLike("%"+cssOrderReqDto.getQueryContent()+"%",pageable);
+			}else if(cssOrderReqDto.getQueryType().equals("goodsName")){
+				Sort pageSort = new Sort(Sort.Direction.DESC,"orderId");
+				Pageable pageable = new PageRequest(0, 400, pageSort);
+				List<OrderGoods> orderGoodsList = orderGoodsDao.findByGoodsNameLike("%"+cssOrderReqDto.getQueryContent()+"%", pageable);
+				List<Integer> orderIdList = new ArrayList<Integer>();
+				for(OrderGoods orderGoods: orderGoodsList){
+					orderIdList.add(orderGoods.getOrderId());
 				}
-			}else if(!cssOrderReqDto.getQueryType().equals("city")){
+				List<Order> orders = orderDao.findByOrderIdIn(orderIdList);
+				for(Order order:orders){
+					orderSnMainSet.add(order.getOrderSnMain());
+				}
+			}
+			for(OrderExtm tmp: orderExtmResultList){
+				orderSnMainSet.add(tmp.getOrderSnMain());
+			}
+			if(!cssOrderReqDto.getQueryType().equals("city") && !cssOrderReqDto.getQueryType().equals("useCouponNo") && orderSnMainSet.size()==0){
 				//如果根据收货人没查到则订单也没有
 				return resp;
 			}
@@ -1334,14 +1356,13 @@ public class BkOrderServiceImpl implements BkOrderService{
 			}
 		}
 		final String cityCodeFinal = cityCode;
-		//不好意思了，这么写也是醉了
 		String qlStr = "select DISTINCT(o.orderSnMain) from Order o where 1=1 ";
 		String whereStr = "";
 		if(cssOrderReqDto.getIsDel()!=null){
 			whereStr += " and o.isDel = " + cssOrderReqDto.getIsDel();
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
-			whereStr += " and o.orderSnMain = '"+cssOrderReqDto.getOrderSnMain()+"'";
+			whereStr += " and o.orderSnMain like '%"+cssOrderReqDto.getOrderSnMain()+"%'";
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getBuyerName())){
 			whereStr += " and o.buyerName = '"+cssOrderReqDto.getBuyerName()+"'";
@@ -1360,6 +1381,9 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		if(cssOrderReqDto.getPayStatus()!=null){
 			whereStr += " and o.payStatus = " + cssOrderReqDto.getPayStatus();
+		}
+		if(StringUtils.isNotBlank(cssOrderReqDto.getQueryContent()) && "useCouponNo".equals(cssOrderReqDto.getQueryType())){
+			whereStr += " and o.useCouponNo = '"+cssOrderReqDto.getQueryContent()+"' ";
 		}
 		if(StringUtils.isNotBlank(cityCodeFinal) && StringUtils.isNotBlank(cssOrderReqDto.getQueryContent())){
 			whereStr += " and o.sellSite = '"+cityCodeFinal+"'";
@@ -1466,7 +1490,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		if(order.getNeedShiptime()!=null){
 			needShipTime += DateUtils.date2DateStr(order.getNeedShiptime());
 		}
-		if(StringUtils.isNoneBlank(order.getNeedShiptimeSlot())){
+		if(StringUtils.isNotBlank(order.getNeedShiptimeSlot())){
 			needShipTime += " "+order.getNeedShiptimeSlot();
 		}
 		baseDto.setNeedShipTime(needShipTime);
@@ -1477,7 +1501,11 @@ public class BkOrderServiceImpl implements BkOrderService{
 		baseDto.setInvoiceHeader(order.getInvoiceHeader());
 		baseDto.setBuyerName(order.getBuyerName());
 		baseDto.setPayType(order.getPayType());
-		baseDto.setPayName(BkOrderPayTypeEnum.parseType(order.getPayType()).getPayType());
+		if(StringUtils.isNotBlank(order.getPayName())){
+			baseDto.setPayName(order.getPayName());
+		}else{
+			baseDto.setPayName(BkOrderPayTypeEnum.parseType(order.getPayId()).getPayType());
+		}
 		baseDto.setOrderAmount(order.getOrderAmount());
 		baseDto.setGoodsAmount(order.getGoodsAmount());
 		baseDto.setOrderPaid(order.getOrderPayed());
@@ -1561,10 +1589,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 		return resp;
 	}
 	
-	private Integer getLastFourMonth(){
-		return DateUtils.getTime()-10368000;//返回120天前的时间戳
-	}
-
 	@Override
 	public BkOrderReturnListRespDto queryBkOrderToReturn(String sort, String order, int pageNum, int pageSize,
 			final CssOrderReqDto cssOrderReqDto) {
@@ -1960,9 +1984,19 @@ public class BkOrderServiceImpl implements BkOrderService{
 	}
 	
 	
-	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot,String invoiceHeader,String phoneMob){
+	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot,String invoiceHeader,String phoneMob, String actor){
 		BaseRes<String> result=new BaseRes<String>();
 		Date needShiptimeDate=DateUtils.str2Date(needShiptime);
+		List<Order> orderList = orderDao.findByOrderSnMain(orderSnMain);
+		List<OrderExtm> extmList = orderExtmDao.findByOrderSnMain(orderSnMain);
+		Order order = null;
+		OrderExtm orderExtm = null;
+		if(orderList != null && orderList.size() >0){
+			order = orderList.get(0);
+		}
+		if(extmList !=null && extmList.size()>0){
+			orderExtm = extmList.get(0);
+		}
 		int orderResult=orderDao.updateNeedShipTimeByOrderSnMain(orderSnMain, needShiptimeDate, needShiptimeSlot,invoiceHeader);
 		if(orderResult<1){
 			result.setCode("400");
@@ -1970,7 +2004,51 @@ public class BkOrderServiceImpl implements BkOrderService{
 			return result;
 		}
 		orderExtmDao.updateExtmByOrderSnMain(orderSnMain,phoneMob);
-		
+		String oldNeedShiptime = "";
+		String oldInvoiceHeader = "";
+		String oldPhoneMob = "";
+		if(order != null){
+			if(order.getNeedShiptime() != null){
+				oldNeedShiptime = DateUtils.date2DateStr(order.getNeedShiptime()) +" "+ order.getNeedShiptimeSlot();
+			}
+			if(StringUtils.isNotBlank(order.getInvoiceHeader())){
+				oldInvoiceHeader = order.getInvoiceHeader();
+			}
+		}
+		if(orderExtm != null && StringUtils.isNotBlank(orderExtm.getPhoneMob())){
+			oldPhoneMob = orderExtm.getPhoneMob();
+		}
+		String notes = "";
+		if(StringUtils.isBlank(needShiptime)){
+			needShiptime = "";
+		}
+		if(StringUtils.isBlank(needShiptimeSlot)){
+			needShiptimeSlot = "";
+		}
+		if(!oldNeedShiptime.equals(needShiptime+" "+needShiptimeSlot)){
+			notes += "修改期望送达时间：" + oldNeedShiptime + " 至 " + needShiptime + " " + needShiptimeSlot + "。";
+		}
+		if(StringUtils.isBlank(invoiceHeader)){
+			invoiceHeader = "";
+		}
+		if(!oldInvoiceHeader.equals(invoiceHeader)){
+			notes += "修改发票抬头：" + oldInvoiceHeader + " 至 " + invoiceHeader + "。";
+		}
+		if(StringUtils.isBlank(phoneMob)){
+			phoneMob = "";
+		}
+		if(!oldPhoneMob.equals(phoneMob)){
+			notes += "修改手机号：" + oldPhoneMob + " 至 " + phoneMob + "。";
+		}
+		OrderAction oa = new OrderAction();
+		oa.setAction(33);
+		oa.setActionTime(new Date());
+		oa.setOrderSnMain(orderSnMain);
+		oa.setOrderId(order.getOrderId());
+		oa.setTaoOrderSn(order.getTaoOrderSn());
+		oa.setActor(actor);
+		oa.setNotes(notes);
+		orderActionDao.save(oa);
 		result.setCode("200");
 		result.setMessage("保存成功");
 		return result;
@@ -2170,9 +2248,15 @@ public class BkOrderServiceImpl implements BkOrderService{
 		String errorMessage="";
 		List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(orderId);
 		for(OrderGoods og:orderGoodsList){
-			Goods goodsMsg=goodsDao.findByGoodsId(og.getGoodsId());
-			int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),goodsMsg.getStoreId());
-			if(stock<og.getQuantity()){
+			
+//			Goods goodsMsg=goodsDao.findByGoodsId(og.getGoodsId());
+//			int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),goodsMsg.getStoreId());
+//			if(stock<og.getQuantity()){
+//				errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
+//			}
+			
+			int stock = goodsSpecService.getStock(og.getProductId(), og.getSiteskuId(), og.getStoreId());
+			if(stock < og.getQuantity()){
 				errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
 			}
 		}
@@ -2277,6 +2361,9 @@ public class BkOrderServiceImpl implements BkOrderService{
 			result.setCode("200");
 			result.setMessage("支付成功");
 			return result;
+		}else{
+			result.setCode("400");
+			result.setMessage("未选支付方式");
 		}
 		
 		result.setCode("200");

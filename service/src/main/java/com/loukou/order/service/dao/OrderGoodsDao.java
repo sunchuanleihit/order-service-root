@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -27,4 +28,7 @@ public interface OrderGoodsDao extends CrudRepository<OrderGoods, Integer>{
 
 	@Query("SELECT coalesce(sum(quantity), 0) FROM OrderGoods WHERE storeId=?1 AND specId=?2 AND timestamp > ?3")
 	int sumGoods(int storeId, int specId, Date date);
+
+	List<OrderGoods> findByGoodsNameLike(String goodsName, Pageable pageable);
+
 }

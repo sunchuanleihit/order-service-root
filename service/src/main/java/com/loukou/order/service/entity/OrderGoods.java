@@ -26,6 +26,7 @@ public class OrderGoods {
 	/*
 	 * 产品号，goods表goods_id字段
 	 */
+	@Deprecated
 	@Column(name = "goods_id")
 	private int goodsId = 0;
 	
@@ -38,6 +39,7 @@ public class OrderGoods {
 	/*
 	 * 商品号，goods_spec表spec_id字段
 	 */
+	@Deprecated
 	@Column(name = "spec_id")
 	private int specId = 0;
 	
@@ -220,11 +222,11 @@ public class OrderGoods {
 	public void setOrderId(int orderId) {
 		this.orderId = orderId;
 	}
-
+	@Deprecated
 	public int getGoodsId() {
 		return goodsId;
 	}
-
+	@Deprecated
 	public void setGoodsId(int goodsId) {
 		this.goodsId = goodsId;
 	}
@@ -236,11 +238,11 @@ public class OrderGoods {
 	public void setGoodsName(String goodsName) {
 		this.goodsName = goodsName;
 	}
-
+	@Deprecated
 	public int getSpecId() {
 		return specId;
 	}
-
+	@Deprecated
 	public void setSpecId(int specId) {
 		this.specId = specId;
 	}

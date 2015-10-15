@@ -46,6 +46,7 @@ import com.loukou.order.service.resp.dto.GoodsInfoDto;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.resp.dto.OrderInfoDto;
 import com.loukou.order.service.resp.dto.OrderListInfoDto;
+import com.loukou.order.service.resp.dto.OrderStatusCountRespDto;
 import com.loukou.order.service.resp.dto.SpecDto;
 import com.loukou.order.service.util.DateUtils;
 
@@ -84,8 +85,8 @@ public class OrderInfoService {
         List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
         for (OrderGoods good : goods) {
             SpecDto spec = new SpecDto();
-            spec.setGoodsInfo(new GoodsInfoDto(good.getGoodsId(), good.getGoodsName(), good.getGoodsImage()));
-            spec.setSpecId(good.getSpecId());
+            spec.setGoodsInfo(new GoodsInfoDto(good.getProductId(), good.getGoodsName(), good.getGoodsImage()));
+            spec.setSpecId(good.getSiteskuId());
             spec.setBuyNum(good.getQuantity());
             spec.setSpecName(good.getGoodsName());
             spec.setSellPrice(good.getPricePurchase());
@@ -122,6 +123,7 @@ public class OrderInfoService {
         orderInfoDto.setShippingFee(order.getShippingFee());
         orderInfoDto.setSpecList(specList);
         orderInfoDto.setDeliveryInfo(deliveryInfo);
+        orderInfoDto.setStoreId(order.getSellerId());
 
         if (!Strings.isNullOrEmpty(order.getShippingNo())) {
             orderInfoDto.setShippingNo(order.getShippingNo());
@@ -270,8 +272,8 @@ public class OrderInfoService {
                     continue;
                 }
                 SpecDto spec = new SpecDto();
-                spec.setGoodsInfo(new GoodsInfoDto(ordergood.getGoodsId(), ordergood.getGoodsName(), ordergood.getGoodsImage()));
-                spec.setSpecId(ordergood.getSpecId());
+                spec.setGoodsInfo(new GoodsInfoDto(ordergood.getProductId(), ordergood.getGoodsName(), ordergood.getGoodsImage()));
+                spec.setSpecId(ordergood.getSiteskuId());
                 spec.setBuyNum(ordergood.getQuantity());
                 spec.setSellPrice(ordergood.getPricePurchase());
                 value.getSpecList().add(spec);
@@ -362,12 +364,13 @@ public class OrderInfoService {
     }
 
     private int calDelivertResult(Date needShipTime, String needShipSlot, int finishedTime) {
-        if(needShipTime==null || needShipSlot==null){
+        if(needShipTime ==null || needShipSlot ==null){
             return 0;
         }
         String timeString = new SimpleDateFormat("yyyy-MM-dd").format(needShipTime);
         DateTimeFormatter formatter = DateTimeFormat.forPattern("yyyy-MM-dd HH:mm");
         Iterable<String> times = Splitter.on("-").split(needShipSlot);
+        @SuppressWarnings("unchecked")
         List<String> timeslots = IteratorUtils.toList(times.iterator());
         if (timeslots.size() < 2) {
             return 0;
@@ -389,5 +392,113 @@ public class OrderInfoService {
             LogFactory.getLog(OrderInfoService.class).error("parsing time error", e);
         }
         return 0;
+    }
+    public OResponseDto<OrderStatusCountRespDto> getOrderCount(int storeId){
+        OrderStatusCountRespDto dto = new OrderStatusCountRespDto();
+        dto.setOrderStatusBookingRecieve(orderDao.findCount(storeId, 3, Lists.newArrayList("booking")));
+        dto.setOrderStatusReviewed(orderDao.findCount(storeId, 3, Lists.newArrayList("wei_wh","wei_self")));;
+        return new OResponseDto<OrderStatusCountRespDto>(200, dto);
+    }
+    
+    /**
+     * 默认0时返回5种查询状态
+     */
+    public OResponseDto<OrderListInfoDto> getWhAvailableOrders(OrderListParamDto param){
+        PageRequest pagenation = new PageRequest((Math.max(1, param.getPageNum()) - 1), param.getPageSize(), new Sort(
+                Sort.Direction.DESC, "orderId"));
+        List<Integer> status = new ArrayList<Integer>();
+        if(param.getOrderStatus() == 0){
+            status.add(OrderStatusEnum.STATUS_REVIEWED.getId());
+            status.add(OrderStatusEnum.STATUS_14.getId());
+            status.add(OrderStatusEnum.STATUS_CANCELED.getId());
+            status.add(OrderStatusEnum.STATUS_FINISHED.getId());
+            status.add(OrderStatusEnum.STATUS_REFUSED.getId());
+        }else{
+            status.add(param.getOrderStatus());
+        }
+     
+        Page<Order> orders = orderDao.findBySellerIdAndStatusIn(param.getStoreId(), status,pagenation);
+        
+        OrderListInfoDto orderListInfoDto = new OrderListInfoDto();
+        List<OrderInfoDto> orderInfoDtos = new ArrayList<OrderInfoDto>();
+        
+        if (CollectionUtils.isEmpty(orders.getContent())) {
+            orderListInfoDto.setOrders(orderInfoDtos);
+            orderListInfoDto.setStoreId(param.getStoreId());
+            orderListInfoDto.setTotalNum(orders.getTotalElements());
+            orderListInfoDto.setPageNum(param.getPageNum());
+            return new OResponseDto<OrderListInfoDto>(200, orderListInfoDto);
+        }
+        
+     // 封装基本信息
+        List<Integer> orderIds = new ArrayList<Integer>();
+        Map<Integer, OrderInfoDto> map = new HashMap<Integer, OrderInfoDto>();
+        HashBiMap<Integer, String> biMap = HashBiMap.create();
+        for (Order o : orders.getContent()) {
+            orderIds.add(o.getOrderId());
+            biMap.put(o.getOrderId(), o.getTaoOrderSn());
+        }
+        for (Order o : orders.getContent()) {
+            OrderInfoDto value = new OrderInfoDto();
+            value.setCreateTime(SDF.format(new Date((long) (o.getAddTime()) * 1000)));
+            value.setGoodsAmount(o.getOrderAmount());
+            value.setTaoOrderSn(o.getTaoOrderSn());
+            value.setOrderStatus(o.getStatus());
+            value.setPayStatus(o.getPayStatus());
+            if (o.getType().equals("booking")) {
+                value.setIsBooking(1);
+                value.setShippingNo(o.getShippingNo());
+            } else {
+                value.setIsBooking(0);
+            }
+
+            map.put(o.getOrderId(), value);
+        }
+        
+        List<OrderGoods> goods = orderGoodsDao.findByOrderIdIn(orderIds);
+        if (!CollectionUtils.isEmpty(goods)) {
+            for (OrderGoods ordergood : goods) {
+                OrderInfoDto value = map.get(ordergood.getOrderId());
+                if (value == null) {
+                    continue;
+                }
+                SpecDto spec = new SpecDto();
+                spec.setGoodsInfo(new GoodsInfoDto(ordergood.getProductId(), ordergood.getGoodsName(), ordergood.getGoodsImage()));
+                spec.setSpecId(ordergood.getSiteskuId());
+                spec.setBuyNum(ordergood.getQuantity());
+                spec.setSellPrice(ordergood.getPricePurchase());
+                value.getSpecList().add(spec);
+            }
+        }
+        List<String> orderSnMainList = new ArrayList<String>();
+        for (Order o : orders.getContent()) {
+            orderSnMainList.add(o.getOrderSnMain());
+        }
+        List<OrderExtm> orderExtmLists = orderExtmDao.findByOrderSnMainIn(orderSnMainList);
+        if (!CollectionUtils.isEmpty(orderExtmLists)) {
+            for (Order o : orders.getContent()) {
+                for (OrderExtm m : orderExtmLists) {
+                    if (o.getOrderSnMain().equals(m.getOrderSnMain())) {
+                        OrderInfoDto value = map.get(o.getOrderId());
+                        DeliveryInfo deliveryInfo = new DeliveryInfo();
+                        deliveryInfo.setAddress(m.getRegionName() + m.getAddress());
+                        deliveryInfo.setConsignee(m.getConsignee());
+                        deliveryInfo.setTel(m.getPhoneMob());
+                        deliveryInfo.setNeedShippingTime(DateUtils.date2DateStr(o.getNeedShiptime()) + " "
+                                + o.getNeedShiptimeSlot());
+                        value.setDeliveryInfo(deliveryInfo);
+                    }
+                }
+            }
+        }
+
+        orderInfoDtos.addAll(map.values());
+
+        orderListInfoDto.setOrders(orderInfoDtos);
+        orderListInfoDto.setStoreId(param.getStoreId());
+        orderListInfoDto.setTotalNum(orders.getTotalElements());
+        orderListInfoDto.setPageNum(param.getPageNum());
+        return new OResponseDto<OrderListInfoDto>(200, orderListInfoDto);
+        
     }
 }

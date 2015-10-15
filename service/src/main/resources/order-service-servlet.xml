@@ -39,4 +39,6 @@
 
 	<dubbo:reference id="cartService"  interface="com.serverstarted.cart.service.api.CartService" retries="0" timeout="5000"  />
 
+	<dubbo:reference id="categoryService"  interface="com.serverstarted.product.service.api.CategoryService" retries="0" timeout="5000"  />
+
 </beans>
