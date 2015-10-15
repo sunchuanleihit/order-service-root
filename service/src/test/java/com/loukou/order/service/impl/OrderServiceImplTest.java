@@ -1,5 +1,7 @@
 package com.loukou.order.service.impl;
 
+import java.util.Date;
+
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -22,6 +24,7 @@ import com.loukou.order.service.resp.dto.ReturnStorageRespDto;
 import com.loukou.order.service.resp.dto.ShippingMsgRespDto;
 import com.loukou.order.service.resp.dto.SubmitOrderRespDto;
 import com.loukou.order.service.resp.dto.UserOrderNumRespDto;
+import com.loukou.order.service.util.DateUtils;
 
 public class OrderServiceImplTest extends AbstractTestObject {
 
@@ -46,7 +49,7 @@ public class OrderServiceImplTest extends AbstractTestObject {
 		req.setCityId(1);
 		req.setAddressId(128);
 		req.setOs("ios");
-		req.getShippingTimes().getMaterial().add("2015-08-05 13:32:00");
+		req.getShippingTimes().getMaterial().add("2015-09-20 13:32:00");
 		
 		SubmitOrderRespDto resp = orderService.submitOrder(req);
 		System.out.println(object2String(resp));
@@ -59,7 +62,7 @@ public class OrderServiceImplTest extends AbstractTestObject {
 		int storeId = 18055;
 		String openId = "test-openId";
 		CouponListRespDto resp = orderService.getCouponList(cityId, userId,
-				storeId, openId, 0);
+				storeId, openId, 1);
 		System.out.println(object2String(resp));
 	}
 
@@ -187,6 +190,16 @@ public class OrderServiceImplTest extends AbstractTestObject {
 			System.out.println(d.getMoblie()+"----"+d.getInviteStatus()+"----"+d.getReward());
 			System.out.println(r.getInviteCode()+"已奖励"+r.getTotalReward());	
 		}
+	}
+	
+	@Test
+	public void getTodayGoodsCount() {
+		int userId = 1156403;
+		int specId = 7957;
+		int storeId = 18047;
+		System.out.println(orderService.getTodayGoodsCount(userId, specId));
+		
+		System.out.println(orderService.getTodayStoreGoodsCount(storeId, specId));
 	}
 	
 }

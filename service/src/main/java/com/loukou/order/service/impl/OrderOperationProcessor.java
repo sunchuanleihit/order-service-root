@@ -26,6 +26,7 @@ import com.loukou.order.service.entity.OrderAction;
 import com.loukou.order.service.entity.OrderExtm;
 import com.loukou.order.service.entity.OrderGoods;
 import com.loukou.order.service.entity.OrderRefuse;
+import com.loukou.order.service.enums.OrderSourceEnum;
 import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.resp.dto.OResponseDto;
 import com.loukou.order.service.util.DateUtils;
@@ -94,8 +95,12 @@ public class OrderOperationProcessor {
             return new OResponseDto<String>(500, "错误的订单号成功");
         }
         createAction(order, OrderStatusEnum.STATUS_FINISHED.getId(), userName, "仓库回单" + gps);
-
-        sendMessage(order, String.format(ShortMessage.FINISH_ORDER_MESSAGE_MODEL, order.getTaoOrderSn()));
+        if(order.getSource() ==OrderSourceEnum.SOURCE_DITUI.getId()){
+            sendMessage(order, ShortMessage.FINISH_ORDER_SOURCE_QIANGTAN_MESSAGE_MODEL);
+        }else{
+            sendMessage(order, String.format(ShortMessage.FINISH_ORDER_MESSAGE_MODEL, order.getTaoOrderSn()));
+        }
+       
 
         return new OResponseDto<String>(200, "确认成功");
     }
@@ -123,6 +128,7 @@ public class OrderOperationProcessor {
         for (OrderGoods good : goods) {
             lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(good.getSpecId(), good.getStoreId(), new Date(),
                     good.getQuantity(), good.getQuantity());
+          
         }
         LkWhDeliveryOrder lkWhDeliveryOrder = new LkWhDeliveryOrder();
         lkWhDeliveryOrder.setOrderId(order.getOrderId());
@@ -148,15 +154,14 @@ public class OrderOperationProcessor {
 
         Order order = orders.get(0);
 
-        int num = orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_REFUSED.getId());
+        int num = orderDao.updateOrderStatus(order.getOrderId(), OrderStatusEnum.STATUS_INVALID.getId());
         if (num < 1) {
             return new OResponseDto<String>(500, "错误的订单号");
         }
 
         List<OrderGoods> goods = orderGoodsDao.findByOrderId(order.getOrderId());
         for (OrderGoods good : goods) {
-            lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(good.getSpecId(), good.getStoreId(), new Date(),
-                    good.getQuantity(), good.getQuantity());
+            lkWhGoodsStoreDao.updateBySpecIdAndStoreIdAndUpdateTime(good.getSpecId(), good.getStoreId(),good.getQuantity(),  new Date());
         }
 
         OrderRefuse orderRefuse = new OrderRefuse();
@@ -172,11 +177,10 @@ public class OrderOperationProcessor {
         }
         orderRefuseDao.save(orderRefuse);
 
-        createAction(order, OrderStatusEnum.STATUS_REFUSED.getId(), userName, "拒收");
+        createAction(order, OrderStatusEnum.STATUS_INVALID.getId(), userName, "作废订单");
 
         sendMessage(order, String.format(ShortMessage.REFUSE_MESSAGE_MODEL, order.getTaoOrderSn()));
 
-        // 退款暂时不考虑 直接设置拒收状态 客服处理
 
         return new OResponseDto<String>(200, "成功");
     }

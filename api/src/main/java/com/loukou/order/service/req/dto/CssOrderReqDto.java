@@ -13,6 +13,7 @@ public class CssOrderReqDto implements Serializable{
 	private Integer status;//订单状态
 	private Integer payStatus;//支付状态
 	private String queryType;//查询类型
+	private String storeType;//商家类型
 	private String queryContent;//查询内容
 	private String buyerName;//买家姓名
 	private Integer buyerId;//买家ID
@@ -20,6 +21,12 @@ public class CssOrderReqDto implements Serializable{
 	private Integer timeLimit;//时间限制
 	private Integer isDel;//是否删除
 	
+	public String getStoreType() {
+		return storeType;
+	}
+	public void setStoreType(String storeType) {
+		this.storeType = storeType;
+	}
 	public Integer getTimeLimit() {
 		return timeLimit;
 	}

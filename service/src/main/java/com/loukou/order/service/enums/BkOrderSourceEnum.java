@@ -2,14 +2,15 @@ package com.loukou.order.service.enums;
 
 public enum BkOrderSourceEnum {
 	//查线上数据库最近两个月的订单来源
+	SOURCE_NONE(-1, ""),
 	SOURCE_WEB(0, "网站"),
 	SOURCE_CMCC(1, "移动公司"),
 	SOURCE_ANDROID(21, "android"),//ANDROID
 	SOURCE_IOS(30, "ios"),//IOS
 	SOURCE_LARGE(35, "大宗触屏版下单"),
 	SOURCE_CVS(50, "便利店内下单"),
-	SOURCE_(51, "微仓");//
-	
+	SOURCE_WC(51, "微仓"),
+	SOURCE_DT(52, "地推");
 	private int id;
 	private String source;
 	
@@ -32,6 +33,6 @@ public enum BkOrderSourceEnum {
 				return e;
 			}
 		}
-		return SOURCE_WEB;
+		return SOURCE_NONE;
 	}
 }

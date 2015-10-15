@@ -61,8 +61,6 @@ import com.loukou.order.service.dao.OrderReturnDao;
 import com.loukou.order.service.dao.PaymentDao;
 import com.loukou.order.service.dao.SiteCityDao;
 import com.loukou.order.service.dao.StoreDao;
-import com.loukou.order.service.dao.TosuDao;
-import com.loukou.order.service.dao.TosuHandleDao;
 import com.loukou.order.service.dao.WeiCangGoodsStoreDao;
 import com.loukou.order.service.entity.CoupList;
 import com.loukou.order.service.entity.CoupRule;
@@ -82,8 +80,6 @@ import com.loukou.order.service.entity.OrderReturn;
 import com.loukou.order.service.entity.Payment;
 import com.loukou.order.service.entity.SiteCity;
 import com.loukou.order.service.entity.Store;
-import com.loukou.order.service.entity.Tosu;
-import com.loukou.order.service.entity.TosuHandle;
 import com.loukou.order.service.enums.BkOrderPayTypeEnum;
 import com.loukou.order.service.enums.BkOrderSourceEnum;
 import com.loukou.order.service.enums.BkOrderStatusEnum;
@@ -182,12 +178,6 @@ public class BkOrderServiceImpl implements BkOrderService{
     private GoodsDao goodsDao;
     
     @Autowired
-    private TosuDao tosuDao;
-    
-    @Autowired
-    private TosuHandleDao tosuHandleDao;
-
-    @Autowired
     private EntityManagerFactory entityManagerFactory;
     
     @Autowired
@@ -261,7 +251,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			
 			Store storeMsg = storeDao.findOne(order.getSellerId());
 			String taxApply = "商家";
-			if(storeMsg.getTaxApply()==1){
+			if(storeMsg!=null && storeMsg.getTaxApply()==1){
 				taxApply = "淘常州";
 			}
 			baseDto.setTaxApply(taxApply);
@@ -481,6 +471,11 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		
 		List<BkOrderPayDto> resp = new ArrayList<BkOrderPayDto>();
+		BkOrderPayDto orderPayBDto = new BkOrderPayDto();
+		orderPayBDto.setPaymentName("虚拟账户");
+		orderPayBDto.setPaymentId(2);
+		orderPayBDto.setMoney(0);
+		resp.add(orderPayBDto);
 		
 		Iterator<Entry<Integer, Double>> iter = orderPayMap.entrySet().iterator();
 		while (iter.hasNext()) {
@@ -500,6 +495,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 	
 	//生成退款单
 	public BaseRes<String> generateReturn(String actor,int orderId,String postScript,String orderSnMain,int returnType,int payId,double shippingFee,
+			int[] checkedGoodsList,
 			int[] goodsIdList,
 			int[] specIdList,
 			int[] proTypeList,
@@ -527,16 +523,24 @@ public class BkOrderServiceImpl implements BkOrderService{
 		//处理退款单商品
 		List<ReturnOrderGoodsBo> returnOrderGoodsList=new ArrayList<ReturnOrderGoodsBo>();
 		for(int i=0;i<goodsIdList.length;i++){
-			ReturnOrderGoodsBo returnOrderGoods=new ReturnOrderGoodsBo();
-			returnOrderGoods.setGoodsId(goodsIdList[i]);
-			returnOrderGoods.setSpecId(specIdList[i]);
-			returnOrderGoods.setProType(proTypeList[i]);
-			returnOrderGoods.setRecId(recIdList[i]);
-			returnOrderGoods.setGoodsNum(goodsReturnNumList[i]);
-			returnOrderGoods.setGoodsAmount(goodsReturnAmountList[i]);
-			returnOrderGoods.setGoodsReasonId(goodsReasonList[i]);
-			returnOrderGoods.setGoodsName(goodsNameList[i]);
-			returnOrderGoodsList.add(returnOrderGoods);
+			int has=0;
+			for(int cg:checkedGoodsList){
+				if(goodsIdList[i]==cg){
+					has=1;
+				}
+			}
+			if(has==1){
+				ReturnOrderGoodsBo returnOrderGoods=new ReturnOrderGoodsBo();
+				returnOrderGoods.setGoodsId(goodsIdList[i]);
+				returnOrderGoods.setSpecId(specIdList[i]);
+				returnOrderGoods.setProType(proTypeList[i]);
+				returnOrderGoods.setRecId(recIdList[i]);
+				returnOrderGoods.setGoodsNum(goodsReturnNumList[i]);
+				returnOrderGoods.setGoodsAmount(goodsReturnAmountList[i]);
+				returnOrderGoods.setGoodsReasonId(goodsReasonList[i]);
+				returnOrderGoods.setGoodsName(goodsNameList[i]);
+				returnOrderGoodsList.add(returnOrderGoods);
+			}
 		}
 		
 		for(ReturnOrderGoodsBo returnOrderGoods:returnOrderGoodsList){
@@ -822,8 +826,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		for(Order o:orderList){
 			List<OrderGoods> orderGoodsList=orderGoodsDao.findByOrderId(o.getOrderId());
 			for(OrderGoods og:orderGoodsList){
-				Goods goodsMsg=goodsDao.findByGoodsId(og.getGoodsId());
-				int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),goodsMsg.getStoreId());
+				int stock=goodsSpecService.getStock(og.getGoodsId(),og.getSpecId(),o.getSellerId());
 				if(stock<og.getQuantity()){
 					errorMessage+=og.getGoodsName()+" 剩余库存"+stock;
 				}
@@ -910,7 +913,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		
 		for(OrderGoods og:orderGoodsList){
-			if(orderMsg.getType() == "wei_wh" || orderMsg.getType() == "wei_self"){
+			if(orderMsg.getType().equals("wei_wh") || orderMsg.getType().equals("wei_self")){
 				if(operateType==6){//发货
 					weiCangGoodsStoreDao.updateBySpecIdAndStoreId(og.getSpecId(), og.getStoreId(), og.getQuantity(), og.getQuantity());
 				}else{//取消
@@ -980,7 +983,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 	}
 	
 	//生成退款单
-	public BaseRes<String> generatePaymentRefund(int reason,String actor,String orderSnMain,String postScript,int[] paymentIdList,double[] returnAmountList){
+	public BaseRes<String> generatePaymentRefund(int reason,String actor,String orderSnMain,String postScript,int[] paymentIdList,double hasPaid,double[] returnAmountList){
 		BaseRes<String> result=new BaseRes<String>();
 		if(orderSnMain.isEmpty()){
 			result.setCode("400");
@@ -1014,6 +1017,15 @@ public class BkOrderServiceImpl implements BkOrderService{
 		if(returnAmount<=0){
 			result.setCode("400");
 			result.setMessage("请选择退款方式");
+			return result;
+		}
+		
+		for(double r:returnAmountList){
+			returnAmount+=r;
+		}
+		if(returnAmount>hasPaid){
+			result.setCode("400");
+			result.setMessage("退款金额大于需退金额");
 			return result;
 		}
 
@@ -1143,63 +1155,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 		
 		result.setCode("200");
 		result.setMessage("退款成功");
-		return result;
-	}
-	
-	
-	//提交投诉
-	public BaseRes<String> generateComplaint(String actor,String orderSnMain,String content1,String addTime,String userName,String mobile,int type,int status,String content2,String[] sellerNameList,String[] goodsNameList){
-		BaseRes<String> result=new BaseRes<String>();
-		
-		String sellerName="";
-		for(String sn:sellerNameList){
-			sellerName+=sn+",";
-		}
-		sellerName=sellerName.substring(0, sellerName.length()-1);
-		
-		String goodsName="";
-		for(String sn:goodsNameList){
-			goodsName+=sn+",";
-		}
-		goodsName=goodsName.substring(0,goodsName.length()-1);
-		
-		Tosu tosuData=new Tosu();
-		tosuData.setDateline1((int)(DateUtils.str2Date(addTime).getTime()/1000));
-		tosuData.setUserName(userName);
-		tosuData.setMobile(mobile);
-		tosuData.setType(type);
-		tosuData.setStatus(status);
-		tosuData.setOrderSnMain(orderSnMain);
-		tosuData.setDateline2(DateUtils.getTime());
-		tosuData.setSellerName(sellerName);
-		tosuData.setGoodsName(goodsName);
-		Tosu tosuResult=tosuDao.save(tosuData);
-		if(tosuResult==null){
-			result.setCode("400");
-			result.setMessage("生成退款支付单失败");
-			return result;
-		}
-		
-		TosuHandle tosuHandle1=new TosuHandle();
-		tosuHandle1.setTid(tosuResult.getId());
-		tosuHandle1.setContent(content1);
-		tosuHandle1.setType(0);
-		tosuHandle1.setActor(actor);
-		tosuHandle1.setDateline(DateUtils.getTime());
-		tosuHandleDao.save(tosuHandle1);
-		
-		if(content2!=""){
-			TosuHandle tosuHandle2=new TosuHandle();
-			tosuHandle2.setTid(tosuResult.getId());
-			tosuHandle2.setContent(content2);
-			tosuHandle2.setType(1);
-			tosuHandle2.setActor(actor);
-			tosuHandle2.setDateline(DateUtils.getTime());
-			tosuHandleDao.save(tosuHandle2);
-		}
-		
-		result.setCode("200");
-		result.setMessage("提交成功");
 		return result;
 	}
 
@@ -1338,14 +1293,19 @@ public class BkOrderServiceImpl implements BkOrderService{
 	}
 
 	@Override
-	public BkOrderListRespDto queryBkOrderList(int pageNum, int pageSize, final CssOrderReqDto cssOrderReqDto) {
+	public synchronized BkOrderListRespDto queryBkOrderList(int pageNum, int pageSize, final CssOrderReqDto cssOrderReqDto) {
 		BkOrderListRespDto resp = new BkOrderListRespDto(200, "");
+		if(StringUtils.isBlank(cssOrderReqDto.getBuyerName()) && StringUtils.isBlank(cssOrderReqDto.getOrderSnMain()) && StringUtils.isBlank(cssOrderReqDto.getStartTime())
+				&& StringUtils.isBlank(cssOrderReqDto.getEndTime()) && cssOrderReqDto.getStatus() ==null && cssOrderReqDto.getPayStatus() == null 
+				&& StringUtils.isBlank(cssOrderReqDto.getQueryContent())){
+			return resp;
+		}
 		List<Order> orderList = new ArrayList<Order>();
 		//先从收货人中查出所有相关的订单
 		String cityCode = "";
 		List<OrderExtm> orderExtmResultList = null;
 		final Set<String> orderSnMainSet = new HashSet<String>();
-		if(StringUtils.isNoneBlank(cssOrderReqDto.getQueryContent()) && StringUtils.isNoneBlank(cssOrderReqDto.getQueryType())){
+		if(StringUtils.isNotBlank(cssOrderReqDto.getQueryContent()) && StringUtils.isNotBlank(cssOrderReqDto.getQueryType())){
 			if(cssOrderReqDto.getQueryType().equals("consignee")){
 				orderExtmResultList = orderExtmDao.findByConsignee(cssOrderReqDto.getQueryContent());
 			}else if(cssOrderReqDto.getQueryType().equals("phoneMob")){
@@ -1375,36 +1335,34 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		final String cityCodeFinal = cityCode;
 		//不好意思了，这么写也是醉了
-		String qlStr = "select distinct(orderSnMain) from Order o where 1=1 ";
+		String qlStr = "select DISTINCT(o.orderSnMain) from Order o where 1=1 ";
+		String whereStr = "";
 		if(cssOrderReqDto.getIsDel()!=null){
-			qlStr += " and o.isDel = " + cssOrderReqDto.getIsDel();
-		}
-		if(cssOrderReqDto.getTimeLimit()!=null){
-			qlStr += " and o.addTime > " + cssOrderReqDto.getTimeLimit();
+			whereStr += " and o.isDel = " + cssOrderReqDto.getIsDel();
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
-			qlStr += " and o.orderSnMain = '"+cssOrderReqDto.getOrderSnMain()+"'";
+			whereStr += " and o.orderSnMain = '"+cssOrderReqDto.getOrderSnMain()+"'";
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getBuyerName())){
-			qlStr += " and o.buyerName = '"+cssOrderReqDto.getBuyerName()+"'";
+			whereStr += " and o.buyerName = '"+cssOrderReqDto.getBuyerName()+"'";
 		}
 		if(cssOrderReqDto.getBuyerId() != null ){
-			qlStr += " and o.buyerId = "+cssOrderReqDto.getBuyerId();
+			whereStr += " and o.buyerId = "+cssOrderReqDto.getBuyerId();
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getStartTime())){
-			qlStr += " and o.addTime >= "+(int)(DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
+			whereStr += " and o.addTime >= "+(int)(DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
-			qlStr += " and o.addTime <= "+(int)(DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
+			whereStr += " and o.addTime <= "+(int)(DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
 		}
 		if(cssOrderReqDto.getStatus()!=null){
-			qlStr += " and o.status = "+cssOrderReqDto.getStatus();
+			whereStr += " and o.status = "+cssOrderReqDto.getStatus();
 		}
 		if(cssOrderReqDto.getPayStatus()!=null){
-			qlStr += " and o.payStatus = " + cssOrderReqDto.getPayStatus();
+			whereStr += " and o.payStatus = " + cssOrderReqDto.getPayStatus();
 		}
 		if(StringUtils.isNotBlank(cityCodeFinal) && StringUtils.isNotBlank(cssOrderReqDto.getQueryContent())){
-			qlStr += " and o.sellSite = '"+cityCodeFinal+"'";
+			whereStr += " and o.sellSite = '"+cityCodeFinal+"'";
 		}
 		if(orderSnMainSet.size()>0){
 			String orderSns = "";
@@ -1412,21 +1370,25 @@ public class BkOrderServiceImpl implements BkOrderService{
 				orderSns += ",'"+str+"'";
 			}
 			orderSns = orderSns.substring(1);
-			qlStr += " and o.orderSnMain in ("+orderSns+")";
+			whereStr += " and o.orderSnMain in ("+orderSns+")";
 		}
-		qlStr += " order by o.orderId desc";
-		
+		String orderStr = " order by o.orderId desc ";
 		EntityManager em = entityManagerFactory.createEntityManager();
-		Query query = em.createQuery(qlStr);
-		List<String> orderSnMainAll = query.getResultList();
-		List<String> orderSnMains = new ArrayList<String>();
-		for(int i=pageNum*pageSize; i<(pageNum+1)*pageSize; i++){
-			if(i<orderSnMainAll.size()){
-				orderSnMains.add(orderSnMainAll.get(i));
-			}
+		Query query = null;
+		int maxResult = 400;
+		if(cssOrderReqDto.getBuyerId() != null){
+			maxResult = 40000;
 		}
+		query = em.createQuery(qlStr+whereStr+orderStr).setFirstResult(0).setMaxResults(maxResult);
+		List<String> allOrderSnMains = query.getResultList();
+		int count = allOrderSnMains.size();
+		List<String> orderSnMains = new ArrayList<String>();
+		for(int i= pageSize*pageNum; (i<count && i<(pageNum+1)*pageSize); i++){
+			orderSnMains.add(allOrderSnMains.get(i));
+		}
+		em.close();
 		List<Order> orderListAll = new ArrayList<Order>();
-		if(orderSnMains.size()>0){
+		if(orderSnMains.size() > 0){
 			orderListAll = orderDao.findByOrderSnMainIn(orderSnMains);
 		}
 		Map<String, Order> orderMap = new HashMap<String, Order>();
@@ -1459,8 +1421,8 @@ public class BkOrderServiceImpl implements BkOrderService{
 		for(OrderExtm orderExtm: orderExtmList){
 			orderExtmMap.put(orderExtm.getOrderSnMain(), orderExtm);
 		}
-		
 		List<BkOrderListDto> bkOrderList = new ArrayList<BkOrderListDto>();
+		
 		for(Order tmp : orderList) {
 			BkOrderListDto orderListDto = new BkOrderListDto();
 			BkOrderListBaseDto baseDto = createBkOrderBaseDto(tmp);
@@ -1472,11 +1434,12 @@ public class BkOrderServiceImpl implements BkOrderService{
 			bkOrderList.add(orderListDto);
 		}
 		BkOrderListResultDto resultDto = new BkOrderListResultDto();
-		resultDto.setOrderCount(orderSnMainAll.size());
+		resultDto.setOrderCount(count);
 		resultDto.setOrderList(bkOrderList);
 		resp.setResult(resultDto);
 		return resp;
 	}
+	
 	private BkExtmMsgDto createExtmMsg(OrderExtm orderExtm) {
 		BkExtmMsgDto dto = new BkExtmMsgDto();
 		if(orderExtm!=null){
@@ -1523,6 +1486,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		baseDto.setPayStatus(order.getPayStatus());
 		baseDto.setSellerName(order.getSellerName());
 		baseDto.setShippingFee(order.getShippingFee());
+		baseDto.setPostscript(order.getPostscript());
 		if(order.getFinishedTime()>0){
 			baseDto.setFinishedTimeStr(DateUtils.dateTimeToStr(order.getFinishedTime()));
 		}
@@ -1534,68 +1498,50 @@ public class BkOrderServiceImpl implements BkOrderService{
 	 * 查找未生成退款单
 	 */
 	@Override
-	public BkOrderListRespDto queryBkOrderNoReturnList(String sort, String order, int pageNum, int pageSize,
+	public  BkOrderListRespDto queryBkOrderNoReturnList(String sort, String order, int pageNum, int pageSize,
 			final CssOrderReqDto cssOrderReqDto) {
 		BkOrderListRespDto resp = new BkOrderListRespDto(200, "");
-		
-		Sort pageSort = new Sort(Sort.Direction.DESC,"orderId");
-		if(StringUtils.isNotBlank(sort) && StringUtils.isNotBlank(order)){
-			if(order.toLowerCase().equals("asc")){
-				pageSort = new Sort(Sort.Direction.ASC,sort);
-			}else if(order.toLowerCase().equals("desc")){
-				pageSort = new Sort(Sort.Direction.DESC,sort);
-			}
+		if(StringUtils.isBlank(cssOrderReqDto.getOrderSnMain()) && StringUtils.isBlank(cssOrderReqDto.getBuyerName()) && StringUtils.isBlank(cssOrderReqDto.getSellerName())
+				&& StringUtils.isBlank(cssOrderReqDto.getStartTime()) && StringUtils.isBlank(cssOrderReqDto.getEndTime()) && StringUtils.isBlank(cssOrderReqDto.getStoreType())){
+			return resp;
 		}
+				
 		pageNum--;
-		Pageable pageable = new PageRequest(pageNum, pageSize, pageSort);
-		Page<Order> noreturnOrderPage = orderDao.findAll(new Specification<Order>(){
-			@Override
-			public Predicate toPredicate(Root<Order> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
-				List<Predicate> predicate = new ArrayList<>();
-				Integer lastTime = getLastFourMonth();
-				predicate.add(cb.greaterThan(root.get("addTime").as(Integer.class), lastTime));
-				
-				if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
-					predicate.add(cb.equal(root.get("orderSnMain"), cssOrderReqDto.getOrderSnMain()));
-				}
-				if(StringUtils.isNotBlank(cssOrderReqDto.getBuyerName())){
-					predicate.add(cb.equal(root.get("buyerName").as(String.class), cssOrderReqDto.getBuyerName()));
-				}
-				if(StringUtils.isNotBlank(cssOrderReqDto.getSellerName())){
-					predicate.add(cb.equal(root.get("sellerName"), cssOrderReqDto.getSellerName()));
-				}
-				
-				Integer startTime = null;
-				if(StringUtils.isNotBlank(cssOrderReqDto.getStartTime())){
-					startTime = (int)(DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
-				}
-				Integer endTime = null;
-				if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
-					endTime = (int)(DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
-				}
-				if(StringUtils.isNotBlank(cssOrderReqDto.getStartTime())){
-					predicate.add(cb.greaterThanOrEqualTo(root.get("addTime").as(Integer.class), startTime));
-				}
-				if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
-					predicate.add(cb.lessThanOrEqualTo(root.get("addTime").as(Integer.class), endTime));
-				}
-				predicate.add(cb.equal(root.get("isDel"), 0));
-				predicate.add(cb.greaterThan(root.<Double>get("orderPayed"), 0.0));
-				
-				Predicate payedMoreThanDisaccount = cb.greaterThan(root.<Double>get("orderPayed"), root.<Double>get("discount"));
-				Predicate statusCancel = cb.equal(root.get("status"), BkOrderStatusEnum.STATUS_CANCEL.getId());
-				Predicate statusInvalid = cb.equal(root.get("status"), BkOrderStatusEnum.STATUS_INVALID.getId());
-				Predicate payedMoreThanAmount = cb.greaterThan(root.<Double>get("orderPayed"), 
-						cb.sum(root.<Double>get("goodsAmount"), root.<Double>get("shippingFee")));
-				Predicate noreturnPredicate = cb.or(cb.and(payedMoreThanDisaccount,cb.or(statusCancel,statusInvalid)),payedMoreThanAmount);
-				
-				predicate.add(noreturnPredicate);
-				Predicate[] pre = new Predicate[predicate.size()];
-				return query.where(predicate.toArray(pre)).getRestriction();
-			}
-		}, pageable);
+		String sql = "select o from Order o where 1=1 ";
+		if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
+			sql += " and o.orderSnMain = '"+cssOrderReqDto.getOrderSnMain()+"' ";
+		}
+		if(StringUtils.isNotBlank(cssOrderReqDto.getBuyerName())){
+			sql += " and o.buyerName = '"+cssOrderReqDto.getBuyerName()+"'";
+		}
+		if(StringUtils.isNotBlank(cssOrderReqDto.getSellerName())){
+			sql += " and o.sellerName = '"+cssOrderReqDto.getSellerName()+"'";
+		}
+		
+		if(StringUtils.isNotBlank(cssOrderReqDto.getStartTime())){
+			Integer startTime = (int)(DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
+			sql += " and o.addTime >= "+startTime;
+		}
+		if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
+			Integer endTime = (int)(DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
+			sql += " and o.addTime <= "+endTime;
+		}
+		if(StringUtils.isNotBlank(cssOrderReqDto.getStoreType())){
+			sql += " and o.type = '"+cssOrderReqDto.getStoreType()+"'";
+		}
+		sql += " and o.isDel = 0 ";
+		sql += " and o.orderPayed > 0.0 ";
+		sql += " and ((o.orderPayed>o.discount and (o.status=1 or o.status =2)) or o.orderPayed>(o.goodsAmount+o.shippingFee)) ";
+		sql += " order by o.orderId DESC";
+		EntityManager em = entityManagerFactory.createEntityManager();
+		Query query = em.createQuery(sql).setFirstResult(0).setMaxResults(100);
+		List<Order> allOrderList = query.getResultList();
+		em.close();
 		List<Order> orderList = new ArrayList<Order>();
-		orderList.addAll(noreturnOrderPage.getContent());
+		int count = allOrderList.size();
+		for(int i=pageNum*pageSize; (i<(pageNum+1)*pageSize && i<count); i++){
+			orderList.add(allOrderList.get(i));
+		}
 		if(CollectionUtils.isEmpty(orderList)) {
 			resp.setMessage("订单列表为空");
 			return resp;
@@ -1609,7 +1555,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			bkOrderList.add(orderListDto);
 		}
 		BkOrderListResultDto resultDto = new BkOrderListResultDto();
-		resultDto.setOrderCount((int)noreturnOrderPage.getTotalElements());
+		resultDto.setOrderCount(count);
 		resultDto.setOrderList(bkOrderList);
 		resp.setResult(resultDto);
 		return resp;
@@ -1657,9 +1603,27 @@ public class BkOrderServiceImpl implements BkOrderService{
 		BkOrderReturnListDto bkOrderReturnListDto = new BkOrderReturnListDto();
 		bkOrderReturnListDto.setCount((int)page.getTotalElements());
 		List<BkOrderReturnDto> returnList = new ArrayList<BkOrderReturnDto>();
+		List<Integer> sellerIds = new ArrayList<Integer>();
 		for(OrderReturn tmp: orderReturnList){
+			if(!sellerIds.contains(tmp.getSellerId())){
+				sellerIds.add(tmp.getSellerId());
+			}
 			BkOrderReturnDto dto = createBkOrderReturn(tmp);
 			returnList.add(dto);
+		}
+		List<Store> storeList = new ArrayList<Store>();
+		if(sellerIds.size() >0){
+			storeList = storeDao.findByStoreIdIn(sellerIds);
+		}
+		Map<Integer, Store> storeMap = new HashMap<Integer, Store>();
+		for(Store store: storeList){
+			storeMap.put(store.getStoreId(), store);
+		}
+		for(BkOrderReturnDto tmp: returnList){
+			Store store = storeMap.get(tmp.getSellerId());
+			if(store!=null){
+				tmp.setSellerName(store.getStoreName());
+			}
 		}
 		bkOrderReturnListDto.setOrderReturnList(returnList);
 		resp.setResult(bkOrderReturnListDto);
@@ -1729,10 +1693,15 @@ public class BkOrderServiceImpl implements BkOrderService{
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		for(OrderAction tmp: orderActionList){
 			BkOrderActionRespDto dto = new BkOrderActionRespDto();
-			String actionTime = dateFormat.format(tmp.getActionTime());
+			String actionTime="";
+			if(tmp.getActionTime()!=null){
+				actionTime = dateFormat.format(tmp.getActionTime());
+			}
+			
 			dto.setActionTime(actionTime);
 			dto.setNote(tmp.getNotes());
 			dto.setActor(tmp.getActor());
+			dto.setAction(tmp.getAction());
 			resultList.add(dto);
 		}
 		//查找支付信息
@@ -1761,7 +1730,13 @@ public class BkOrderServiceImpl implements BkOrderService{
 		Collections.sort(resultList, new Comparator<BkOrderActionRespDto>(){
 			@Override
 			public int compare(BkOrderActionRespDto o1, BkOrderActionRespDto o2) {
-				return o1.getActionTime().compareTo(o2.getActionTime());
+				if(o2.getActionTime() == null){
+					return 1;
+				}else if(o1.getActionTime() == null){
+					return -1;
+				}else{
+					return o1.getActionTime().compareTo(o2.getActionTime());
+				}
 			}
 		});
 		return resultList;
@@ -1881,6 +1856,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			}
 		}
 		
+		//优惠券使用规则
 		List<CoupRule> rules = coupRuleDao.findByIdIn(couponIds);
 		Map<Integer, CoupRule> ruleMap = new HashMap<Integer, CoupRule>();
 		for(CoupRule tmp: rules){
@@ -1907,14 +1883,18 @@ public class BkOrderServiceImpl implements BkOrderService{
 		List<BkCouponListDto> couponList = new ArrayList<BkCouponListDto>();
 		for(CoupList coup : coupList){
 			CoupRule rule = ruleMap.get(coup.getCouponId());
-			CoupType type = typeMap.get(rule.getTypeid());
 			Order order = orderMap.get(coup.getCommoncode());
 			BkCouponListDto dto = new BkCouponListDto();
 			dto.setCommonCode(coup.getCommoncode());
 			dto.setMoney(coup.getMoney());
-			dto.setCouponName(rule.getCouponName());
-			dto.setCouponTypeId(rule.getCoupontypeid());
-			dto.setCouponFormId(type.getTypeid());
+			if(rule != null){
+				dto.setCouponName(rule.getCouponName());
+				dto.setCouponTypeId(rule.getCoupontypeid());
+				CoupType type = typeMap.get(rule.getTypeid());
+				if(type != null){
+					dto.setCouponFormId(type.getTypeid());
+				}
+			}
 			dto.setIsSue(coup.getIssue());
 			dto.setIsChecked(coup.getIschecked());
 			if(order!=null){
@@ -1980,15 +1960,17 @@ public class BkOrderServiceImpl implements BkOrderService{
 	}
 	
 	
-	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot){
+	public BaseRes<String> changeOrder(String orderSnMain,String needShiptime,String needShiptimeSlot,String invoiceHeader,String phoneMob){
 		BaseRes<String> result=new BaseRes<String>();
 		Date needShiptimeDate=DateUtils.str2Date(needShiptime);
-		int orderResult=orderDao.updateNeedShipTimeByOrderSnMain(orderSnMain, needShiptimeDate, needShiptimeSlot);
+		int orderResult=orderDao.updateNeedShipTimeByOrderSnMain(orderSnMain, needShiptimeDate, needShiptimeSlot,invoiceHeader);
 		if(orderResult<1){
 			result.setCode("400");
 			result.setMessage("保存失败");
 			return result;
 		}
+		orderExtmDao.updateExtmByOrderSnMain(orderSnMain,phoneMob);
+		
 		result.setCode("200");
 		result.setMessage("保存成功");
 		return result;
@@ -2035,6 +2017,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		query = em.createQuery(sql);
 		List<OrderRemark> orderRemarkAllList = query.getResultList();
+		em.close();
 		Map<String, OrderRemark> orderRemarkMap = new HashMap<String, OrderRemark>();
 		for(OrderRemark tmp: orderRemarkAllList){
 			OrderRemark orderRemark = orderRemarkMap.get(tmp.getOrderSnMain());
@@ -2088,15 +2071,15 @@ public class BkOrderServiceImpl implements BkOrderService{
 		orderRemark.setBumen(0);
 		orderRemark.setContent(content);
 		orderRemark.setOrderSnMain(orderSnMain);
-		orderRemark.setType(1);
+		orderRemark.setType(type);
 		orderRemark.setUser(userName);
 		orderRemark.setTime(new Date());
 		orderRemarkDao.save(orderRemark);
 	}
 
 	@Override
-	public List<BkOrderRemarkDto> queryHandoverByOrderSnMain(String orderSnMain) {
-		List<OrderRemark> remarkList = orderRemarkDao.getHandoverByOrderSnMain(orderSnMain);
+	public List<BkOrderRemarkDto> queryOrderRemark(String orderSnMain,Integer type) {
+		List<OrderRemark> remarkList = orderRemarkDao.getOrderRemark(orderSnMain,type);
 		List<BkOrderRemarkDto> resultList = new ArrayList<BkOrderRemarkDto>();
 		if(remarkList !=null && remarkList.size()>0){
 			for(OrderRemark tmp: remarkList){

@@ -18,6 +18,8 @@ import com.loukou.order.service.entity.Order;
 public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, JpaSpecificationExecutor<Order>{
 	List<Order> findByTaoOrderSn(String taoOrderSn);
 	
+	List<Order> findByOrderSn(String orderSn);
+	
 	List<Order> findByOrderSnMain(String orderSnMain);
 
 	@Query("SELECT o FROM Order o WHERE shippingId=?1 AND status=15 AND finishedTime>=?2 AND finishedTime<=?3")
@@ -61,6 +63,8 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 
 	Page<Order> findByBuyerIdAndIsDel(int userId, int isDel, Pageable pageable);
 	
+	Page<Order> findByBuyerIdAndIsDelAndPayStatusInAndSource(int userId, int isDel, List<Integer> payStatusList,int source,Pageable pageable);
+	
 	Page<Order> findByBuyerId(int userId, Pageable pageable);
 
 	@Transactional
@@ -87,7 +91,9 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 
 	Page<Order> findByBuyerIdAndIsDelAndPayStatusAndStatusIn(int userId, int isDel, int payStatus,
 			List<Integer> statusList, Pageable pagealbe);
-
+	Page<Order> findByBuyerIdAndIsDelAndPayStatusAndStatusInAndSourceNot(int userId, int isDel, int payStatus,
+			List<Integer> statusList,int source, Pageable pagealbe);
+	
 	List<Order> findByOrderSnMainAndPayStatus(String orderSnMain, int payStatus);
 
 	Page<Order> findBySellerIdAndStatusAndTypeIn(int sellerId,int status,List<String> types,Pageable page);
@@ -128,12 +134,15 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 	
 	@Transactional(value="transactionManagerMall")
 	@Modifying
-	@Query("UPDATE Order set needShiptime = ?2,needShiptimeSlot=?3 where orderSnMain = ?1")
-	int updateNeedShipTimeByOrderSnMain(String orderSnMain,Date needShiptime, String needShiptimeSlot);
+	@Query("UPDATE Order set needShiptime = ?2,needShiptimeSlot=?3,invoiceHeader=?4 where orderSnMain = ?1")
+	int updateNeedShipTimeByOrderSnMain(String orderSnMain,Date needShiptime, String needShiptimeSlot,String invoiceHeader);
 	
 	@Transactional
 	@Modifying
 	@Query("UPDATE Order set payId = ?1, payStatus = 1, payTime = addTime, orderPayed = goodsAmount+shippingFee where orderSnMain = ?2")
 	int updateOrderPayId(int payId,String orderSnMain);
+
+	@Query("SELECT orderId FROM Order WHERE buyerId=?1 AND addTime>?2 AND status IN (0, 3, 5, 6, 8, 13, 14, 15)")
+	List<Integer> getValidOrderId(int userId, int addTime);
 }
 
