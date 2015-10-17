@@ -72,7 +72,7 @@ public interface WeiCangGoodsStoreDao extends PagingAndSortingRepository<WeiCang
     
     @Transactional
 	@Modifying
-	@Query("UPDATE WeiCangGoodsStore set stockS = stockS - ?3, freezstock=freezstock - ?4 where siteSkuId = ?1 and storeId=?2")
+	@Query("UPDATE WeiCangGoodsStore set stockS = stockS - ?3, freezstock=freezstock - ?4 where siteskuId = ?1 and storeId=?2")
 	int updateBySiteskuIdAndStoreId(int skuId, int storeId, int stockS, int freezstock);
 	
 }
