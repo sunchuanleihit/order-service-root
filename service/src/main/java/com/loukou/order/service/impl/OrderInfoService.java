@@ -353,8 +353,12 @@ public class OrderInfoService {
             }
         }
 
-        orderInfoDtos.addAll(map.values());
-
+        for(Order  o :orders.getContent()){
+            OrderInfoDto dto = map.get(o.getOrderId());
+            if(dto !=null){
+                orderInfoDtos.add(dto);
+            }
+        }
         orderListInfoDto.setOrders(orderInfoDtos);
         orderListInfoDto.setStoreId(param.getStoreId());
         orderListInfoDto.setTotalNum(orders.getTotalElements());
@@ -492,7 +496,12 @@ public class OrderInfoService {
             }
         }
 
-        orderInfoDtos.addAll(map.values());
+        for(Order  o :orders.getContent()){
+            OrderInfoDto dto = map.get(o.getOrderId());
+            if(dto !=null){
+                orderInfoDtos.add(dto);
+            }
+        }
 
         orderListInfoDto.setOrders(orderInfoDtos);
         orderListInfoDto.setStoreId(param.getStoreId());
