@@ -1506,7 +1506,11 @@ public class BkOrderServiceImpl implements BkOrderService{
 		baseDto.setOrderAmount(order.getOrderAmount());
 		baseDto.setGoodsAmount(order.getGoodsAmount());
 		baseDto.setOrderPaid(order.getOrderPayed());
-		baseDto.setOrderNotPaid(order.getGoodsAmount()+order.getShippingFee()-order.getOrderPayed());
+		if(order.getStatus() == 1 || order.getStatus() ==2){
+			baseDto.setOrderNotPaid(order.getOrderPayed());
+		}else{
+			baseDto.setOrderNotPaid(order.getGoodsAmount()+order.getShippingFee()-order.getOrderPayed());
+		}
 		baseDto.setPrinted(order.getPrinted());
 		baseDto.setPayStatus(order.getPayStatus());
 		baseDto.setSellerName(order.getSellerName());
@@ -1527,10 +1531,9 @@ public class BkOrderServiceImpl implements BkOrderService{
 			final CssOrderReqDto cssOrderReqDto) {
 		BkOrderListRespDto resp = new BkOrderListRespDto(200, "");
 		if(StringUtils.isBlank(cssOrderReqDto.getOrderSnMain()) && StringUtils.isBlank(cssOrderReqDto.getBuyerName()) && StringUtils.isBlank(cssOrderReqDto.getSellerName())
-				&& StringUtils.isBlank(cssOrderReqDto.getStartTime()) && StringUtils.isBlank(cssOrderReqDto.getEndTime()) && StringUtils.isBlank(cssOrderReqDto.getStoreType())){
+				&& StringUtils.isBlank(cssOrderReqDto.getOrderDate()) && StringUtils.isBlank(cssOrderReqDto.getStoreType())){
 			return resp;
 		}
-				
 		pageNum--;
 		String sql = "select o from Order o where 1=1 ";
 		if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
@@ -1542,28 +1545,42 @@ public class BkOrderServiceImpl implements BkOrderService{
 		if(StringUtils.isNotBlank(cssOrderReqDto.getSellerName())){
 			sql += " and o.sellerName = '"+cssOrderReqDto.getSellerName()+"'";
 		}
-		
-		if(StringUtils.isNotBlank(cssOrderReqDto.getStartTime())){
-			Integer startTime = (int)(DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
-			sql += " and o.addTime >= "+startTime;
-		}
-		if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
-			Integer endTime = (int)(DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
-			sql += " and o.addTime <= "+endTime;
+		if(StringUtils.isNotBlank(cssOrderReqDto.getOrderDate())){
+			Integer startTime = (int)(DateUtils.getStartofDate(DateUtils.str2Date(cssOrderReqDto.getOrderDate())).getTime()/1000);
+			Integer endTime = (int)(DateUtils.getEndofDate(DateUtils.str2Date(cssOrderReqDto.getOrderDate())).getTime()/1000);
+			sql += " and o.addTime > " + startTime + " and o.addTime < " + endTime;
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getStoreType())){
 			sql += " and o.type = '"+cssOrderReqDto.getStoreType()+"'";
 		}
-		sql += " and o.isDel = 0 ";
 		sql += " and o.orderPayed > 0.0 ";
 		sql += " and ((o.orderPayed>o.discount and (o.status=1 or o.status =2)) or o.orderPayed>(o.goodsAmount+o.shippingFee)) ";
 		sql += " order by o.orderId DESC";
 		EntityManager em = entityManagerFactory.createEntityManager();
-		Query query = em.createQuery(sql).setFirstResult(0).setMaxResults(100);
+		Query query = em.createQuery(sql);
 		List<Order> allOrderList = query.getResultList();
 		em.close();
+		List<String> allOrderSnMainList = new ArrayList<String>();
+		for(Order tmp: allOrderList){
+			allOrderSnMainList.add(tmp.getOrderSnMain());
+		}
+		//找出所有已生成待退款单
+		List<OrderReturn> orderReturnList = new ArrayList<OrderReturn>();
+		if(allOrderSnMainList.size()>0){
+			orderReturnList = orderReturnDao.findByOrderSnMainIn(allOrderSnMainList);
+		}
+		Set<String> orderReturnSet = new HashSet<String>();
+		for(OrderReturn or : orderReturnList){
+			orderReturnSet.add(or.getOrderSnMain());
+		}
+		List<Order> orderListNotReturn = new ArrayList<Order>();
+		for(Order tmp : allOrderList){
+			if(!orderReturnSet.contains(tmp.getOrderSnMain())){
+				orderListNotReturn.add(tmp);
+			}
+		}
+ 		int count = orderListNotReturn.size();
 		List<Order> orderList = new ArrayList<Order>();
-		int count = allOrderList.size();
 		for(int i=pageNum*pageSize; (i<(pageNum+1)*pageSize && i<count); i++){
 			orderList.add(allOrderList.get(i));
 		}
@@ -1571,7 +1588,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 			resp.setMessage("订单列表为空");
 			return resp;
 		}
-		
 		List<BkOrderListDto> bkOrderList = new ArrayList<BkOrderListDto>();
 		for(Order tmp : orderList) {
 			BkOrderListDto orderListDto = new BkOrderListDto();
@@ -2382,5 +2398,19 @@ public class BkOrderServiceImpl implements BkOrderService{
 			}
 		}
 		return resp;
+	}
+
+	@Override
+	public List<BkOrderReturnDto> getOrderReturnByOrderSnMain(String orderSnMain) {
+		List<OrderReturn> orderReturnList = orderReturnDao.findByOrderSnMain(orderSnMain);
+		List<BkOrderReturnDto> bkOrderReturnList = new ArrayList<BkOrderReturnDto>();
+		if(orderReturnList!=null){
+			for(OrderReturn orderReturn : orderReturnList){
+				BkOrderReturnDto bkOrderReturnDto = new BkOrderReturnDto();
+				BeanUtils.copyProperties(orderReturn, bkOrderReturnDto);
+				bkOrderReturnList.add(bkOrderReturnDto);
+			}
+		}
+		return bkOrderReturnList;
 	}
 }
