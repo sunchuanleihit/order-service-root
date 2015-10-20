@@ -1671,7 +1671,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		resp.setResult(bkOrderReturnListDto);
 		return resp;
 	}
-
+	
 	@Override
 	public String cancelOrderReturn(Integer orderIdR) {
 		OrderReturn orderReturn = orderReturnDao.findOne(orderIdR);
@@ -1689,8 +1689,26 @@ public class BkOrderServiceImpl implements BkOrderService{
 	public List<BkOrderReturnDto> getOrderReturnsByIds(List<Integer> ids) {
 		List<OrderReturn> orderReturns = orderReturnDao.findByOrderIdRIn(ids);
 		List<BkOrderReturnDto> resultList = new ArrayList<BkOrderReturnDto>();
+		List<Integer> sellerIds = new ArrayList<Integer>();
 		for(OrderReturn tmp: orderReturns){
 			resultList.add(createBkOrderReturn(tmp));
+			if(!sellerIds.contains(tmp.getSellerId())){
+				sellerIds.add(tmp.getSellerId());
+			}
+		}
+		List<Store> storeList = new ArrayList<Store>();
+		if(sellerIds.size() >0){
+			storeList = storeDao.findByStoreIdIn(sellerIds);
+		}
+		Map<Integer, Store> storeMap = new HashMap<Integer, Store>();
+		for(Store store: storeList){
+			storeMap.put(store.getStoreId(), store);
+		}
+		for(BkOrderReturnDto tmp: resultList){
+			Store store = storeMap.get(tmp.getSellerId());
+			if(store!=null){
+				tmp.setSellerName(store.getStoreName());
+			}
 		}
 		Collections.sort(resultList,new Comparator<BkOrderReturnDto>(){
 			@Override
