@@ -366,6 +366,7 @@ public class OrderInfoService {
                                 }else{
                                     dto.setGoodsReturnStatus(2);
                                 }
+                                dto.setCancelTime(copyList.get(i).getAddTime());
                                removeId =i;
                                break;
                             }
