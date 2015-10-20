@@ -354,14 +354,14 @@ public class OrderInfoService {
 
         for(Order  o :orders.getContent()){
             OrderInfoDto dto = map.get(o.getOrderId());
-            System.out.println(o.getOrderId());
             if(dto !=null){
                 orderInfoDtos.add(dto);
                 if(param.getOrderStatus()  == OrderStatusEnum.STATUS_CANCELED.getId()){
+                    List<OrderReturn> copyList = Lists.newArrayList(orderReturns.getContent());
                     int removeId=0 ;
-                    for(int i =0;i<orderReturns.getContent().size();i++){
-                            if(o.getOrderId() == orderReturns.getContent().get(i).getOrderId()){
-                                if(orderReturns.getContent().get(i).getGoodsStatus()!=4){
+                    for(int i =0;i<copyList.size();i++){
+                            if(o.getOrderId() ==copyList.get(i).getOrderId()){
+                                if(copyList.get(i).getGoodsStatus()!=4){
                                    dto.setGoodsReturnStatus(1);
                                 }else{
                                     dto.setGoodsReturnStatus(2);
@@ -370,7 +370,7 @@ public class OrderInfoService {
                                break;
                             }
                     }
-                    orderReturns.getContent().remove(removeId);
+                    copyList.remove(removeId);
                 }
             }
         }
