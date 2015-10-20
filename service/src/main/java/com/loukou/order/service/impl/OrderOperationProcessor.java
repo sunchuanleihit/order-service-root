@@ -356,7 +356,7 @@ public class OrderOperationProcessor {
 		}
 		
 		for (LKWhStockInGoods stockInGoods : stockInGoodsList) {
-			int tempCount = lkWhGoodsStoreDao.updateBySiteskuIdAndStoreId(stockInGoods.getSpecId(),
+			int tempCount = lkWhGoodsStoreDao.updateBySiteskuIdAndStoreId(stockInGoods.getSiteSkuId(),
 					whStockIn.getStoreId(),-stockInGoods.getStock(),0);
 			
 			if(tempCount==0){
