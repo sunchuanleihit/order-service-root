@@ -359,6 +359,8 @@ public class OrderInfoService {
             OrderInfoDto dto = map.get(o.getOrderId());
             if(dto !=null){
                 orderInfoDtos.add(dto);
+                //内部状态要重置掉
+                dto.setOrderStatus(param.getOrderStatus());
                 if(param.getOrderStatus()  == OrderStatusEnum.STATUS_CANCELED.getId()){
                     List<OrderReturn> copyList = Lists.newArrayList(orderReturns.getContent());
                     int removeId=-1 ;
@@ -374,8 +376,7 @@ public class OrderInfoService {
                                break;
                             }
                     }
-                    //因为order表中的状态不会是取消状态,这里更改dto的状态
-                    dto.setOrderStatus(OrderStatusEnum.STATUS_CANCELED.getId());
+                 
                     if(removeId!=-1){
                         copyList.remove(removeId);
                     }
