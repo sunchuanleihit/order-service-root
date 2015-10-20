@@ -192,8 +192,16 @@ public class OrderInfoService {
         }
         Page<Order> orders;
         if (param.getOrderType() == 2) {
-            orders = orderDao.findBySellerIdAndStatusAndTypeIn(param.getStoreId(), param.getOrderStatus(), types,
-                    pagenation);
+            //待处理的预售订单包含　打包和审核好的
+            if(param.getOrderStatus() == OrderStatusEnum.STATUS_REVIEWED.getId()){
+                List<Integer> status = Lists.newArrayList( OrderStatusEnum.STATUS_REVIEWED.getId(), OrderStatusEnum.STATUS_PACKAGED.getId());
+                orders = orderDao.findBySellerIdAndStatusInAndTypeIn(param.getStoreId(), status, types,
+                        pagenation);
+            }else{
+                orders = orderDao.findBySellerIdAndStatusAndTypeIn(param.getStoreId(), param.getOrderStatus(), types,
+                        pagenation);
+            }
+          
         } else {
             if (param.getOrderStatus() == OrderStatusEnum.STATUS_FINISHED.getId()
                     && !StringUtils.isBlank(param.getFinishedTime())) {

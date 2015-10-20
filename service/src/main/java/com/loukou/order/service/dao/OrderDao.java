@@ -98,6 +98,8 @@ public interface OrderDao extends PagingAndSortingRepository<Order, Integer>, Jp
 
 	Page<Order> findBySellerIdAndStatusAndTypeIn(int sellerId,int status,List<String> types,Pageable page);
 	
+	Page<Order> findBySellerIdAndStatusInAndTypeIn(int sellerId,List<Integer> status,List<String> types,Pageable page);
+	
 	Page<Order> findBySellerIdAndStatusIn(int sellerId,List<Integer> status,Pageable page);
 	
 	Page<Order> findBySellerIdAndStatusAndFinishedTimeBetweenAndTypeIn(int sellerId,int status,int startTime,int endTime,List<String> types,Pageable page);
