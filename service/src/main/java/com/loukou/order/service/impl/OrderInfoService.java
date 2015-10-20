@@ -370,6 +370,8 @@ public class OrderInfoService {
                                break;
                             }
                     }
+                    //因为order表中的状态不会是取消状态,这里更改dto的状态
+                    dto.setOrderStatus(OrderStatusEnum.STATUS_CANCELED.getId());
                     copyList.remove(removeId);
                 }
             }
