@@ -166,4 +166,6 @@ public interface BkOrderService {
 	public BaseRes<String> paySubOrder(String orderSnMain,String actor,int payId);
 	
 	public List<BkOrderPayDto> getPaymentList();
+	
+	public List<BkOrderReturnDto> getOrderReturnByOrderSnMain(String orderSnMain);
 }

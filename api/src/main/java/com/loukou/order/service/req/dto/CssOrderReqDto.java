@@ -20,7 +20,14 @@ public class CssOrderReqDto implements Serializable{
 	private Integer refundStatus;//退款状态
 	private Integer timeLimit;//时间限制
 	private Integer isDel;//是否删除
+	private String orderDate;//订单日期
 	
+	public String getOrderDate() {
+		return orderDate;
+	}
+	public void setOrderDate(String orderDate) {
+		this.orderDate = orderDate;
+	}
 	public String getStoreType() {
 		return storeType;
 	}
