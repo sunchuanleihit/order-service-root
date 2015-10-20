@@ -56,7 +56,7 @@ public class OrderServiceOperationImpTest extends AbstractTestObject {
     @Test
     public void testGetOrderListInfo() {
         OrderListParamDto param = new OrderListParamDto();
-        param.setOrderStatus(OrderStatusEnum.STATUS_FINISHED.getId());
+        param.setOrderStatus(OrderStatusEnum.STATUS_CANCELED.getId());
         param.setOrderType(1);
         param.setPageNum(1);
         param.setPageSize(4);

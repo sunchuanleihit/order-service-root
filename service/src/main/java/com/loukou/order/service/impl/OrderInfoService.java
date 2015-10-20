@@ -2,6 +2,7 @@ package com.loukou.order.service.impl;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +16,7 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -191,6 +193,7 @@ public class OrderInfoService {
             break;
         }
         Page<Order> orders;
+        Page<OrderReturn> orderReturns = new PageImpl<OrderReturn>(new ArrayList<OrderReturn>());
         if (param.getOrderType() == 2) {
             //待处理的预售订单包含　打包和审核好的
             if(param.getOrderStatus() == OrderStatusEnum.STATUS_REVIEWED.getId()){
@@ -201,8 +204,28 @@ public class OrderInfoService {
                 orders = orderDao.findBySellerIdAndStatusAndTypeIn(param.getStoreId(), param.getOrderStatus(), types,
                         pagenation);
             }
-          
-        } else {
+        } else if(param.getOrderStatus() == OrderStatusEnum.STATUS_CANCELED.getId()){
+            //用户取消的需要通过客服系统退货 走退货表 (订单表中状态依旧是回单)　然后通过orderId反查订单表
+            orderReturns = orderRDao.findBySellerIdAndGoodsStatusIn(param.getStoreId(), Lists.newArrayList(0,1,2,3),pagenation);
+            List<Order> orderDaoList = new ArrayList<Order>();
+            List<Order> orderList = new ArrayList<Order>();
+            List<Integer> orderIds = new ArrayList<Integer>();
+            for(OrderReturn r :orderReturns.getContent()){
+                orderIds.add(r.getOrderId());
+            }
+            if(!CollectionUtils.isEmpty(orderIds)){
+                orderDaoList = orderDao.findByOrderIdIn(orderIds);
+            }
+            //因为可以多次退单，这里需要重新build一遍
+            for(Integer i:orderIds){
+                for(Order o: orderDaoList){
+                    if(i==o.getOrderId()){
+                        orderList.add(o);
+                    }
+                }
+            }
+            orders =new PageImpl<Order>(orderList);
+        }else {
             if (param.getOrderStatus() == OrderStatusEnum.STATUS_FINISHED.getId()
                     && !StringUtils.isBlank(param.getFinishedTime())) {
                 long startTime = 0;
@@ -224,13 +247,7 @@ public class OrderInfoService {
                         PayStatusEnum.STATUS_PAYED.getId());
                 orders = orderDao.findBysellerIdAndStatusAndPayStatusInAndTypeIn(param.getStoreId(),
                         param.getOrderStatus(), payed, types, pagenation);
-            }else if (param.getOrderStatus() == OrderStatusEnum.STATUS_CANCELED.getId()) {
-                // 取消状态需要已付款
-                List<Integer> payed = Lists.newArrayList(PayStatusEnum.STATUS_PART_PAYED.getId(),
-                        PayStatusEnum.STATUS_PAYED.getId());
-                orders = orderDao.findBysellerIdAndStatusAndPayStatusInAndTypeIn(param.getStoreId(),
-                        param.getOrderStatus(), payed, types, pagenation);
-            } else {
+            }else {
                 orders = orderDao.findBySellerIdAndStatusAndTypeIn(param.getStoreId(), param.getOrderStatus(), types,
                         pagenation);
             }
@@ -292,32 +309,6 @@ public class OrderInfoService {
         if (param.getOrderStatus() == OrderStatusEnum.STATUS_REVIEWED.getId()) {
 
         } else if (param.getOrderStatus() == OrderStatusEnum.STATUS_CANCELED.getId()) {
-
-            List<OrderAction> orderActions = orderActionDao.findByTaoOrderSnInAndAction(biMap.values(),
-                    OrderStatusEnum.STATUS_CANCELED.getId());
-            if (!CollectionUtils.isEmpty(orderActions)) {
-                for (OrderAction orderAction : orderActions) {
-                    OrderInfoDto value = map.get(orderAction.getOrderId());
-                    if (value != null) {
-                        value.setCancelTime(DateUtils.date2DateStr2(orderAction.getActionTime()));
-                    }
-                }
-            }
-            for (Order order : orders.getContent()) {
-                List<OrderReturn> returns = orderRDao.findByOrderSnMain(order.getOrderSnMain());
-                if (!CollectionUtils.isEmpty(returns)) {
-                    // good_status只要不是４　就是待退货
-                    if (returns.get(0).getGoodsStatus() != 4) {
-                        map.get(order.getOrderId()).setGoodsReturnStatus(1);
-                    } else {
-                        map.get(order.getOrderId()).setGoodsReturnStatus(2);
-                    }
-                } else {
-                    // 没有状态　　直接就是已退货
-                    map.get(order.getOrderId()).setGoodsReturnStatus(2);
-                }
-            }
-
         } else if (param.getOrderStatus() == OrderStatusEnum.STATUS_14.getId()) {
 
         } else if (param.getOrderStatus() == OrderStatusEnum.STATUS_INVALID.getId()) {
@@ -363,8 +354,24 @@ public class OrderInfoService {
 
         for(Order  o :orders.getContent()){
             OrderInfoDto dto = map.get(o.getOrderId());
+            System.out.println(o.getOrderId());
             if(dto !=null){
                 orderInfoDtos.add(dto);
+                if(param.getOrderStatus()  == OrderStatusEnum.STATUS_CANCELED.getId()){
+                    int removeId=0 ;
+                    for(int i =0;i<orderReturns.getContent().size();i++){
+                            if(o.getOrderId() == orderReturns.getContent().get(i).getOrderId()){
+                                if(orderReturns.getContent().get(i).getGoodsStatus()!=4){
+                                   dto.setGoodsReturnStatus(1);
+                                }else{
+                                    dto.setGoodsReturnStatus(2);
+                                }
+                               removeId =i;
+                               break;
+                            }
+                    }
+                    orderReturns.getContent().remove(removeId);
+                }
             }
         }
         orderListInfoDto.setOrders(orderInfoDtos);
