@@ -85,6 +85,7 @@ import com.loukou.order.service.enums.OrderPayTypeEnum;
 import com.loukou.order.service.enums.OrderReturnGoodsType;
 import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.enums.PayStatusEnum;
+import com.loukou.order.service.enums.PaymentEnum;
 import com.loukou.order.service.enums.ReturnGoodsStatus;
 import com.loukou.order.service.req.dto.BkOrderRemarkReqDto;
 import com.loukou.order.service.req.dto.CssOrderReqDto;
@@ -743,7 +744,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 				return result;
 			}
 			
-			if(o.getStatus()>=8 || o.getStatus()==1 || o.getStatus()==2){
+			if(o.getStatus()>=OrderStatusEnum.STATUS_PACKAGED.getId() || o.getStatus()==OrderStatusEnum.STATUS_INVALID.getId()){
 				result.setCode("400");
 				result.setMessage("不可作废");
 				return result;
@@ -753,12 +754,13 @@ public class BkOrderServiceImpl implements BkOrderService{
 		double discount=0;
 		List<OrderPay> orderPayList = orderPayDao.findByOrderSnMain(orderSnMain);
 		for(OrderPay op:orderPayList){
-			if(op.getPaymentId()==14){
+			if(op.getPaymentId()==PaymentEnum.PAY_YHQ.getId()){
 				discount+=op.getMoney();
 			}
 		}
 		
-		int orderResult= orderDao.updateOrderStatusByOrderSnMainAndNotStatus(orderSnMain,2,2);
+		int orderResult= orderDao.updateOrderStatusByOrderSnMainAndNotStatus(orderSnMain,OrderStatusEnum.STATUS_INVALID.getId(),OrderStatusEnum.STATUS_INVALID.getId());
+		
 		if(orderResult<1){
 			result.setCode("400");
 			result.setMessage("已作废，不可再次作废");
@@ -769,15 +771,15 @@ public class BkOrderServiceImpl implements BkOrderService{
 		for(Order o:orderList){
 			if(o.getStatus()!=1){//已取消订单不退库存
 				releaseFreezStock(o.getOrderId(),2);
+				if(discount>0){
+					String couponNo = o.getUseCouponNo();
+					int userId = o.getBuyerId();
+					if(StringUtils.isNotBlank(couponNo) || userId > 0){
+						coupListDao.refundCouponList(couponNo, userId);
+					}
+				}
 			}
 		}
-		
-		if(discount>0){
-			String couponNo=orderList.get(0).getUseCouponNo();
-			int userId=orderList.get(0).getBuyerId();
-			coupListDao.refundCouponList(couponNo, userId);
-		}
-		
 		for(Order o:orderList){
 			OrderAction orderAction=new OrderAction();
 			orderAction.setAction(2);
@@ -788,8 +790,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			orderAction.setActor(actor);
 			orderAction.setNotes("作废");
 			orderActionDao.save(orderAction);
-		}		
-		
+		}
 		List<OrderExtm> orderExtmMsg=orderExtmDao.findByOrderSnMain(orderSnMain);
 		String phone=orderExtmMsg.get(0).getPhoneMob();
 		
@@ -1359,7 +1360,11 @@ public class BkOrderServiceImpl implements BkOrderService{
 			whereStr += " and o.isDel = " + cssOrderReqDto.getIsDel();
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
-			whereStr += " and o.orderSnMain like '%"+cssOrderReqDto.getOrderSnMain()+"%'";
+			if(cssOrderReqDto.getOrderSnMain().length()>=15){
+				whereStr += " and o.orderSnMain = '"+cssOrderReqDto.getOrderSnMain()+"'";
+			}else{
+				whereStr += " and o.orderSnMain like '%"+cssOrderReqDto.getOrderSnMain()+"%'";
+			}
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getBuyerName())){
 			whereStr += " and o.buyerName = '"+cssOrderReqDto.getBuyerName()+"'";
@@ -1506,7 +1511,11 @@ public class BkOrderServiceImpl implements BkOrderService{
 		baseDto.setOrderAmount(order.getOrderAmount());
 		baseDto.setGoodsAmount(order.getGoodsAmount());
 		baseDto.setOrderPaid(order.getOrderPayed());
-		baseDto.setOrderNotPaid(order.getGoodsAmount()+order.getShippingFee()-order.getOrderPayed());
+		if(order.getStatus() == 1 || order.getStatus() ==2){
+			baseDto.setOrderNotPaid(order.getOrderPayed());
+		}else{
+			baseDto.setOrderNotPaid(order.getGoodsAmount()+order.getShippingFee()-order.getOrderPayed());
+		}
 		baseDto.setPrinted(order.getPrinted());
 		baseDto.setPayStatus(order.getPayStatus());
 		baseDto.setSellerName(order.getSellerName());
@@ -1527,10 +1536,9 @@ public class BkOrderServiceImpl implements BkOrderService{
 			final CssOrderReqDto cssOrderReqDto) {
 		BkOrderListRespDto resp = new BkOrderListRespDto(200, "");
 		if(StringUtils.isBlank(cssOrderReqDto.getOrderSnMain()) && StringUtils.isBlank(cssOrderReqDto.getBuyerName()) && StringUtils.isBlank(cssOrderReqDto.getSellerName())
-				&& StringUtils.isBlank(cssOrderReqDto.getStartTime()) && StringUtils.isBlank(cssOrderReqDto.getEndTime()) && StringUtils.isBlank(cssOrderReqDto.getStoreType())){
+				&& StringUtils.isBlank(cssOrderReqDto.getOrderDate()) && StringUtils.isBlank(cssOrderReqDto.getStoreType())){
 			return resp;
 		}
-				
 		pageNum--;
 		String sql = "select o from Order o where 1=1 ";
 		if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
@@ -1542,28 +1550,42 @@ public class BkOrderServiceImpl implements BkOrderService{
 		if(StringUtils.isNotBlank(cssOrderReqDto.getSellerName())){
 			sql += " and o.sellerName = '"+cssOrderReqDto.getSellerName()+"'";
 		}
-		
-		if(StringUtils.isNotBlank(cssOrderReqDto.getStartTime())){
-			Integer startTime = (int)(DateUtils.str2Date(cssOrderReqDto.getStartTime()).getTime()/1000);
-			sql += " and o.addTime >= "+startTime;
-		}
-		if(StringUtils.isNotBlank(cssOrderReqDto.getEndTime())){
-			Integer endTime = (int)(DateUtils.str2Date(cssOrderReqDto.getEndTime()).getTime()/1000);
-			sql += " and o.addTime <= "+endTime;
+		if(StringUtils.isNotBlank(cssOrderReqDto.getOrderDate())){
+			Integer startTime = (int)(DateUtils.getStartofDate(DateUtils.str2Date(cssOrderReqDto.getOrderDate())).getTime()/1000);
+			Integer endTime = (int)(DateUtils.getEndofDate(DateUtils.str2Date(cssOrderReqDto.getOrderDate())).getTime()/1000);
+			sql += " and o.addTime > " + startTime + " and o.addTime < " + endTime;
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getStoreType())){
 			sql += " and o.type = '"+cssOrderReqDto.getStoreType()+"'";
 		}
-		sql += " and o.isDel = 0 ";
 		sql += " and o.orderPayed > 0.0 ";
 		sql += " and ((o.orderPayed>o.discount and (o.status=1 or o.status =2)) or o.orderPayed>(o.goodsAmount+o.shippingFee)) ";
 		sql += " order by o.orderId DESC";
 		EntityManager em = entityManagerFactory.createEntityManager();
-		Query query = em.createQuery(sql).setFirstResult(0).setMaxResults(100);
+		Query query = em.createQuery(sql);
 		List<Order> allOrderList = query.getResultList();
 		em.close();
+		List<String> allOrderSnMainList = new ArrayList<String>();
+		for(Order tmp: allOrderList){
+			allOrderSnMainList.add(tmp.getOrderSnMain());
+		}
+		//找出所有已生成待退款单
+		List<OrderReturn> orderReturnList = new ArrayList<OrderReturn>();
+		if(allOrderSnMainList.size()>0){
+			orderReturnList = orderReturnDao.findByOrderSnMainIn(allOrderSnMainList);
+		}
+		Set<String> orderReturnSet = new HashSet<String>();
+		for(OrderReturn or : orderReturnList){
+			orderReturnSet.add(or.getOrderSnMain());
+		}
+		List<Order> orderListNotReturn = new ArrayList<Order>();
+		for(Order tmp : allOrderList){
+			if(!orderReturnSet.contains(tmp.getOrderSnMain())){
+				orderListNotReturn.add(tmp);
+			}
+		}
+ 		int count = orderListNotReturn.size();
 		List<Order> orderList = new ArrayList<Order>();
-		int count = allOrderList.size();
 		for(int i=pageNum*pageSize; (i<(pageNum+1)*pageSize && i<count); i++){
 			orderList.add(allOrderList.get(i));
 		}
@@ -1571,7 +1593,6 @@ public class BkOrderServiceImpl implements BkOrderService{
 			resp.setMessage("订单列表为空");
 			return resp;
 		}
-		
 		List<BkOrderListDto> bkOrderList = new ArrayList<BkOrderListDto>();
 		for(Order tmp : orderList) {
 			BkOrderListDto orderListDto = new BkOrderListDto();
@@ -1650,7 +1671,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 		resp.setResult(bkOrderReturnListDto);
 		return resp;
 	}
-
+	
 	@Override
 	public String cancelOrderReturn(Integer orderIdR) {
 		OrderReturn orderReturn = orderReturnDao.findOne(orderIdR);
@@ -1668,8 +1689,26 @@ public class BkOrderServiceImpl implements BkOrderService{
 	public List<BkOrderReturnDto> getOrderReturnsByIds(List<Integer> ids) {
 		List<OrderReturn> orderReturns = orderReturnDao.findByOrderIdRIn(ids);
 		List<BkOrderReturnDto> resultList = new ArrayList<BkOrderReturnDto>();
+		List<Integer> sellerIds = new ArrayList<Integer>();
 		for(OrderReturn tmp: orderReturns){
 			resultList.add(createBkOrderReturn(tmp));
+			if(!sellerIds.contains(tmp.getSellerId())){
+				sellerIds.add(tmp.getSellerId());
+			}
+		}
+		List<Store> storeList = new ArrayList<Store>();
+		if(sellerIds.size() >0){
+			storeList = storeDao.findByStoreIdIn(sellerIds);
+		}
+		Map<Integer, Store> storeMap = new HashMap<Integer, Store>();
+		for(Store store: storeList){
+			storeMap.put(store.getStoreId(), store);
+		}
+		for(BkOrderReturnDto tmp: resultList){
+			Store store = storeMap.get(tmp.getSellerId());
+			if(store!=null){
+				tmp.setSellerName(store.getStoreName());
+			}
 		}
 		Collections.sort(resultList,new Comparator<BkOrderReturnDto>(){
 			@Override
@@ -2170,21 +2209,19 @@ public class BkOrderServiceImpl implements BkOrderService{
 		BaseRes<String> result=new BaseRes<String>();
 		
 		Order order=orderDao.findByOrderId(orderId);
-		if(order.getStatus()==1 || order.getStatus()==2){
+		if(order.getStatus()==2){
 			result.setCode("400");
 			result.setMessage("已作废，不可再次作废");
 			return result;
 		}
 		
-		if(order.getType()!="booking"){
-			if(order.getStatus()>=8){
-				result.setCode("400");
-				result.setMessage("子订单作废失败");
-				return result;
-			}
+		if(order.getStatus()>=OrderStatusEnum.STATUS_PACKAGED.getId()){
+			result.setCode("400");
+			result.setMessage("子订单作废失败");
+			return result;
 		}
 		
-		if(order.getStatus()==15){
+		if(order.getStatus()==OrderStatusEnum.STATUS_FINISHED.getId()){
 			result.setCode("400");
 			result.setMessage("子订单已完成，不可作废");
 			return result;
@@ -2198,10 +2235,8 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		
 		//取消订单返还库存
-		if(order.getType()!="booking"){
-			if(order.getStatus()!=1){//已取消订单不退库存
-				releaseFreezStock(order.getOrderId(),2);
-			}
+		if(order.getStatus()!=1){//已取消订单不退库存
+			releaseFreezStock(order.getOrderId(),2);
 		}
 		
 		OrderAction orderAction=new OrderAction();
@@ -2382,5 +2417,19 @@ public class BkOrderServiceImpl implements BkOrderService{
 			}
 		}
 		return resp;
+	}
+
+	@Override
+	public List<BkOrderReturnDto> getOrderReturnByOrderSnMain(String orderSnMain) {
+		List<OrderReturn> orderReturnList = orderReturnDao.findByOrderSnMain(orderSnMain);
+		List<BkOrderReturnDto> bkOrderReturnList = new ArrayList<BkOrderReturnDto>();
+		if(orderReturnList!=null){
+			for(OrderReturn orderReturn : orderReturnList){
+				BkOrderReturnDto bkOrderReturnDto = new BkOrderReturnDto();
+				BeanUtils.copyProperties(orderReturn, bkOrderReturnDto);
+				bkOrderReturnList.add(bkOrderReturnDto);
+			}
+		}
+		return bkOrderReturnList;
 	}
 }
