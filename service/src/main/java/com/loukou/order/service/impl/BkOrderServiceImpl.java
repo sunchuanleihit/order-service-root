@@ -85,6 +85,7 @@ import com.loukou.order.service.enums.OrderPayTypeEnum;
 import com.loukou.order.service.enums.OrderReturnGoodsType;
 import com.loukou.order.service.enums.OrderStatusEnum;
 import com.loukou.order.service.enums.PayStatusEnum;
+import com.loukou.order.service.enums.PaymentEnum;
 import com.loukou.order.service.enums.ReturnGoodsStatus;
 import com.loukou.order.service.req.dto.BkOrderRemarkReqDto;
 import com.loukou.order.service.req.dto.CssOrderReqDto;
@@ -743,7 +744,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 				return result;
 			}
 			
-			if(o.getStatus()>=8 || o.getStatus()==1 || o.getStatus()==2){
+			if(o.getStatus()>=OrderStatusEnum.STATUS_PACKAGED.getId() || o.getStatus()==OrderStatusEnum.STATUS_INVALID.getId()){
 				result.setCode("400");
 				result.setMessage("不可作废");
 				return result;
@@ -753,12 +754,13 @@ public class BkOrderServiceImpl implements BkOrderService{
 		double discount=0;
 		List<OrderPay> orderPayList = orderPayDao.findByOrderSnMain(orderSnMain);
 		for(OrderPay op:orderPayList){
-			if(op.getPaymentId()==14){
+			if(op.getPaymentId()==PaymentEnum.PAY_YHQ.getId()){
 				discount+=op.getMoney();
 			}
 		}
 		
-		int orderResult= orderDao.updateOrderStatusByOrderSnMainAndNotStatus(orderSnMain,2,2);
+		int orderResult= orderDao.updateOrderStatusByOrderSnMainAndNotStatus(orderSnMain,OrderStatusEnum.STATUS_INVALID.getId(),OrderStatusEnum.STATUS_INVALID.getId());
+		
 		if(orderResult<1){
 			result.setCode("400");
 			result.setMessage("已作废，不可再次作废");
@@ -769,15 +771,15 @@ public class BkOrderServiceImpl implements BkOrderService{
 		for(Order o:orderList){
 			if(o.getStatus()!=1){//已取消订单不退库存
 				releaseFreezStock(o.getOrderId(),2);
+				if(discount>0){
+					String couponNo = o.getUseCouponNo();
+					int userId = o.getBuyerId();
+					if(StringUtils.isNotBlank(couponNo) || userId > 0){
+						coupListDao.refundCouponList(couponNo, userId);
+					}
+				}
 			}
 		}
-		
-		if(discount>0){
-			String couponNo=orderList.get(0).getUseCouponNo();
-			int userId=orderList.get(0).getBuyerId();
-			coupListDao.refundCouponList(couponNo, userId);
-		}
-		
 		for(Order o:orderList){
 			OrderAction orderAction=new OrderAction();
 			orderAction.setAction(2);
@@ -788,8 +790,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			orderAction.setActor(actor);
 			orderAction.setNotes("作废");
 			orderActionDao.save(orderAction);
-		}		
-		
+		}
 		List<OrderExtm> orderExtmMsg=orderExtmDao.findByOrderSnMain(orderSnMain);
 		String phone=orderExtmMsg.get(0).getPhoneMob();
 		
@@ -1359,7 +1360,11 @@ public class BkOrderServiceImpl implements BkOrderService{
 			whereStr += " and o.isDel = " + cssOrderReqDto.getIsDel();
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getOrderSnMain())){
-			whereStr += " and o.orderSnMain like '%"+cssOrderReqDto.getOrderSnMain()+"%'";
+			if(cssOrderReqDto.getOrderSnMain().length()>=15){
+				whereStr += " and o.orderSnMain = '"+cssOrderReqDto.getOrderSnMain()+"'";
+			}else{
+				whereStr += " and o.orderSnMain like '%"+cssOrderReqDto.getOrderSnMain()+"%'";
+			}
 		}
 		if(StringUtils.isNotBlank(cssOrderReqDto.getBuyerName())){
 			whereStr += " and o.buyerName = '"+cssOrderReqDto.getBuyerName()+"'";
@@ -2186,21 +2191,19 @@ public class BkOrderServiceImpl implements BkOrderService{
 		BaseRes<String> result=new BaseRes<String>();
 		
 		Order order=orderDao.findByOrderId(orderId);
-		if(order.getStatus()==1 || order.getStatus()==2){
+		if(order.getStatus()==2){
 			result.setCode("400");
 			result.setMessage("已作废，不可再次作废");
 			return result;
 		}
 		
-		if(order.getType()!="booking"){
-			if(order.getStatus()>=8){
-				result.setCode("400");
-				result.setMessage("子订单作废失败");
-				return result;
-			}
+		if(order.getStatus()>=OrderStatusEnum.STATUS_PACKAGED.getId()){
+			result.setCode("400");
+			result.setMessage("子订单作废失败");
+			return result;
 		}
 		
-		if(order.getStatus()==15){
+		if(order.getStatus()==OrderStatusEnum.STATUS_FINISHED.getId()){
 			result.setCode("400");
 			result.setMessage("子订单已完成，不可作废");
 			return result;
@@ -2214,10 +2217,8 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		
 		//取消订单返还库存
-		if(order.getType()!="booking"){
-			if(order.getStatus()!=1){//已取消订单不退库存
-				releaseFreezStock(order.getOrderId(),2);
-			}
+		if(order.getStatus()!=1){//已取消订单不退库存
+			releaseFreezStock(order.getOrderId(),2);
 		}
 		
 		OrderAction orderAction=new OrderAction();
