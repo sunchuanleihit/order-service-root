@@ -211,7 +211,10 @@ public class OrderInfoService {
             List<Order> orderList = new ArrayList<Order>();
             List<Integer> orderIds = new ArrayList<Integer>();
             for(OrderReturn r :orderReturns.getContent()){
-                orderIds.add(r.getOrderId());
+                if(r.getOrderId()!=null){
+                    orderIds.add(r.getOrderId());
+                }
+               
             }
             if(!CollectionUtils.isEmpty(orderIds)){
                 orderDaoList = orderDao.findByOrderIdIn(orderIds);
@@ -358,7 +361,7 @@ public class OrderInfoService {
                 orderInfoDtos.add(dto);
                 if(param.getOrderStatus()  == OrderStatusEnum.STATUS_CANCELED.getId()){
                     List<OrderReturn> copyList = Lists.newArrayList(orderReturns.getContent());
-                    int removeId=0 ;
+                    int removeId=-1 ;
                     for(int i =0;i<copyList.size();i++){
                             if(o.getOrderId() ==copyList.get(i).getOrderId()){
                                 if(copyList.get(i).getGoodsStatus()!=4){
@@ -373,7 +376,9 @@ public class OrderInfoService {
                     }
                     //因为order表中的状态不会是取消状态,这里更改dto的状态
                     dto.setOrderStatus(OrderStatusEnum.STATUS_CANCELED.getId());
-                    copyList.remove(removeId);
+                    if(removeId!=-1){
+                        copyList.remove(removeId);
+                    }
                 }
             }
         }
