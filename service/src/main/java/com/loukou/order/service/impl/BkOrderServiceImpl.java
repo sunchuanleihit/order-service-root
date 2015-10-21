@@ -543,10 +543,12 @@ public class BkOrderServiceImpl implements BkOrderService{
 		//处理退款单支付记录
 		List<ReturnOrderPayBo> returnOrderPayList=new ArrayList<ReturnOrderPayBo>();
 		for(int i=0;i<paymentIdList.length;i++){
-			ReturnOrderPayBo returnOrderPay=new ReturnOrderPayBo();
-			returnOrderPay.setPaymentId(paymentIdList[i]);
-			returnOrderPay.setPaymentAmount(returnAmountList[i]);
-			returnOrderPayList.add(returnOrderPay);
+			if(returnAmountList[i]>0){
+				ReturnOrderPayBo returnOrderPay=new ReturnOrderPayBo();
+				returnOrderPay.setPaymentId(paymentIdList[i]);
+				returnOrderPay.setPaymentAmount(returnAmountList[i]);
+				returnOrderPayList.add(returnOrderPay);
+			}
 		}
 		
 		//校验退货商品数量
