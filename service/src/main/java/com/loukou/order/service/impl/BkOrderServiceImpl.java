@@ -1864,6 +1864,9 @@ public class BkOrderServiceImpl implements BkOrderService{
 		VirtualAccountProcessor virtualAccountProcessor = VirtualAccountProcessor.getProcessor();
 		VaccountWaterBillQueryRespVO resp = virtualAccountProcessor.queryWaterBillByUserId(pageNum, pageSize,buyerId);
 		String result = resp.getResult();
+		if(StringUtils.isBlank(result)){
+			return bkVaccountListResultRespDto;
+		}
 		JSONObject json = new JSONObject(result);
 		Integer totalElement = json.getInt("total");
 		JSONArray jsonArray = json.getJSONArray("rows");
@@ -1905,6 +1908,9 @@ public class BkOrderServiceImpl implements BkOrderService{
 		//获取相应的优惠券
 		Page<CoupList> coupListPage = coupListDao.findByUserId(buyerId, pageable);
 		List<CoupList> coupList = coupListPage.getContent();
+		if(coupList == null || coupList.size() == 0){
+			return couponListRespDto;
+		}
 		BkCouponListResultDto resultDto = new BkCouponListResultDto();
 		//获取优惠券使用规则
 		List<Integer> couponIds = new ArrayList<Integer>();
@@ -1919,13 +1925,19 @@ public class BkOrderServiceImpl implements BkOrderService{
 		}
 		
 		//优惠券使用规则
-		List<CoupRule> rules = coupRuleDao.findByIdIn(couponIds);
+		List<CoupRule> rules = new ArrayList<CoupRule>();
+		if(couponIds != null && couponIds.size()>0){
+			rules = coupRuleDao.findByIdIn(couponIds);
+		}
 		Map<Integer, CoupRule> ruleMap = new HashMap<Integer, CoupRule>();
 		for(CoupRule tmp: rules){
 			ruleMap.put(tmp.getId(), tmp);
 		}
 		//获取使用过优惠券的订单
-		List<Order> orderList = orderDao.findByUseCouponNoIn(usedCommonCodes);
+		List<Order> orderList = new ArrayList<Order>();
+		if(usedCommonCodes!=null && usedCommonCodes.size()>0){
+			orderList = orderDao.findByUseCouponNoIn(usedCommonCodes);
+		}
 		Map<String, Order> orderMap = new HashMap<String, Order>();
 		for(Order order: orderList){
 			orderMap.put(order.getUseCouponNo(), order);
@@ -1937,7 +1949,10 @@ public class BkOrderServiceImpl implements BkOrderService{
 				typeIds.add(tmp.getTypeid());
 			}
 		}
-		List<CoupType> types = coupTypeDao.findByIdIn(typeIds);
+		List<CoupType> types = new ArrayList<CoupType>();
+		if(typeIds !=null && typeIds.size()>0){
+			types = coupTypeDao.findByIdIn(typeIds);
+		}
 		Map<Integer, CoupType> typeMap = new HashMap<Integer, CoupType>();
 		for(CoupType tmp: types){
 			typeMap.put(tmp.getId(), tmp);
