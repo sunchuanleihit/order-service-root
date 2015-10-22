@@ -164,6 +164,10 @@ public class OrderInfoService {
             orderInfoDto.setDeliverResult(calDelivertResult(order.getNeedShiptime(), order.getNeedShiptimeSlot(),
                     order.getFinishedTime()));
         }
+        if(orderInfoDto.getOrderStatus()==OrderStatusEnum.STATUS_PACKAGED.getId()){
+            //打包状态只有在预售单存在，直接置成待审核,方便做map
+            orderInfoDto.setOrderStatus(OrderStatusEnum.STATUS_REVIEWED.getId());
+        }
         oResultDto.setCode(200);
         oResultDto.setResult(orderInfoDto);
         return oResultDto;
