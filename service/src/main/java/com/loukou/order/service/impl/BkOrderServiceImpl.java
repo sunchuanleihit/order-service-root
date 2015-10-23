@@ -848,15 +848,22 @@ public class BkOrderServiceImpl implements BkOrderService{
 			return result;
 		}
 		
+		for(Order order: orderList){
+			if(StringUtils.isNotBlank(order.getUseCouponNo())){
+				CoupList coup = coupListDao.findByCommoncode(order.getUseCouponNo());
+				if(coup != null && coup.getIschecked() == 1){
+					result.setCode("400");
+					result.setMessage("优惠券" + order.getUseCouponNo() + "已被使用，不能取消作废");
+					return result;
+				}
+			}
+		}
+		
 		for(Order o:orderList){
+			if(StringUtils.isNotBlank(o.getUseCouponNo())){
+				coupListDao.useCouponByCommoncode(o.getBuyerId(),o.getUseCouponNo());
+			}
 			addFreezStock(o.getOrderId());
-		}
-		
-		if(orderList.get(0).getUseCouponNo()!=""){
-			coupListDao.useCouponByCommoncode(orderList.get(0).getBuyerId(),orderList.get(0).getUseCouponNo());
-		}
-		
-		for(Order o:orderList){
 			OrderAction orderAction=new OrderAction();
 			orderAction.setAction(31);
 			orderAction.setActionTime(new Date());
@@ -2232,10 +2239,12 @@ public class BkOrderServiceImpl implements BkOrderService{
 			return result;
 		}
 		
-		if(order.getStatus()>=OrderStatusEnum.STATUS_PACKAGED.getId()){
-			result.setCode("400");
-			result.setMessage("子订单作废失败");
-			return result;
+		if(!"booking".equals(order.getType())){
+			if(order.getStatus()>=OrderStatusEnum.STATUS_PACKAGED.getId()){
+				result.setCode("400");
+				result.setMessage("子订单作废失败");
+				return result;
+			}
 		}
 		
 		if(order.getStatus()==OrderStatusEnum.STATUS_FINISHED.getId()){
@@ -2254,6 +2263,17 @@ public class BkOrderServiceImpl implements BkOrderService{
 		//取消订单返还库存
 		if(order.getStatus()!=1){//已取消订单不退库存
 			releaseFreezStock(order.getOrderId(),2);
+		}
+		
+		//如果主单只有一个预售订单，而且使用了优惠券，则将优惠券返还给用户
+		if("booking".equals(order.getType())){
+			String orderSnMain = order.getOrderSnMain();
+			List<Order> orderList = orderDao.findByOrderSnMain(orderSnMain);
+			if(orderList!=null && orderList.size()==1){
+				if(StringUtils.isNotBlank(order.getUseCouponNo())){
+					coupListDao.refundCouponList(order.getUseCouponNo(), order.getBuyerId());
+				}
+			}
 		}
 		
 		OrderAction orderAction=new OrderAction();
@@ -2316,8 +2336,22 @@ public class BkOrderServiceImpl implements BkOrderService{
 			result.setMessage(errorMessage);
 			return result;
 		}
-		
-		addFreezStock(orderId);
+		//如果主单只有一个预售订单，而且使用了优惠券，则将将优惠券用到该订单
+		if("booking".equals(order.getType())){
+			String orderSnMain = order.getOrderSnMain();
+			List<Order> orderList = orderDao.findByOrderSnMain(orderSnMain);
+			if(orderList!=null && orderList.size()==1){
+				if(StringUtils.isNotBlank(order.getUseCouponNo())){
+					CoupList coup = coupListDao.findByCommoncode(order.getUseCouponNo());
+					if(coup.getIschecked() == 1){
+						result.setCode("400");
+						result.setMessage("优惠券" + order.getUseCouponNo() + "已被使用，子订单不能取消作废");
+						return result;
+					}
+					coupListDao.useCouponByCommoncode(order.getBuyerId(),order.getUseCouponNo());
+				}
+			}
+		}
 		
 		int orderResult= orderDao.updateOrderStatusByOrderIdAndNotStatus(orderId,0,0);
 		if(orderResult<1){
@@ -2325,7 +2359,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			result.setMessage("子订单作废失败");
 			return result;
 		}
-		
+		addFreezStock(orderId);
 		OrderAction orderAction=new OrderAction();
 		orderAction.setAction(31);
 		orderAction.setActionTime(new Date());
