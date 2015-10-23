@@ -6,9 +6,11 @@ public enum BkOrderStatusEnum {
 	STATUS_INVALID(2,"无效"),
 	STATUS_CHECKED(3,"已审核"),
 	STATUS_TOKEN(4,"已提货"),
-	STATUS_PICKED(6,"已拣货"),
+	STATUS_PICKED(5, "已提货"), //已提货
+	STATUS_ALLOCATED(6,"已拣货"),
 	STATUS_PACKAGED(8,"已打包"),
 	STATUS_SHIPPED(13,"已发货"),
+	STATUS_DELIVERED(14, "已发货"),// 已发货
 	STATUS_RETURNED(15,"回单"),
 	STATUS_REFUSED(16,"拒收");
 	private int id;
