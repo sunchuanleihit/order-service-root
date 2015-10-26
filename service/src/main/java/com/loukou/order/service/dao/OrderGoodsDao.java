@@ -23,10 +23,10 @@ public interface OrderGoodsDao extends CrudRepository<OrderGoods, Integer>{
 		nativeQuery=true)
 	int deleteByOrderId(int orderId);
 
-	@Query("SELECT coalesce(sum(quantity), 0) FROM OrderGoods WHERE orderId IN (?1) AND specId = ?2")
+	@Query("SELECT coalesce(sum(quantity), 0) FROM OrderGoods WHERE orderId IN (?1) AND siteskuId = ?2")
 	int sumGoods(List<Integer> orderIds, int specId);
 
-	@Query("SELECT coalesce(sum(quantity), 0) FROM OrderGoods WHERE storeId=?1 AND specId=?2 AND timestamp > ?3")
+	@Query("SELECT coalesce(sum(quantity), 0) FROM OrderGoods WHERE storeId=?1 AND siteskuId=?2 AND timestamp > ?3")
 	int sumGoods(int storeId, int specId, Date date);
 
 	List<OrderGoods> findByGoodsNameLike(String goodsName, Pageable pageable);

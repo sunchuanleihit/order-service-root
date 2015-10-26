@@ -56,13 +56,15 @@ public class OrderServiceOperationImpTest extends AbstractTestObject {
     @Test
     public void testGetOrderListInfo() {
         OrderListParamDto param = new OrderListParamDto();
-        param.setOrderStatus(OrderStatusEnum.STATUS_FINISHED.getId());
+        param.setOrderStatus(OrderStatusEnum.STATUS_CANCELED.getId());
         param.setOrderType(1);
-        param.setPageNum(0);
+        param.setPageNum(1);
         param.setPageSize(4);
-        param.setStoreId(18017);
+        param.setStoreId(20184);
         OResponseDto<OrderListInfoDto> list = orderService.getOrderListInfo(param);
-        System.out.println(list.getResult().getTotalNum());
+        for(OrderInfoDto t :list.getResult().getOrders()){
+            System.out.println(t.getTaoOrderSn());
+        }
     }
 
     @Test

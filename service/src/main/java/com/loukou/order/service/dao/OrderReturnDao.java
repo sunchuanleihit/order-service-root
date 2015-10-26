@@ -61,5 +61,7 @@ public interface OrderReturnDao extends PagingAndSortingRepository<OrderReturn, 
 	
 	@Query("SELECT o FROM OrderReturn o WHERE orderSnMain=?1 AND orderType!=?2 AND orderStatus=?3")
 	OrderReturn findByOrderSnMainAndNotOrderTypeAndOrderStatus(String orderSnMain, int orderType, int orderStatus);
+	
+	Page<OrderReturn> findBySellerIdAndGoodsStatusIn(int sellerId,List<Integer> goodsStatus,Pageable Pageable);
 }
 
