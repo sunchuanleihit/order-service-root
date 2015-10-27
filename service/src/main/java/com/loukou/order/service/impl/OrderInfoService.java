@@ -445,7 +445,6 @@ public class OrderInfoService {
             status.add(OrderStatusEnum.STATUS_14.getId());
             status.add(OrderStatusEnum.STATUS_CANCELED.getId());
             status.add(OrderStatusEnum.STATUS_FINISHED.getId());
-            status.add(OrderStatusEnum.STATUS_REFUSED.getId());
         }else{
             status.add(param.getOrderStatus());
         }
