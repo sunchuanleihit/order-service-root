@@ -362,7 +362,7 @@ public class BkOrderServiceImpl implements BkOrderService{
 			
 			Store storeMsg = storeDao.findOne(order.getSellerId());
 			String taxApply = "商家";
-			if(storeMsg.getTaxApply()==1){
+			if(storeMsg !=null && storeMsg.getTaxApply()==1){
 				taxApply = "淘常州";
 			}
 			baseDto.setTaxApply(taxApply);
