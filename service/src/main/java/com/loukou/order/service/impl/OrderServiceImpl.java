@@ -953,11 +953,12 @@ public class OrderServiceImpl implements OrderService {
 			}
 			order.setOrderSn(generateOrderSn());
 			order.setTaoOrderSn(taoOrderSn);
-			if (PackageType.MATERIAL.equals(pl.getPackageType())) {
-				order.setShippingFee(cartRespDto.getShippingFeeTotal());
-			} else {
-				order.setShippingFee(0);
-			}
+//			if (PackageType.MATERIAL.equals(pl.getPackageType())) {
+//				order.setShippingFee(cartRespDto.getShippingFeeTotal());
+//			} else {
+//				order.setShippingFee(0);
+//			}
+			order.setShippingFee(pl.getPackageShippingFee());
 			String needShippingTime = null;
 			if (PackageType.MATERIAL.equals(pl.getPackageType())) {
 				needShippingTime = materialShippingTime.get(0);
