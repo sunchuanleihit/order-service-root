@@ -1027,11 +1027,6 @@ public class OrderServiceImpl implements OrderService {
 			} else {
 				order.setShippingId(1); // 商家自送
 			}
-			if (PackageType.MATERIAL.equals(pl.getPackageType())) {
-				order.setShippingFee(cartRespDto.getShippingFeeTotal());
-			} else {
-				order.setShippingFee(0);
-			}
 			order.setSource(os);
 			order.setSellSite(site.getShortCode());
 			// 如果有用优惠券，设置已支付金额
